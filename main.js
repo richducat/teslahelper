@@ -2,7 +2,7 @@
   const { useState, useEffect, useMemo } = React;
   const e = React.createElement;
 
-  // --- Section definitions (titles and default steps) ---
+  // SECTION DEFINITIONS (same as before)
   const SECTIONS = [
     { id:'quickstart', title:'Quick Start', steps:['Adjust your seat','Adjust mirrors','Fasten seatbelt','Select drive mode','Press brake to start'] },
     { id:'drive', title:'How to Drive', steps:['Start the car','Shift into Drive','Accelerate and brake','Regenerative braking','Park the car'] },
@@ -14,7 +14,7 @@
     { id:'delivery', title:'Delivery Checklist', steps:['Inspect exterior and interior','Check VIN and paperwork','Pair key cards and phone','Verify software version'] }
   ];
 
-  // --- Default video map for each model ---
+  // DEFAULT VIDEO MAP AND PLAYLISTS (unchanged)
   function defaultVideoMap(vehicle) {
     const base = {
       quickstart:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Essentials_MYT.mp4',
@@ -27,7 +27,7 @@
       delivery:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Essentials_MYT.mp4'
     };
     if (vehicle === 'S' || vehicle === 'X') {
-      base.drive    = 'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Physical-Controls_SX_MYT_Video.mp4';
+      base.drive = 'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Physical-Controls_SX_MYT_Video.mp4';
       base.controls = 'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Touchscreen_SX_MYT_Video.mp4';
     }
     if (vehicle === 'CT') {
@@ -35,8 +35,6 @@
     }
     return base;
   }
-
-  // --- Default recommended playlist for each section and model ---
   function defaultPlaylist(vehicle) {
     const m = defaultVideoMap(vehicle);
     return {
@@ -75,7 +73,7 @@
     };
   }
 
-  // --- Persistent state using localStorage ---
+  // LOCAL STORAGE PERSISTENCE
   function useLocalStorage(key, initial) {
     const [value, setValue] = useState(() => {
       try {
@@ -88,8 +86,6 @@
     }, [key, value]);
     return [value, setValue];
   }
-
-  // --- Manage per-vehicle video selections ---
   function useVideoMap(vehicle) {
     const [maps, setMaps] = useLocalStorage('teslaHelper.videos', {});
     const map = maps[vehicle] || defaultVideoMap(vehicle);
@@ -103,22 +99,22 @@
     return [map, setUrl, resetUrl];
   }
 
-  // --- Convert user-provided URL to embed URL ---
+  // EMBED URL CONVERSION
   function embedUrlFromInput(url) {
     if (!url) return '';
     try {
-      const vimeo = url.match(/^https?:\/\/(?:www\.)?vimeo\.com\/(\d+)/);
+      const vimeo = url.match(/^https?:\\/\\/(?:www\\.)?vimeo\\.com\\/(\\d+)/);
       if (vimeo) return 'https://player.vimeo.com/video/' + vimeo[1];
-      const yt = url.match(/^https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+      const yt = url.match(/^https?:\\/\\/(?:www\\.)?(?:youtube\\.com\\/watch\\?v=|youtu\\.be\\/)([\\w-]+)/);
       if (yt) return 'https://www.youtube.com/embed/' + yt[1];
     } catch {}
     return url;
   }
 
-  // --- Video display container ---
+  // VIDEO PANEL AND EDITOR COMPONENTS
   function VideoPanel({ url }) {
     if (!url) return null;
-    const isMp4 = /\.mp4(\?|$)/.test(url);
+    const isMp4 = /\.mp4(\\?|$)/.test(url);
     if (isMp4) {
       return e('video',{controls:true,src:url,style:{width:'100%',borderRadius:'8px'}});
     }
@@ -130,8 +126,6 @@
       style:{width:'100%',height:'360px',borderRadius:'8px',border:'none'}
     });
   }
-
-  // --- Editor for custom video URLs ---
   function VideoEditor({ sectionId, current, onSave, onReset, recommendations }) {
     const [value,setValue] = useState(current || '');
     useEffect(() => setValue(current || ''), [current]);
@@ -167,7 +161,7 @@
     ]);
   }
 
-  // --- Optional descriptive text for each step ---
+  // STEP DESCRIPTIONS FOR MODERN CARDS
   const STEP_DESCRIPTIONS = {
     quickstart: {
       'Adjust your seat': 'Position the driver’s seat so you can comfortably reach the pedals and wheel.',
@@ -220,11 +214,9 @@
     }
   };
 
-  // --- Generate model-specific steps ---
+  // MODEL-SPECIFIC STEPS
   function getCustomSteps(vehicle, sectionId) {
-    // 3 & Y use stalks; S, X & CT use the touchscreen strip
     const isStalkCar = vehicle === '3' || vehicle === 'Y';
-
     if (sectionId === 'drive') {
       return isStalkCar
         ? [
@@ -242,7 +234,6 @@
             'Tap “P” on the drive‑mode strip or press the Park button on the overhead console to park.'
           ];
     }
-
     if (sectionId === 'controls') {
       return isStalkCar
         ? [
@@ -260,7 +251,6 @@
             'Use the right scroll button for Autopilot controls and media.'
           ];
     }
-
     if (sectionId === 'autopilot') {
       return isStalkCar
         ? [
@@ -276,28 +266,76 @@
             'To cancel Autopilot, press the right scroll button or press the brake pedal.'
           ];
     }
-
-    // Return original steps for sections without model differences
     const section = SECTIONS.find(s => s.id === sectionId);
     return section ? section.steps : [];
   }
 
-  // --- Card component used on home page ---
+  // CAR IMAGES: update these with your own hosted images
+  const CAR_IMAGES = {
+    '3': 'https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/models/model-3.jpg',
+    'Y': 'https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/models/model-y.jpg',
+    'S': 'https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/models/model-s.jpg',
+    'X': 'https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/models/model-x.jpg',
+    'CT': 'https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/models/cybertruck.jpg'
+  };
+
+  // GOOGLE ADSENSE COMPONENT (replace client and slot)
+  function AdSense() {
+    useEffect(() => {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR_AD_CLIENT';
+      script.crossOrigin = 'anonymous';
+      document.body.appendChild(script);
+      return () => {
+        document.body.removeChild(script);
+      };
+    }, []);
+    return e('ins', {
+      className: 'adsbygoogle',
+      style: { display: 'block', margin: '24px 0' },
+      'data-ad-client': 'YOUR_AD_CLIENT',
+      'data-ad-slot': 'YOUR_AD_SLOT',
+      'data-ad-format': 'auto',
+      'data-full-width-responsive': 'true'
+    });
+  }
+
+  // REFERRAL BANNER COMPONENT
+  function ReferralBanner() {
+    return e('div', {
+      style: {
+        padding: '12px',
+        borderRadius: '8px',
+        border: '1px solid #444',
+        backgroundColor: '#111',
+        marginTop: '32px',
+        textAlign: 'center'
+      }
+    },
+      e('a', {
+        href: 'https://ts.la/richard834858',
+        target: '_blank',
+        style: {
+          color: '#2563eb',
+          fontSize: '16px',
+          textDecoration: 'none',
+          fontWeight: '600'
+        }
+      }, 'Support us by using our Tesla referral code')
+    );
+  }
+
+  // CARD COMPONENT
   function Card({ section, onClick }) {
     return e(
       'button',
       {
         onClick,
         style:{
-          display:'flex',
-          justifyContent:'space-between',
-          alignItems:'center',
-          padding:'16px',
-          borderRadius:'12px',
-          border:'1px solid #333',
-          backgroundColor:'#111',
-          color:'#fff',
-          cursor:'pointer'
+          display:'flex', justifyContent:'space-between', alignItems:'center',
+          padding:'16px', borderRadius:'12px', border:'1px solid #333',
+          backgroundColor:'#111', color:'#fff', cursor:'pointer'
         }
       },
       [
@@ -307,10 +345,15 @@
     );
   }
 
-  // --- Home view with model and activity selectors ---
+  // HOME VIEW WITH CAR IMAGE, ADSENSE & REFERRAL
   function Home({ vehicle, setVehicle, setRoute }) {
     const statuses = ['Taking Delivery','Rental','Owner'];
-    return e('div',null,[
+    const imgSrc = CAR_IMAGES[vehicle];
+    return e('div', null, [
+      // Car image at the top
+      e('div', { style:{ marginBottom:'24px', width:'100%', textAlign:'center' } },
+        imgSrc ? e('img', { src: imgSrc, alt:'Tesla car', style:{ maxWidth:'100%', borderRadius:'12px' } }) : null
+      ),
       e('div',{style:{letterSpacing:'0.2em',fontSize:'14px',color:'#888',textAlign:'center',marginBottom:'16px'}},'Tesla Coach'),
       e('h2',{style:{fontSize:'28px',fontWeight:'600',marginBottom:'8px'}},'Drive a Tesla with Confidence'),
       e('p',{style:{color:'#888',marginBottom:'24px'}},'Clear steps. Big buttons. Read‑aloud guidance. Now with videos.'),
@@ -332,7 +375,7 @@
             })
           )
         ]),
-        // Activity selector (not persisted)
+        // Activity selector
         e('div',{style:{flex:'1'}},[
           e('div',{style:{color:'#aaa',fontSize:'14px',marginBottom:'8px'}},'What are you doing today?'),
           e('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}},
@@ -350,12 +393,17 @@
       e('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}},
         SECTIONS.map(sec => e(Card,{key:sec.id,section:sec,onClick:() => setRoute({type:'section',id:sec.id})}))
       ),
+      // AdSense slot
+      e(AdSense, null),
+      // Referral banner
+      e(ReferralBanner, null),
+      // Footer text
       e('p',{style:{marginTop:'24px',color:'#666',fontSize:'12px'}},'Tip: Add a video per section on the Video tab. Links save locally.'),
       e('p',{style:{marginTop:'8px',color:'#555',fontSize:'10px',textAlign:'center'}},'Minimal UI • Large tap targets • Read‑aloud • Progress auto‑save • Videos per section')
     ]);
   }
 
-  // --- Detail view with hero video and card-style steps ---
+  // SECTION DETAIL WITH HERO VIDEO AND CARD-STYLE STEPS
   function SectionDetail({
     sectionId,
     vehicle,
@@ -370,7 +418,6 @@
     const steps = getCustomSteps(vehicle, sectionId);
     const descriptions = STEP_DESCRIPTIONS[sectionId] || {};
 
-    // Render card for each step
     function renderStepCards() {
       return e('div',{style:{display:'flex',flexDirection:'column',gap:'16px'}},
         steps.map((title,index) =>
@@ -393,9 +440,8 @@
         style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor:'#333',color:'#fff',cursor:'pointer',marginBottom:'16px',fontSize:'14px'}
       },'\u2039 Back'),
       e('h2',{style:{fontSize:'24px',fontWeight:'600',marginBottom:'16px'}},sec.title),
-      // Hero video or image
+      // Hero video
       e('div',{style:{marginBottom:'16px'}},e(VideoPanel,{url: videoMap[sectionId] || ''})),
-      // Steps/Video toggle
       e('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},[
         e('button',{style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor: mode==='steps' ? '#2563eb' : '#333',color:'#fff',fontSize:'14px',cursor:'pointer'},onClick:() => setMode('steps')},'Steps'),
         e('button',{style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor: mode==='video' ? '#2563eb' : '#333',color:'#fff',fontSize:'14px',cursor:'pointer'},onClick:() => setMode('video')},'Video')
@@ -409,13 +455,12 @@
     ]);
   }
 
-  // --- App router ---
+  // MAIN APP ROUTER
   function App() {
     const [vehicle,setVehicle] = useLocalStorage('teslaHelper.vehicle','3');
     const [videoMap,setVideoUrl,resetVideoUrl] = useVideoMap(vehicle);
     const playlists = useMemo(() => defaultPlaylist(vehicle),[vehicle]);
     const [route,setRoute] = useState({type:'home'});
-
     return e('div',{style:{maxWidth:'900px',margin:'0 auto',padding:'24px',color:'#fff',backgroundColor:'#000',minHeight:'100vh',fontFamily:'Arial, sans-serif'}},
       route.type === 'home'
         ? e(Home,{vehicle,setVehicle,setRoute})

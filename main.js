@@ -2,7 +2,7 @@
   const { useState, useEffect, useMemo } = React;
   const e = React.createElement;
 
-  // Section definitions
+  // --- Section definitions (titles and default steps) ---
   const SECTIONS = [
     { id:'quickstart', title:'Quick Start', steps:['Adjust your seat','Adjust mirrors','Fasten seatbelt','Select drive mode','Press brake to start'] },
     { id:'drive', title:'How to Drive', steps:['Start the car','Shift into Drive','Accelerate and brake','Regenerative braking','Park the car'] },
@@ -11,10 +11,10 @@
     { id:'autopilot', title:'Autopilot & Safety', steps:['Enable Autopilot','Adjust following distance','Use Navigate on Autopilot','Disable Autopilot safely'] },
     { id:'phonekey', title:'Phone as Key / App', steps:['Download Tesla app','Pair phone as key','Unlock and start with phone','Remote control functions'] },
     { id:'climate', title:'Climate & Defrost', steps:['Adjust cabin temperature','Use seat heaters','Defrost windshield','Activate Dog/Sentry mode'] },
-    { id:'delivery', title:'Delivery Checklist', steps:['Inspect exterior and interior','Check VIN and paperwork','Pair key cards and phone','Verify software version'] },
+    { id:'delivery', title:'Delivery Checklist', steps:['Inspect exterior and interior','Check VIN and paperwork','Pair key cards and phone','Verify software version'] }
   ];
 
-  // Default videos per model
+  // --- Default video map for each model ---
   function defaultVideoMap(vehicle) {
     const base = {
       quickstart:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Essentials_MYT.mp4',
@@ -27,7 +27,7 @@
       delivery:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Essentials_MYT.mp4'
     };
     if (vehicle === 'S' || vehicle === 'X') {
-      base.drive = 'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Physical-Controls_SX_MYT_Video.mp4';
+      base.drive    = 'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Physical-Controls_SX_MYT_Video.mp4';
       base.controls = 'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Touchscreen_SX_MYT_Video.mp4';
     }
     if (vehicle === 'CT') {
@@ -36,22 +36,46 @@
     return base;
   }
 
-  // Recommended playlists
+  // --- Default recommended playlist for each section and model ---
   function defaultPlaylist(vehicle) {
     const m = defaultVideoMap(vehicle);
     return {
-      quickstart:[{ title:'Essentials / First Drive', url:m.quickstart }, { title:'Driver Profiles', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Driver-Profiles_3Y_MYT_Video.mp4' }],
-      drive:[{ title:'Physical Controls', url:m.drive }, { title:'Wipers', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Wipers_3Y_MYT_Video.mp4' }],
-      controls:[{ title:'Touchscreen Overview', url:m.controls }, { title:'Customize Controls', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Customize-Controls_3Y_MYT_Video.mp4' }],
-      charging:[{ title:'Charging Basics', url:m.charging }, { title:'Trip Planner', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Trip-Planner_3Y_MYT_Video.mp4' }],
-      autopilot:[{ title:'Autopilot Basics', url:m.autopilot }, { title:'Navigate on Autopilot', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Navigate-on-Autopilot_3Y_MYT_Video.mp4' }],
-      phonekey:[{ title:'Tesla App Vehicle Controls', url:m.phonekey }, { title:'Phone Key Setup', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Phone-Key_3Y_MYT_Video.mp4' }],
-      climate:[{ title:'Climate on Touchscreen', url:m.climate }, { title:'Cabin Overheat', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Cabin-Overheat_3Y_MYT_Video.mp4' }],
-      delivery:[{ title:'Essentials / First Drive', url:m.delivery }, { title:'Keys & Cards', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Keys_3Y_MYT_Video.mp4' }]
+      quickstart:[
+        { title:'Essentials / First Drive', url:m.quickstart },
+        { title:'Driver Profiles', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Driver-Profiles_3Y_MYT_Video.mp4' }
+      ],
+      drive:[
+        { title:'Physical Controls', url:m.drive },
+        { title:'Wipers', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Wipers_3Y_MYT_Video.mp4' }
+      ],
+      controls:[
+        { title:'Touchscreen Overview', url:m.controls },
+        { title:'Customize Controls', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Customize-Controls_3Y_MYT_Video.mp4' }
+      ],
+      charging:[
+        { title:'Charging Basics', url:m.charging },
+        { title:'Trip Planner', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Trip-Planner_3Y_MYT_Video.mp4' }
+      ],
+      autopilot:[
+        { title:'Autopilot Basics', url:m.autopilot },
+        { title:'Navigate on Autopilot', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Navigate-on-Autopilot_3Y_MYT_Video.mp4' }
+      ],
+      phonekey:[
+        { title:'Tesla App Vehicle Controls', url:m.phonekey },
+        { title:'Phone Key Setup', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Phone-Key_3Y_MYT_Video.mp4' }
+      ],
+      climate:[
+        { title:'Climate on Touchscreen', url:m.climate },
+        { title:'Cabin Overheat', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Cabin-Overheat_3Y_MYT_Video.mp4' }
+      ],
+      delivery:[
+        { title:'Essentials / First Drive', url:m.delivery },
+        { title:'Keys & Cards', url:'https://digitalassets.tesla.com/tesla-contents/video/upload/f_auto,q_auto:best/Keys_3Y_MYT_Video.mp4' }
+      ]
     };
   }
 
-  // Persisted state
+  // --- Persistent state using localStorage ---
   function useLocalStorage(key, initial) {
     const [value, setValue] = useState(() => {
       try {
@@ -65,7 +89,7 @@
     return [value, setValue];
   }
 
-  // Manage video URLs per vehicle
+  // --- Manage per-vehicle video selections ---
   function useVideoMap(vehicle) {
     const [maps, setMaps] = useLocalStorage('teslaHelper.videos', {});
     const map = maps[vehicle] || defaultVideoMap(vehicle);
@@ -79,7 +103,7 @@
     return [map, setUrl, resetUrl];
   }
 
-  // Convert user URL to embed
+  // --- Convert user-provided URL to embed URL ---
   function embedUrlFromInput(url) {
     if (!url) return '';
     try {
@@ -91,7 +115,7 @@
     return url;
   }
 
-  // Video container
+  // --- Video display container ---
   function VideoPanel({ url }) {
     if (!url) return null;
     const isMp4 = /\.mp4(\?|$)/.test(url);
@@ -107,7 +131,7 @@
     });
   }
 
-  // Editor for custom videos
+  // --- Editor for custom video URLs ---
   function VideoEditor({ sectionId, current, onSave, onReset, recommendations }) {
     const [value,setValue] = useState(current || '');
     useEffect(() => setValue(current || ''), [current]);
@@ -143,23 +167,148 @@
     ]);
   }
 
-  // Card for section on home page
-  function Card({ section, onClick }) {
-    return e('button',{
-      onClick,
-      style:{
-        display:'flex',justifyContent:'space-between',alignItems:'center',
-        padding:'16px',borderRadius:'12px',border:'1px solid #333',
-        backgroundColor:'#111',color:'#fff',cursor:'pointer'
-      }
-    },[
-      e('div',{style:{fontSize:'16px',fontWeight:'500'}},section.title),
-      e('div',{style:{fontSize:'20px',color:'#555'}},'\u203A')  // › symbol
-    ]);
+  // --- Optional descriptive text for each step ---
+  const STEP_DESCRIPTIONS = {
+    quickstart: {
+      'Adjust your seat': 'Position the driver’s seat so you can comfortably reach the pedals and wheel.',
+      'Adjust mirrors': 'Tilt your side and rear‑view mirrors for maximum visibility.',
+      'Fasten seatbelt': 'Always buckle up before driving for your safety.',
+      'Select drive mode': 'Choose Park, Reverse or Drive as appropriate for your situation.',
+      'Press brake to start': 'Press and hold the brake pedal to power up and ready the vehicle.'
+    },
+    drive: {
+      'Start the car': 'With your key or phone in range, press the brake pedal to wake up the vehicle.',
+      'Shift into Drive': 'Use the shifter or touchscreen based on your model to select Drive.',
+      'Accelerate and brake': 'Apply the accelerator to move and the brake pedal to slow or stop.',
+      'Regenerative braking': 'Lift your foot off the accelerator to slow the car and recharge the battery.',
+      'Park the car': 'Use the Park button (or stalk button) to secure the vehicle.'
+    },
+    controls: {
+      'Use the touchscreen': 'Access all vehicle settings and information from the main screen.',
+      'Wipers & washers': 'Clean the windshield with the wiper button; cycle speeds or spray fluid as needed.',
+      'Turn signals & lights': 'Signal your intentions using the stalk or steering‑yoke buttons.',
+      'Steering wheel controls': 'Use the scroll wheels to adjust media, speed or Autopilot settings.'
+    },
+    autopilot: {
+      'Enable Autopilot': 'Engage Autopilot or cruise control via the stalk or right scroll button.',
+      'Adjust following distance': 'Set how closely your car follows the vehicle ahead.',
+      'Use Navigate on Autopilot': 'Let the system suggest lane changes and exits on supported roads.',
+      'Disable Autopilot safely': 'Press the brake or cancel button to return full control to the driver.'
+    },
+    charging: {
+      'Open charge port': 'Tap the charge port door or press the button on the connector.',
+      'Plug in the charger': 'Insert the connector firmly into the charge port until latched.',
+      'Monitor charging': 'Check charge status and range on the touchscreen or app.'
+    },
+    phonekey: {
+      'Download Tesla app': 'Get the Tesla app and log in with your Tesla account.',
+      'Pair phone as key': 'Follow the app prompts to set up your phone as a key.',
+      'Unlock and start with phone': 'Use the paired phone to lock/unlock and start the car.',
+      'Remote control functions': 'Control climate, charge limits and more from your phone.'
+    },
+    climate: {
+      'Adjust cabin temperature': 'Set desired temperature via the touchscreen or app.',
+      'Use seat heaters': 'Warm the seats using the climate control menu.',
+      'Defrost windshield': 'Clear ice or fog by selecting defrost mode.',
+      'Activate Dog/Sentry mode': 'Keep pets comfortable or secure the car with these modes.'
+    },
+    delivery: {
+      'Inspect exterior and interior': 'Check body panels, paint, and interior for any damage.',
+      'Check VIN and paperwork': 'Ensure VIN on the car matches your documents.',
+      'Pair key cards and phone': 'Activate key cards and set up your phone key.',
+      'Verify software version': 'Confirm the vehicle is up to date via the software menu.'
+    }
+  };
+
+  // --- Generate model-specific steps ---
+  function getCustomSteps(vehicle, sectionId) {
+    // 3 & Y use stalks; S, X & CT use the touchscreen strip
+    const isStalkCar = vehicle === '3' || vehicle === 'Y';
+
+    if (sectionId === 'drive') {
+      return isStalkCar
+        ? [
+            'Start the car.',
+            'Press the brake and move the drive stalk all the way down to shift into Drive.',
+            'Accelerate and brake using the pedals.',
+            'Use regenerative braking (release the accelerator to slow down).',
+            'Press the button on the end of the drive stalk to put the car in Park.'
+          ]
+        : [
+            'Start the car.',
+            'Press the brake and swipe up on the drive‑mode strip on the touchscreen to shift into Drive.',
+            'Accelerate and brake using the pedals.',
+            'Use regenerative braking (release the accelerator to slow down).',
+            'Tap “P” on the drive‑mode strip or press the Park button on the overhead console to park.'
+          ];
+    }
+
+    if (sectionId === 'controls') {
+      return isStalkCar
+        ? [
+            'Use the touchscreen to adjust settings and view vehicle information.',
+            'Press the wiper button on the left stalk to wipe the windshield; each press cycles through speeds; hold it to spray washer fluid.',
+            'Push the left stalk up or down (or tap the arrow buttons on the steering wheel on newer cars) to signal a turn; press again to cancel.',
+            'Use the left scroll wheel on the steering wheel to adjust wiper speed or media volume.',
+            'Use the right scroll wheel for Autopilot controls and media.'
+          ]
+        : [
+            'Use the touchscreen to adjust settings and view vehicle information.',
+            'Press the wiper button on the steering yoke; each press cycles through speeds; hold to spray washer fluid; adjust the speed by rolling the left scroll button.',
+            'Press the turn‑signal buttons on the steering yoke to signal a turn; press again to cancel.',
+            'Use the left scroll button to adjust wiper speed, mirrors or brightness.',
+            'Use the right scroll button for Autopilot controls and media.'
+          ];
+    }
+
+    if (sectionId === 'autopilot') {
+      return isStalkCar
+        ? [
+            'Pull the right drive stalk down once to engage Traffic‑Aware Cruise Control.',
+            'Pull the right drive stalk down twice quickly to engage Autosteer (Autopilot).',
+            'Adjust the set speed or following distance using the right scroll wheel.',
+            'To cancel Autopilot, push the drive stalk up once or press the brake pedal.'
+          ]
+        : [
+            'Press the right scroll button on the steering yoke once to engage Traffic‑Aware Cruise Control.',
+            'Press the right scroll button twice quickly to engage Autosteer (Autopilot).',
+            'Adjust the set speed or following distance by rolling the right scroll button.',
+            'To cancel Autopilot, press the right scroll button or press the brake pedal.'
+          ];
+    }
+
+    // Return original steps for sections without model differences
+    const section = SECTIONS.find(s => s.id === sectionId);
+    return section ? section.steps : [];
   }
 
-  // Home view
-  function Home({ vehicle,setVehicle,setRoute }) {
+  // --- Card component used on home page ---
+  function Card({ section, onClick }) {
+    return e(
+      'button',
+      {
+        onClick,
+        style:{
+          display:'flex',
+          justifyContent:'space-between',
+          alignItems:'center',
+          padding:'16px',
+          borderRadius:'12px',
+          border:'1px solid #333',
+          backgroundColor:'#111',
+          color:'#fff',
+          cursor:'pointer'
+        }
+      },
+      [
+        e('div',{style:{fontSize:'16px',fontWeight:'500'}},section.title),
+        e('div',{style:{fontSize:'20px',color:'#555'}},'\u203A')
+      ]
+    );
+  }
+
+  // --- Home view with model and activity selectors ---
+  function Home({ vehicle, setVehicle, setRoute }) {
     const statuses = ['Taking Delivery','Rental','Owner'];
     return e('div',null,[
       e('div',{style:{letterSpacing:'0.2em',fontSize:'14px',color:'#888',textAlign:'center',marginBottom:'16px'}},'Tesla Coach'),
@@ -173,7 +322,7 @@
           e('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}},
             ['3','Y','S','X','CT'].map(v => {
               const label = v==='3'?'Model 3':v==='Y'?'Model Y':v==='S'?'Model S':v==='X'?'Model X':'Cybertruck';
-              const active = v===vehicle;
+              const active = v === vehicle;
               const bg = active ? (v==='CT' ? '#dc2626' : '#2563eb') : '#333';
               return e('button',{
                 key:v,
@@ -183,7 +332,7 @@
             })
           )
         ]),
-        // Activity selector (placeholder, not persisted)
+        // Activity selector (not persisted)
         e('div',{style:{flex:'1'}},[
           e('div',{style:{color:'#aaa',fontSize:'14px',marginBottom:'8px'}},'What are you doing today?'),
           e('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}},
@@ -206,38 +355,71 @@
     ]);
   }
 
-  // Detail view for a section
-  function SectionDetail({ sectionId, videoMap,setVideoUrl,resetVideoUrl,playlist,goBack }) {
-    const sec = SECTIONS.find(s => s.id === sectionId);
+  // --- Detail view with hero video and card-style steps ---
+  function SectionDetail({
+    sectionId,
+    vehicle,
+    videoMap,
+    setVideoUrl,
+    resetVideoUrl,
+    playlist,
+    goBack
+  }) {
     const [mode,setMode] = useState('steps');
+    const sec = SECTIONS.find(s => s.id === sectionId);
+    const steps = getCustomSteps(vehicle, sectionId);
+    const descriptions = STEP_DESCRIPTIONS[sectionId] || {};
+
+    // Render card for each step
+    function renderStepCards() {
+      return e('div',{style:{display:'flex',flexDirection:'column',gap:'16px'}},
+        steps.map((title,index) =>
+          e('div',{
+            key:index,
+            style:{padding:'16px',borderRadius:'12px',backgroundColor:'#111',border:'1px solid #333'}
+          },[
+            e('div',{style:{fontSize:'18px',fontWeight:'600',marginBottom:'8px'}},title),
+            descriptions[title]
+              ? e('div',{style:{fontSize:'14px',color:'#aaa',lineHeight:'1.4'}},descriptions[title])
+              : null
+          ])
+        )
+      );
+    }
+
     return e('div',null,[
-      e('button',{onClick:goBack,style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor:'#333',color:'#fff',cursor:'pointer',marginBottom:'16px',fontSize:'14px'}},'\u2039 Back'),
+      e('button',{
+        onClick:goBack,
+        style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor:'#333',color:'#fff',cursor:'pointer',marginBottom:'16px',fontSize:'14px'}
+      },'\u2039 Back'),
       e('h2',{style:{fontSize:'24px',fontWeight:'600',marginBottom:'16px'}},sec.title),
+      // Hero video or image
+      e('div',{style:{marginBottom:'16px'}},e(VideoPanel,{url: videoMap[sectionId] || ''})),
+      // Steps/Video toggle
       e('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},[
         e('button',{style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor: mode==='steps' ? '#2563eb' : '#333',color:'#fff',fontSize:'14px',cursor:'pointer'},onClick:() => setMode('steps')},'Steps'),
         e('button',{style:{padding:'6px 12px',borderRadius:'6px',border:'1px solid #444',backgroundColor: mode==='video' ? '#2563eb' : '#333',color:'#fff',fontSize:'14px',cursor:'pointer'},onClick:() => setMode('video')},'Video')
       ]),
       mode === 'steps'
-        ? e('ul',{style:{listStyleType:'disc',paddingLeft:'24px',marginBottom:'16px',color:'#ccc',fontSize:'16px',lineHeight:'1.5'}},
-            sec.steps.map((st,i) => e('li',{key:i,style:{marginBottom:'6px'}},st))
-          )
+        ? renderStepCards()
         : e('div',null,[
-            e(VideoPanel,{url: videoMap[sec.id]}),
-            e(VideoEditor,{sectionId:sec.id,current: videoMap[sec.id],onSave:url => setVideoUrl(sec.id,url),onReset:() => resetVideoUrl(sec.id),recommendations: playlist[sec.id]})
+            e(VideoPanel,{url: videoMap[sectionId]}),
+            e(VideoEditor,{sectionId,current: videoMap[sectionId],onSave:url => setVideoUrl(sectionId,url),onReset:() => resetVideoUrl(sectionId),recommendations: playlist[sectionId]})
           ])
     ]);
   }
 
-  // Main app router
+  // --- App router ---
   function App() {
     const [vehicle,setVehicle] = useLocalStorage('teslaHelper.vehicle','3');
     const [videoMap,setVideoUrl,resetVideoUrl] = useVideoMap(vehicle);
     const playlists = useMemo(() => defaultPlaylist(vehicle),[vehicle]);
     const [route,setRoute] = useState({type:'home'});
+
     return e('div',{style:{maxWidth:'900px',margin:'0 auto',padding:'24px',color:'#fff',backgroundColor:'#000',minHeight:'100vh',fontFamily:'Arial, sans-serif'}},
-      route.type==='home'
+      route.type === 'home'
         ? e(Home,{vehicle,setVehicle,setRoute})
-        : e(SectionDetail,{sectionId:route.id,videoMap,setVideoUrl,resetVideoUrl,playlist:playlists,goBack:() => setRoute({type:'home'})})
+        : e(SectionDetail,{sectionId: route.id, vehicle, videoMap, setVideoUrl, resetVideoUrl, playlist: playlists, goBack:() => setRoute({type:'home'})})
     );
   }
 

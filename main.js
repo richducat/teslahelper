@@ -162,18 +162,26 @@
 
   // --- Display video or embed ---
   function VideoPanel({ url }) {
-    if (!url) return null;
-    if (/\.mp4(\?|$)/.test(url)) {
-      return e('video', { controls: true, src: url, style: { width: '100%', borderRadius: '8px' } });
-    }
-    const src = embedUrlFromInput(url);
-    return e('iframe', {
-      src,
-      allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
-      allowFullScreen: true,
-      style: { width: '100%', height: '360px', border: 'none', borderRadius: '8px' }
+  if (!url) return null;
+  // If the URL ends in .mp4, use a <video> tag with crossOrigin
+  if (/\.mp4(\?|$)/.test(url)) {
+    return React.createElement('video', {
+      controls: true,
+      src: url,
+      crossOrigin: 'anonymous',    // <—— add this line
+      style: { width: '100%', borderRadius: '8px' }
     });
   }
+  // Otherwise, embed YouTube/Vimeo normally
+  const src = embedUrlFromInput(url);
+  return React.createElement('iframe', {
+    src,
+    allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+    allowFullScreen: true,
+    style: { width: '100%', height: '360px', border: 'none', borderRadius: '8px' }
+  });
+}
+
 
   // --- Video URL editor ---
   function VideoEditor({ sectionId, current, onSave, onReset, recommendations }) {

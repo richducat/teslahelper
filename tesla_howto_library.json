@@ -1,0 +1,831 @@
+{
+  "schema_version": 1,
+  "generated_at": "2025-11-10T04:51:45.385402Z",
+  "source": "User-provided Tesla official video links (English)",
+  "models": [
+    {
+      "model": "Model S",
+      "year_range": "2024+",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Essentials | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/essentials-meet-your-model-s",
+              "copy": "Meet your Model S: overview of access, controls, and first drive."
+            }
+          ]
+        },
+        {
+          "name": "Access & Profiles",
+          "videos": [
+            {
+              "title": "Access | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/access-model-s",
+              "copy": "Unlock and enter using phone key, key card, or key fob."
+            },
+            {
+              "title": "Driver Profiles | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/driver-profiles-model-s",
+              "copy": "Save seat, mirror, and steering preferences per driver."
+            }
+          ]
+        },
+        {
+          "name": "Driving & Displays",
+          "videos": [
+            {
+              "title": "Driver Controls | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/driver-controls-model-s",
+              "copy": "Use gear selection, signals, wipers, and steering-wheel controls."
+            },
+            {
+              "title": "Displays | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/displays-meet-your-model-s",
+              "copy": "Instrument cluster and center display overview."
+            }
+          ]
+        },
+        {
+          "name": "Tesla App",
+          "videos": [
+            {
+              "title": "Tesla App | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/tesla-app-meet-your-model-s",
+              "copy": "Pair your car and control it remotely from the Tesla app."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot & FSD",
+          "videos": [
+            {
+              "title": "FSD (Supervised) | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/fsd-supervised-meet-your-model-s",
+              "copy": "Overview of supervised Full Self-Driving features and usage."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Software",
+          "videos": [
+            {
+              "title": "Charging | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-model-s",
+              "copy": "Home charging and Supercharging basics."
+            },
+            {
+              "title": "Software and Support | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/software-and-support-meet-your-model-s",
+              "copy": "How to connect to Wi-Fi, install updates, and get support."
+            }
+          ]
+        },
+        {
+          "name": "Keys",
+          "videos": [
+            {
+              "title": "Keys | Model S",
+              "url": "https://www.tesla.com/support/videos/watch/keys-meet-your-model-s",
+              "copy": "Use key fob, phone key, and key card."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model S",
+      "year_range": "2012\u20132020",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Introduction",
+              "url": "https://www.tesla.com/support/videos/watch/introduction-meet-your-2012-2020-model-s",
+              "copy": "Intro to first-generation Model S features and layout."
+            },
+            {
+              "title": "Owner\u2019s Manual",
+              "url": "https://www.tesla.com/support/videos/watch/owners-manual-meet-your-2012-2020-model-s",
+              "copy": "Use the on-screen owner\u2019s manual."
+            }
+          ]
+        },
+        {
+          "name": "Access & Personalization",
+          "videos": [
+            {
+              "title": "Keys",
+              "url": "https://www.tesla.com/support/videos/watch/keys-meet-your-2012-2020-model-s",
+              "copy": "Unlock and start with key fob or key card."
+            },
+            {
+              "title": "Personalization",
+              "url": "https://www.tesla.com/support/videos/watch/personalization-meet-your-2012-2020-model-s",
+              "copy": "Save driver profiles and preferences."
+            }
+          ]
+        },
+        {
+          "name": "Controls & Screens",
+          "videos": [
+            {
+              "title": "Physical Controls",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-2012-2020-model-s",
+              "copy": "Use stalks, buttons, and steering-wheel controls."
+            },
+            {
+              "title": "Screens",
+              "url": "https://www.tesla.com/support/videos/watch/screens-meet-your-2012-2020-model-s",
+              "copy": "Instrument cluster and touchscreen overview."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot",
+          "videos": [
+            {
+              "title": "Autopilot",
+              "url": "https://www.tesla.com/support/videos/watch/autopilot-meet-your-2012-2020-model-s",
+              "copy": "Basics of Autopilot on early Model S vehicles."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Updates",
+          "videos": [
+            {
+              "title": "Charging",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-2012-2020-model-s",
+              "copy": "Charge at home and on the road."
+            },
+            {
+              "title": "Software Updates",
+              "url": "https://www.tesla.com/support/videos/watch/software-updates-meet-your-2012-2020-model-s",
+              "copy": "Download and install software updates."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model 3",
+      "year_range": "2024+",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Essentials | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/essentials-meet-your-model-3",
+              "copy": "Model 3 quickstart: access, controls, and first drive."
+            }
+          ]
+        },
+        {
+          "name": "Access & Profiles",
+          "videos": [
+            {
+              "title": "Access | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/access-model-3",
+              "copy": "Unlock and enter with phone key or key card."
+            },
+            {
+              "title": "Driver Profiles | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/driver-profiles-model-3",
+              "copy": "Save seat, mirrors, and settings."
+            }
+          ]
+        },
+        {
+          "name": "Driving & Interface",
+          "videos": [
+            {
+              "title": "Driver Controls | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/driver-controls-model-3",
+              "copy": "Gear selection, signals, wipers, and wheel controls."
+            },
+            {
+              "title": "Physical Controls | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-model-3",
+              "copy": "Buttons and switches overview."
+            },
+            {
+              "title": "Touchscreen | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/touchscreen-meet-your-model-3",
+              "copy": "Center display for climate, nav, and settings."
+            }
+          ]
+        },
+        {
+          "name": "Tesla App",
+          "videos": [
+            {
+              "title": "Tesla App | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/tesla-app-meet-your-model-3",
+              "copy": "Pair the car and control it remotely."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot & FSD",
+          "videos": [
+            {
+              "title": "FSD (Supervised) | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/fsd-supervised-meet-your-model-3",
+              "copy": "Overview of supervised Full Self-Driving."
+            },
+            {
+              "title": "Stopping Mode (Model 3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/stopping-mode-model-3-model-y",
+              "copy": "Choose Creep, Roll, or Hold for regen behavior."
+            },
+            {
+              "title": "Autopark (Model 3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/autopark-model-3-model-y",
+              "copy": "Parallel & perpendicular self-parking."
+            },
+            {
+              "title": "Heated Steering Wheel (Model 3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/heated-steering-wheel-model-3-model-y",
+              "copy": "Turn heated steering wheel on/off."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Software",
+          "videos": [
+            {
+              "title": "Software | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/software-meet-your-model-3",
+              "copy": "Connect to Wi-Fi and install updates."
+            },
+            {
+              "title": "Regenerative Braking | Model 3",
+              "url": "https://www.tesla.com/support/videos/watch/regenerative-braking-model-3",
+              "copy": "How regen works and available settings."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model 3",
+      "year_range": "2017\u20132023",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Introduction",
+              "url": "https://www.tesla.com/support/videos/watch/introduction-meet-your-2017-2023-model-3",
+              "copy": "Intro to first-gen Model 3."
+            },
+            {
+              "title": "Owner\u2019s Manual",
+              "url": "https://www.tesla.com/support/videos/watch/owners-manual-meet-your-2017-2023-model-3",
+              "copy": "Use the on-screen owner\u2019s manual."
+            }
+          ]
+        },
+        {
+          "name": "Access & Personalization",
+          "videos": [
+            {
+              "title": "Keys",
+              "url": "https://www.tesla.com/support/videos/watch/keys-meet-your-2017-2023-model-3",
+              "copy": "Phone key, key card, and fob usage."
+            },
+            {
+              "title": "Personalization",
+              "url": "https://www.tesla.com/support/videos/watch/personalization-meet-your-2017-2023-model-3",
+              "copy": "Driver profiles and preferences."
+            }
+          ]
+        },
+        {
+          "name": "Controls & Screens",
+          "videos": [
+            {
+              "title": "Physical Controls",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-2017-2023-model-3",
+              "copy": "Stalks, buttons, and wheel controls."
+            },
+            {
+              "title": "Touchscreen",
+              "url": "https://www.tesla.com/support/videos/watch/touchscreen-meet-your-2017-2023-model-3",
+              "copy": "Main UI walkthrough."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot",
+          "videos": [
+            {
+              "title": "Autopilot",
+              "url": "https://www.tesla.com/support/videos/watch/autopilot-meet-your-2017-2023-model-3",
+              "copy": "TAAC, Autosteer, and safety notes."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Updates",
+          "videos": [
+            {
+              "title": "Charging",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-2017-2023-model-3",
+              "copy": "Charging options and connectors."
+            },
+            {
+              "title": "Software Updates",
+              "url": "https://www.tesla.com/support/videos/watch/software-updates-meet-your-2017-2023-model-3",
+              "copy": "Install OTA updates over Wi-Fi."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model Y",
+      "year_range": "2025+",
+      "categories": [
+        {
+          "name": "Access & Storage",
+          "videos": [
+            {
+              "title": "Access | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/access-model-y",
+              "copy": "Unlock/start with phone key, key card, or fob."
+            },
+            {
+              "title": "Storage | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/storage-model-y",
+              "copy": "Front/rear trunk, interior storage, seat folding."
+            }
+          ]
+        },
+        {
+          "name": "Driving & Profiles",
+          "videos": [
+            {
+              "title": "Driver Controls | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/driver-controls-model-y",
+              "copy": "Drive selector, signals, wipers, wheel controls."
+            },
+            {
+              "title": "Driver Profiles | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/driver-profiles-model-y",
+              "copy": "Save preferences per driver."
+            }
+          ]
+        },
+        {
+          "name": "Tesla App & FSD",
+          "videos": [
+            {
+              "title": "Tesla App | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/tesla-app-meet-your-model-y",
+              "copy": "Connect and control from the Tesla app."
+            },
+            {
+              "title": "FSD (Supervised) | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/fsd-supervised-meet-your-model-y",
+              "copy": "Overview of supervised Full Self-Driving."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model Y",
+      "year_range": "2020\u20132024",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Essentials",
+              "url": "https://www.tesla.com/support/videos/watch/essentials-meet-your-model-y",
+              "copy": "Quickstart for early Model Y."
+            },
+            {
+              "title": "Support",
+              "url": "https://www.tesla.com/support/videos/watch/support-meet-your-model-y",
+              "copy": "Where to find support and docs."
+            }
+          ]
+        },
+        {
+          "name": "Controls & Interface",
+          "videos": [
+            {
+              "title": "Physical Controls",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-model-y",
+              "copy": "Stalks, buttons, wheel controls."
+            },
+            {
+              "title": "Touchscreen",
+              "url": "https://www.tesla.com/support/videos/watch/touchscreen-meet-your-model-y",
+              "copy": "Center display menus and settings."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Software",
+          "videos": [
+            {
+              "title": "Charging",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-model-y",
+              "copy": "Charging at home and on trips."
+            },
+            {
+              "title": "Software",
+              "url": "https://www.tesla.com/support/videos/watch/software-meet-your-model-y",
+              "copy": "Connect to Wi-Fi and install updates."
+            },
+            {
+              "title": "Software Updates (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/software-updates-meet-your-2020-2024-model-y",
+              "copy": "OTA update process."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot & Driving",
+          "videos": [
+            {
+              "title": "Autopilot",
+              "url": "https://www.tesla.com/support/videos/watch/autopilot-meet-your-model-y",
+              "copy": "Use TAAC and Autosteer on supported roads."
+            },
+            {
+              "title": "Stopping Mode (Model 3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/stopping-mode-model-3-model-y",
+              "copy": "Pick Creep, Roll, or Hold for one-pedal driving."
+            },
+            {
+              "title": "Autopark (Model 3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/autopark-model-3-model-y",
+              "copy": "Self-park into marked spaces."
+            },
+            {
+              "title": "Heated Steering Wheel (Model 3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/heated-steering-wheel-model-3-model-y",
+              "copy": "Enable steering-wheel heating."
+            }
+          ]
+        },
+        {
+          "name": "Seating Options",
+          "videos": [
+            {
+              "title": "Seven-Seater | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/seven-seater-model-y",
+              "copy": "Third-row access and folding."
+            },
+            {
+              "title": "Five-Seater | Model Y",
+              "url": "https://www.tesla.com/support/videos/watch/five-seater-model-y",
+              "copy": "Rear-seat folding and storage."
+            }
+          ]
+        },
+        {
+          "name": "Intro & Docs (2020\u20132024)",
+          "videos": [
+            {
+              "title": "Introduction (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/introduction-meet-your-2020-2024-model-y",
+              "copy": "Intro to early Model Y UI and features."
+            },
+            {
+              "title": "Owner\u2019s Manual (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/owners-manual-meet-your-2020-2024-model-y",
+              "copy": "Access and use the owner\u2019s manual."
+            },
+            {
+              "title": "Keys (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/keys-meet-your-2020-2024-model-y",
+              "copy": "Phone key, key card, and fob."
+            },
+            {
+              "title": "Personalization (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/personalization-meet-your-2020-2024-model-y",
+              "copy": "Driver profiles and preferences."
+            },
+            {
+              "title": "Physical Controls (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-2020-2024-model-y",
+              "copy": "Stalks and buttons overview."
+            },
+            {
+              "title": "Touchscreen (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/touchscreen-meet-your-2020-2024-model-y",
+              "copy": "Screen menus and shortcuts."
+            },
+            {
+              "title": "Autopilot (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/autopilot-meet-your-2020-2024-model-y",
+              "copy": "Driver-assist features on early Model Y."
+            },
+            {
+              "title": "Charging (2020\u20132024)",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-2020-2024-model-y",
+              "copy": "Charging methods and connectors."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model X",
+      "year_range": "2021+",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Essentials | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/essentials-meet-your-model-x",
+              "copy": "Meet your Model X: access, controls, and first drive."
+            }
+          ]
+        },
+        {
+          "name": "Access & Displays",
+          "videos": [
+            {
+              "title": "Keys | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/keys-meet-your-model-x",
+              "copy": "Phone key, key fob, and key card."
+            },
+            {
+              "title": "Displays | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/displays-meet-your-model-x",
+              "copy": "Instrument cluster and touchscreen."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Controls",
+          "videos": [
+            {
+              "title": "Charging | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-model-x",
+              "copy": "Home charging and Supercharging basics."
+            },
+            {
+              "title": "Physical Controls | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-model-x",
+              "copy": "Buttons, wheel/yoke controls, on-screen shifter."
+            },
+            {
+              "title": "Doors | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/doors-meet-your-model-x",
+              "copy": "Falcon-wing and front door operation."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot & Software",
+          "videos": [
+            {
+              "title": "Autopilot | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/autopilot-meet-your-model-x",
+              "copy": "Driver assistance overview."
+            },
+            {
+              "title": "Software and Support | Model X",
+              "url": "https://www.tesla.com/support/videos/watch/software-and-support-meet-your-model-x",
+              "copy": "Updates and support resources."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Model X",
+      "year_range": "2015\u20132020",
+      "categories": [
+        {
+          "name": "Getting Started",
+          "videos": [
+            {
+              "title": "Introduction",
+              "url": "https://www.tesla.com/support/videos/watch/introduction-meet-your-2015-2020-model-x",
+              "copy": "Intro to first-gen Model X."
+            },
+            {
+              "title": "Owner\u2019s Manual",
+              "url": "https://www.tesla.com/support/videos/watch/owners-manual-meet-your-2015-2020-model-x",
+              "copy": "Use the in-car owner\u2019s manual."
+            }
+          ]
+        },
+        {
+          "name": "Access & Personalization",
+          "videos": [
+            {
+              "title": "Keys",
+              "url": "https://www.tesla.com/support/videos/watch/keys-meet-your-2015-2020-model-x",
+              "copy": "Unlocking and starting with key options."
+            },
+            {
+              "title": "Personalization",
+              "url": "https://www.tesla.com/support/videos/watch/personalization-meet-your-2015-2020-model-x",
+              "copy": "Driver profiles and preferences."
+            }
+          ]
+        },
+        {
+          "name": "Controls, Doors & Seats",
+          "videos": [
+            {
+              "title": "Physical Controls",
+              "url": "https://www.tesla.com/support/videos/watch/physical-controls-meet-your-2015-2020-model-x",
+              "copy": "Buttons and stalks overview."
+            },
+            {
+              "title": "Screens",
+              "url": "https://www.tesla.com/support/videos/watch/screens-meet-your-2015-2020-model-x",
+              "copy": "Instrument cluster and main screen."
+            },
+            {
+              "title": "Doors and Seats",
+              "url": "https://www.tesla.com/support/videos/watch/doors-and-seats-meet-your-2015-2020-model-x",
+              "copy": "Falcon-wing doors and seat adjustments."
+            }
+          ]
+        },
+        {
+          "name": "Autopilot, Charging & Updates",
+          "videos": [
+            {
+              "title": "Autopilot",
+              "url": "https://www.tesla.com/support/videos/watch/autopilot-meet-your-2015-2020-model-x",
+              "copy": "Autopilot basics on early Model X."
+            },
+            {
+              "title": "Charging",
+              "url": "https://www.tesla.com/support/videos/watch/charging-meet-your-2015-2020-model-x",
+              "copy": "Charge at home and on the road."
+            },
+            {
+              "title": "Software Updates",
+              "url": "https://www.tesla.com/support/videos/watch/software-updates-meet-your-2015-2020-model-x",
+              "copy": "Install updates over Wi-Fi."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Cross-Model / Tesla App",
+      "categories": [
+        {
+          "name": "Driver Assistance",
+          "videos": [
+            {
+              "title": "Autosteer Activation Settings (S/X)",
+              "url": "https://www.tesla.com/support/videos/watch/autosteer-activation-settings-model-s-model-x",
+              "copy": "Enable/disable Autosteer and related settings."
+            },
+            {
+              "title": "Auto Lane Change (S/X)",
+              "url": "https://www.tesla.com/support/videos/watch/auto-lane-change-model-s-model-x",
+              "copy": "Change lanes automatically while Autosteer is active."
+            },
+            {
+              "title": "Traffic Light & Stop Sign Control",
+              "url": "https://www.tesla.com/support/videos/watch/traffic-light-and-stop-sign-control",
+              "copy": "Vehicle responds to lights and stop signs with supervision."
+            }
+          ]
+        },
+        {
+          "name": "Security & Convenience",
+          "videos": [
+            {
+              "title": "Dashcam",
+              "url": "https://www.tesla.com/support/videos/watch/dashcam",
+              "copy": "Record driving footage to review or save incidents."
+            },
+            {
+              "title": "Sentry Mode",
+              "url": "https://www.tesla.com/support/videos/watch/sentry-mode",
+              "copy": "Monitor surroundings when parked and get alerts."
+            },
+            {
+              "title": "Valet Mode",
+              "url": "https://www.tesla.com/support/videos/watch/valet-mode",
+              "copy": "Restrict speed and hide personal data for valet use."
+            },
+            {
+              "title": "Summon",
+              "url": "https://www.tesla.com/support/videos/watch/summon",
+              "copy": "Move the car forward/back remotely."
+            },
+            {
+              "title": "Smart Summon",
+              "url": "https://www.tesla.com/support/videos/watch/smart-summon",
+              "copy": "Have the car navigate to you in parking lots (supervision required)."
+            }
+          ]
+        },
+        {
+          "name": "Tesla App",
+          "videos": [
+            {
+              "title": "Vehicle Charge Stats",
+              "url": "https://www.tesla.com/support/videos/watch/vehicle-charge-stats",
+              "copy": "See charging history, energy use, and cost savings."
+            },
+            {
+              "title": "Service | Tesla App",
+              "url": "https://www.tesla.com/support/videos/watch/service-tesla-app",
+              "copy": "Schedule and manage service appointments."
+            },
+            {
+              "title": "Vehicle Controls | Tesla App",
+              "url": "https://www.tesla.com/support/videos/watch/vehicle-controls-tesla-app",
+              "copy": "Lock/unlock, climate, trunks, and more from the app."
+            }
+          ]
+        },
+        {
+          "name": "Charging & Frunk",
+          "videos": [
+            {
+              "title": "Supercharging",
+              "url": "https://www.tesla.com/support/videos/watch/supercharging",
+              "copy": "Find a Supercharger and plug in for fast charging."
+            },
+            {
+              "title": "Closing Front Trunk (S/X)",
+              "url": "https://www.tesla.com/support/videos/watch/closing-the-front-trunk-model-s-model-x",
+              "copy": "Safely close the front trunk on Model S/X."
+            },
+            {
+              "title": "Closing Front Trunk (3/Y)",
+              "url": "https://www.tesla.com/support/videos/watch/closing-the-front-trunk-model-3-and-model-y",
+              "copy": "Safely close the front trunk on Model 3/Y."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "Cybertruck",
+      "year_range": "All",
+      "categories": [
+        {
+          "name": "Essentials & Controls",
+          "videos": [
+            {
+              "title": "Access (Cybertruck Essentials)",
+              "url": "https://www.youtube.com/watch?v=b60uw_hl1PI",
+              "copy": "Unlock and enter with key card, phone key, or NFC card."
+            },
+            {
+              "title": "Driver Profiles (Cybertruck Essentials)",
+              "url": "https://www.youtube.com/watch?v=T9JZhZ9jVpU",
+              "copy": "Save seat, mirror, and control preferences per driver."
+            },
+            {
+              "title": "Driver Controls (Cybertruck Essentials)",
+              "url": "https://www.youtube.com/watch?v=G4K3NE_MNMQ",
+              "copy": "Driving controls, wipers, lighting, on-screen shifter."
+            }
+          ]
+        },
+        {
+          "name": "Utility & Maintenance",
+          "videos": [
+            {
+              "title": "Cargo Bed (Cybertruck Essentials)",
+              "url": "https://www.youtube.com/watch?v=csM0CJSoXPQ",
+              "copy": "Operate tonneau cover, tailgate ramp, and bed power outlets."
+            },
+            {
+              "title": "Front License Plate Installation",
+              "url": "https://www.youtube.com/watch?v=Nn8iFRo76J4",
+              "copy": "Install the front plate bracket."
+            },
+            {
+              "title": "Wheel Covers Removal and Installation",
+              "url": "https://www.youtube.com/watch?v=q2o8_BPGaSE",
+              "copy": "Remove and reinstall wheel covers safely."
+            },
+            {
+              "title": "Spare Tire Kit Installation and Tire Swap",
+              "url": "https://www.youtube.com/watch?v=a_OipLOjKzE",
+              "copy": "Install spare kit and perform a tire swap."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

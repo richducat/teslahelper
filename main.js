@@ -240,26 +240,32 @@
     const [yearFilter, setYearFilter] = useState('');
     const [q, setQ] = useState('');
 
-    useEffect(() => {
-      let initialQ = '';
-      let initialModel = '';
+    const applyHashFilters = React.useCallback(() => {
       try {
         const hash = window.location.hash || '';
         if (hash.startsWith('#library')) {
           const params = new URLSearchParams(hash.replace(/^#library\??/, ''));
-          initialQ = params.get('q') || '';
-          initialModel = params.get('model') || '';
+          setQ(params.get('q') || '');
+          setModelFilter(params.get('model') || '');
         }
       } catch (e) {
         // ignore URL parsing errors
       }
-      setQ(initialQ);
-      setModelFilter(initialModel);
+    }, []);
+
+    useEffect(() => {
+      applyHashFilters();
       fetch('tesla_howto_library.json')
         .then((r) => r.json())
         .then((json) => setLib(json))
         .catch(() => setLib(null));
-    }, []);
+    }, [applyHashFilters]);
+
+    useEffect(() => {
+      const handleHashChange = () => applyHashFilters();
+      window.addEventListener('hashchange', handleHashChange);
+      return () => window.removeEventListener('hashchange', handleHashChange);
+    }, [applyHashFilters]);
 
     const models = lib?.models || [];
     // Filter by selected model/year

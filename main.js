@@ -109,14 +109,15 @@
       { k: 'amber', hex: '#f59e0b' },
     ];
     return (
-      <div className="flex items-center gap-1" aria-label="Accent color">
+      <div className="flex flex-wrap items-center gap-2" aria-label="Accent color">
         {options.map((c) => (
           <button
             key={c.k}
             aria-label={'Accent ' + c.k}
+            type="button"
             onClick={() => setAccentName(c.k)}
             className={classNames(
-              'h-5 w-5 rounded-full ring-2 hover:opacity-90',
+              'h-6 w-6 rounded-full ring-2 hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
               accentName === c.k ? 'ring-white' : 'ring-transparent'
             )}
             style={{ backgroundColor: c.hex }}
@@ -403,7 +404,7 @@
     return (
       <div className={classNames('min-h-screen', pageBg)}>
         <header className={classNames('sticky top-0 z-40 backdrop-blur border-b', headerBg)}>
-          <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+          <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <a href="#top" className="inline-flex items-center" aria-label={BRAND.name}>
                 <img src={BRAND.logo} alt={`${BRAND.name} logo`} className="h-8 w-auto" />
@@ -414,13 +415,13 @@
               <a className="hover:opacity-80" href="#models">Models</a>
               <a className="hover:opacity-80" href="#library">Library</a>
             </nav>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row md:items-center md:justify-end">
               <AccentPicker accentName={accentName} setAccentName={setAccentName} />
               <button
                 data-testid="mode-toggle"
                 onClick={() => setMode(isDark ? 'light' : 'dark')}
                 className={classNames(
-                  'rounded-md px-2 py-1 border text-xs hover:opacity-80',
+                  'rounded-lg px-3 py-2 border text-sm hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                   isDark ? 'border-neutral-800' : 'border-neutral-200'
                 )}
               >
@@ -428,7 +429,12 @@
               </button>
               <a
                 href="#library"
-                className={classNames('px-3 py-2 rounded-lg text-sm font-semibold hover:opacity-90', accent.btn, accent.hover)}
+                className={classNames(
+                  'px-3 py-2 rounded-lg text-sm font-semibold text-center hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                  'w-full md:w-auto',
+                  accent.btn,
+                  accent.hover
+                )}
               >
                 Open Library
               </a>

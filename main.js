@@ -19,7 +19,7 @@
   const BRAND = {
     name: 'Tesla Helper',
     tagline: 'Know your Tesla in minutes.',
-    logo: 'logo.png',
+    logo: 'logo.svg',
     defaultAccent: 'violet',
   };
 

@@ -439,7 +439,7 @@
         <section className="relative">
           <div className="mx-auto max-w-6xl px-4 py-10 md:py-14 grid md:grid-cols-2 gap-6 items-start">
             <div>
-              <p className="uppercase tracking-widest text-xs opacity-85">Your Tesla · Your Guide</p>
+              <p className="uppercase tracking-widest text-xs opacity-80">Your Tesla · Your Guide</p>
               <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mt-2">The Tesla Helper App</h1>
               <ul className="mt-4 space-y-1 text-sm opacity-90">
                 <li>• Find exactly what you need fast—charging, FSD, safety, and more.</li>

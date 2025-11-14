@@ -16,12 +16,24 @@
   /* ------------------------------------------------------------------
    * Brand definition
    * ------------------------------------------------------------------ */
+  const BRAND_LOGO_SRC = 'assets/logo.svg';
+  const BRAND_LOGO_FALLBACK_DATA_URI =
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjMyMCIgdmlld0JveD0iMCAwIDI1NiAzMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPlRlc2xhIEhlbHBlciBzaGllbGQgbG9nbzwvdGl0bGU+CiAgPGRlc2MgaWQ9ImRlc2MiPlJlZCBzaGllbGQgd2l0aCBhIHdoaXRlIFRlc2xhIHNpbGhvdWV0dGUgYW5kIGxpZ2h0bmluZyBib2x0IGFib3ZlIHN0YWNrZWQgVGVzbGEgSGVscGVyIHRleHQuPC9kZXNjPgogIDxkZWZzPgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJiZ0dsb3ciIGN4PSI1MCUiIGN5PSIzNSUiIHI9IjY1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZjRkNGQiIHN0b3Atb3BhY2l0eT0iMC44IiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzEzMGIwYiIgc3RvcC1vcGFjaXR5PSIwLjYiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA1MDUwNSIgc3RvcC1vcGFjaXR5PSIxIiAvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2hpZWxkRmlsbCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZjY2NjYiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2Q0MDcwNyIgLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8ZmlsdGVyIGlkPSJzb2Z0U2hhZG93IiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTQwJSIgaGVpZ2h0PSIxNDAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjYiIHN0ZERldmlhdGlvbj0iMTAiIGZsb29kLWNvbG9yPSIjZmYzYjNiIiBmbG9vZC1vcGFjaXR5PSIwLjYiIC8+CiAgICA8L2ZpbHRlcj4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIzMjAiIHJ4PSI0MiIgZmlsbD0iIzA1MDUwNSIgLz4KICA8cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjMyMCIgcng9IjQyIiBmaWxsPSJ1cmwoI2JnR2xvdykiIC8+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjggMjApIj4KICAgIDxwYXRoCiAgICAgIGQ9Ik0xMDAgOGMtMjUgMTQtNTAgMjMtNzYgMjV2ODRjMCA1MiAzMCA5OSAxMDAgMTMyYzcwLTMzIDEwMC04MCAxMDAtMTMyVjMzYy0yNi0yLTUxLTExLTc2LTI1Yy03IDQtMTYgOS0yNCAxMmMtOC0zLTE3LTgtMjQtMTJaIgogICAgICBmaWxsPSJ1cmwoI3NoaWVsZEZpbGwpIgogICAgICBzdHJva2U9IiNmZmIxYjEiCiAgICAgIHN0cm9rZS13aWR0aD0iNCIKICAgICAgZmlsdGVyPSJ1cmwoI3NvZnRTaGFkb3cpIgogICAgLz4KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQ4IDcwKSI+CiAgICAgIDxwYXRoCiAgICAgICAgZD0iTTc4IDdMNTYgNDZoMjJsLTE4IDQ4bDM4LTU0SDgwbDE4LTMzeiIKICAgICAgICBmaWxsPSIjZmVmZWZlIgogICAgICAvPgogICAgICA8cGF0aAogICAgICAgIGQ9Ik0xMiA4MGMxLTE2IDE0LTI4IDMyLTMzbDI2LTdjMjItNiA0MiA3IDQ4IDI3bDUgMTdjMiA2LTIgMTItOCAxMkg2OGMtNCAwLTctMy04LTdsLTEtNEg0NWwtMiA2Yy0xIDMtNCA1LTggNUgxNWMtMyAwLTUtMy01LTZaIgogICAgICAgIGZpbGw9IiNmZmYiCiAgICAgIC8+CiAgICAgIDxwYXRoIGQ9Ik00NyA2OGgzNGMzIDAgNS0yIDQtNGwtMy0xMGMtMi01LTgtOC0xNS02bC0yNCA3Yy01IDItOSA3LTEwIDEzYzAgMSAyIDAgMyAwbDktMmMxLTEgMi0yIDItM2wxLTNjMS0xIDItMiA0LTJaIiBmaWxsPSIjMGYwZjBmIiBvcGFjaXR5PSIwLjQiIC8+CiAgICA8L2c+CiAgPC9nPgogIDxnIGZpbGw9IiNmOGY4ZjgiIGZvbnQtZmFtaWx5PSInSW50ZXInLCAnU2Vnb2UgVUknLCBzeXN0ZW0tdWksIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI3MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPgogICAgPHRleHQgeD0iMTI4IiB5PSIyNTAiIGZvbnQtc2l6ZT0iMzQiIGxldHRlci1zcGFjaW5nPSI2Ij5URVNMQTwvdGV4dD4KICAgIDx0ZXh0IHg9IjEyOCIgeT0iMjg4IiBmb250LXNpemU9IjI2IiBsZXR0ZXItc3BhY2luZz0iOCIgb3BhY2l0eT0iMC45Ij5IRUxQRVI8L3RleHQ+CiAgPC9nPgo8L3N2Zz4K';
   const BRAND = {
     name: 'Tesla Helper',
     tagline: 'Know your Tesla in minutes.',
-    logo: 'logo.svg',
+    logo: BRAND_LOGO_SRC,
     defaultAccent: 'violet',
   };
+  function handleLogoFallback(event) {
+    const img = event?.currentTarget;
+    if (!img || img.src === BRAND_LOGO_FALLBACK_DATA_URI) return;
+    img.onerror = null;
+    img.src = BRAND_LOGO_FALLBACK_DATA_URI;
+  }
+  const SUPPORT_LINK = 'https://ts.la/richard834858';
+  const CTA_PILL_BASE =
+    'inline-flex h-10 min-w-[140px] items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
 
   /* ------------------------------------------------------------------
    * Accent color palette
@@ -130,8 +142,8 @@
   /* ------------------------------------------------------------------
    * Car tile component
    *
-   * Displays a car image with a button that scrolls to the library
-   * filtered for the given model. The accent colours are passed in.
+   * Displays a car image with key model details. The accent colours
+   * are passed in so the cards stay in sync with the picker.
    * ------------------------------------------------------------------ */
   function CarTile({ id, accent, carImages }) {
     const m = CAR_META[id];
@@ -143,17 +155,9 @@
           <div className="aspect-[16/9] w-full overflow-hidden rounded-xl">
             <img src={imgSrc} alt={m.alt} className="h-full w-full object-cover" loading="lazy" />
           </div>
-          <div className="mt-3 flex items-start justify-between gap-2">
-            <div>
-              <div className="font-semibold">{m.label}</div>
-              <div className="text-xs opacity-70">{m.note}</div>
-            </div>
-            <a
-              href={'#library?model=' + encodeURIComponent(m.label)}
-              className={classNames('shrink-0 rounded-lg px-3 py-2 text-sm font-semibold hover:opacity-90', accent.btn, accent.hover)}
-            >
-              Open library
-            </a>
+          <div className="mt-3">
+            <div className="font-semibold">{m.label}</div>
+            <div className="text-xs opacity-70">{m.note}</div>
           </div>
         </div>
       </Card>
@@ -407,15 +411,63 @@
       document.documentElement.style.setProperty('--safe-top', 'env(safe-area-inset-top)');
       document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom)');
     }, []);
+    useEffect(() => {
+      const handleAnchorClick = (event) => {
+        if (typeof document === 'undefined') return;
+        const anchor = event.target?.closest?.('a[href^="#"]');
+        if (!anchor) return;
+        const href = anchor.getAttribute('href');
+        if (!href || href === '#' || href === '#!') return;
+        const [idPart] = href.split('?');
+        if (!idPart || idPart.length < 2) return;
+        const target = document.querySelector(idPart);
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (typeof window !== 'undefined') {
+          if (window.history?.pushState) {
+            window.history.pushState(null, '', href);
+          } else {
+            window.location.hash = href;
+          }
+          try {
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          } catch (err) {
+            const fallbackEvent = document.createEvent('HTMLEvents');
+            fallbackEvent.initEvent('hashchange', true, true);
+            window.dispatchEvent(fallbackEvent);
+          }
+        }
+      };
+      document.addEventListener('click', handleAnchorClick);
+      return () => document.removeEventListener('click', handleAnchorClick);
+    }, []);
     return (
-      <div className={classNames('min-h-screen', pageBg)}>
+      <div id="top" className={classNames('min-h-screen', pageBg)}>
         <header className={classNames('sticky top-0 z-40 backdrop-blur border-b', headerBg)}>
           <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <a href="#top" className="inline-flex items-center" aria-label={BRAND.name}>
-                <img src={BRAND.logo} alt={`${BRAND.name} logo`} className="h-8 w-auto" />
+                <img
+                  src={BRAND.logo}
+                  alt={`${BRAND.name} logo`}
+                  className="h-8 w-auto"
+                  loading="lazy"
+                  onError={handleLogoFallback}
+                />
               </a>
               <div className="font-semibold hidden sm:block">{BRAND.name}</div>
+              <a
+                href={SUPPORT_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className={classNames(
+                  CTA_PILL_BASE,
+                  'border border-red-500/60 bg-red-600 text-white shadow-lg shadow-red-500/30 hover:bg-red-500'
+                )}
+              >
+                <span aria-hidden="true">❤️</span> Support Us
+              </a>
             </div>
             <nav className="hidden md:flex items-center gap-6 text-sm">
               <a className="hover:opacity-80" href="#models">Models</a>
@@ -427,23 +479,14 @@
                 data-testid="mode-toggle"
                 onClick={() => setMode(isDark ? 'light' : 'dark')}
                 className={classNames(
-                  'rounded-lg px-3 py-2 border text-sm hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                  isDark ? 'border-neutral-800' : 'border-neutral-200'
+                  CTA_PILL_BASE,
+                  isDark
+                    ? 'border border-white/30 bg-white/5 text-white hover:bg-white/10'
+                    : 'border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100'
                 )}
               >
                 {isDark ? 'Light' : 'Dark'}
               </button>
-              <a
-                href="#library"
-                className={classNames(
-                  'px-3 py-2 rounded-lg text-sm font-semibold text-center hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                  'w-full md:w-auto',
-                  accent.btn,
-                  accent.hover
-                )}
-              >
-                Open Library
-              </a>
             </div>
           </div>
         </header>
@@ -503,12 +546,23 @@
         <CarsGrid accent={accent} carImages={carImages} />
         <LibraryPanel accent={accent} isDark={isDark} />
         <footer className={classNames('border-t', isDark ? 'border-neutral-800' : 'border-neutral-200')}>
-          <div className="mx-auto max-w-6xl px-4 py-8 text-sm opacity-80 flex flex-col md:flex-row items-center justify-between gap-2">
-            <div>© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
-            <div className="flex items-center gap-4">
-              <a className="hover:opacity-100" href="#">Terms</a>
-              <a className="hover:opacity-100" href="#">Privacy</a>
-              <a className="hover:opacity-100" href="#">Accessibility</a>
+          <div className="mx-auto max-w-6xl px-4 py-8 text-sm opacity-80 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
+            <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
+              <div className="flex items-center gap-4">
+                <a className="hover:opacity-100" href="#">Terms</a>
+                <a className="hover:opacity-100" href="#">Privacy</a>
+                <a className="hover:opacity-100" href="#">Accessibility</a>
+              </div>
+              <a
+                href={SUPPORT_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white shadow-lg shadow-red-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                style={{ background: 'linear-gradient(90deg, #ef4444, #f87171)' }}
+              >
+                <span aria-hidden="true">⚡</span> Support Us
+              </a>
             </div>
           </div>
         </footer>

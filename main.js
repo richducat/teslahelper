@@ -139,12 +139,7 @@
     );
   }
 
-  /* ------------------------------------------------------------------
-   * Car tile component
-   *
-   * Displays a car image with key model details. The accent colours
-   * are passed in so the cards stay in sync with the picker.
-   * ------------------------------------------------------------------ */
+  /*
   function CarTile({ id, accent, carImages }) {
     const m = CAR_META[id];
     // Use base64 image if available, otherwise fall back to the img field or an empty string.
@@ -164,11 +159,6 @@
     );
   }
 
-  /* ------------------------------------------------------------------
-   * Cars grid component
-   *
-   * Displays all four models in a responsive grid.
-   * ------------------------------------------------------------------ */
   function CarsGrid({ accent, carImages }) {
     const ids = ['model3', 'models', 'modelx', 'modely'];
     return (

@@ -1,17 +1,44 @@
-<svg width="200" height="64" viewBox="0 0 200 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Tesla Helper logo</title>
-  <desc id="desc">Rounded dark badge with a stylised T monogram.</desc>
+<svg width="256" height="320" viewBox="0 0 256 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Tesla Helper shield logo</title>
+  <desc id="desc">Red shield with a white Tesla silhouette and lightning bolt above stacked Tesla Helper text.</desc>
   <defs>
-    <linearGradient id="glow" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%" stop-color="#c084fc" />
-      <stop offset="100%" stop-color="#6366f1" />
+    <radialGradient id="bgGlow" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ff4d4d" stop-opacity="0.8" />
+      <stop offset="60%" stop-color="#130b0b" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#050505" stop-opacity="1" />
+    </radialGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6666" />
+      <stop offset="100%" stop-color="#d40707" />
     </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#ff3b3b" flood-opacity="0.6" />
+    </filter>
   </defs>
-  <rect x="1" y="1" width="198" height="62" rx="18" fill="#05060a" stroke="url(#glow)" stroke-width="2" />
-  <g transform="translate(50 10)">
-    <path d="M50 0C40.5 6.5 31 11.5 22 14c-9 2.5-18 3.5-22 3.5v9c5.5 0 12-.8 20-2.6V64h12V24c8 1.8 14.5 2.6 20 2.6v-9c-4 0-13-1-22-3.5C31 11.5 40.5 6.5 50 0Z" fill="url(#glow)" />
+  <rect width="256" height="320" rx="42" fill="#050505" />
+  <rect width="256" height="320" rx="42" fill="url(#bgGlow)" />
+  <g transform="translate(28 20)">
+    <path
+      d="M100 8c-25 14-50 23-76 25v84c0 52 30 99 100 132c70-33 100-80 100-132V33c-26-2-51-11-76-25c-7 4-16 9-24 12c-8-3-17-8-24-12Z"
+      fill="url(#shieldFill)"
+      stroke="#ffb1b1"
+      stroke-width="4"
+      filter="url(#softShadow)"
+    />
+    <g transform="translate(48 70)">
+      <path
+        d="M78 7L56 46h22l-18 48l38-54H80l18-33z"
+        fill="#fefefe"
+      />
+      <path
+        d="M12 80c1-16 14-28 32-33l26-7c22-6 42 7 48 27l5 17c2 6-2 12-8 12H68c-4 0-7-3-8-7l-1-4H45l-2 6c-1 3-4 5-8 5H15c-3 0-5-3-5-6Z"
+        fill="#fff"
+      />
+      <path d="M47 68h34c3 0 5-2 4-4l-3-10c-2-5-8-8-15-6l-24 7c-5 2-9 7-10 13c0 1 2 0 3 0l9-2c1-1 2-2 2-3l1-3c1-1 2-2 4-2Z" fill="#0f0f0f" opacity="0.4" />
+    </g>
   </g>
-  <text x="120" y="40" font-family="'Inter', 'Segoe UI', system-ui" font-size="18" font-weight="600" letter-spacing="1px" fill="#e5e7eb">
-    Tesla Helper
-  </text>
+  <g fill="#f8f8f8" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="700" text-anchor="middle">
+    <text x="128" y="250" font-size="34" letter-spacing="6">TESLA</text>
+    <text x="128" y="288" font-size="26" letter-spacing="8" opacity="0.9">HELPER</text>
+  </g>
 </svg>

@@ -4,15 +4,93 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tesla Helper</title>
+  <meta
+    name="description"
+    content="Owner-first Tesla tips with official videos, how-tos, and FAQs organized by model, year, hardware, and software version."
+  />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <meta name="color-scheme" content="dark light" />
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none';"
+  />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Tesla Helper · Fast answers for every Tesla model" />
+  <meta
+    property="og:description"
+    content="Find trusted Tesla how-tos, FAQs, and official links with offline support and PWA installability."
+  />
+  <meta property="og:image" content="https://teslahelper.app/og/teslahelper-default.jpg" />
+  <meta property="og:url" content="https://teslahelper.app" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tesla Helper · Trusted owner guides" />
+  <meta name="twitter:description" content="Step-by-step Tesla guidance with offline support." />
+  <meta name="twitter:image" content="https://teslahelper.app/og/teslahelper-default.jpg" />
+
+  <!-- Structured data: example HowTo + FAQPage -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Enable Sentry Mode on a 2025 Model Y",
+      "description": "Quick steps to enable and customize Sentry Mode. Updated for software 2025.38.",
+      "totalTime": "PT2M",
+      "tool": [{ "@type": "HowToTool", "name": "Tesla touchscreen" }],
+      "step": [
+        { "@type": "HowToStep", "name": "Open Controls", "text": "Tap Controls > Safety." },
+        { "@type": "HowToStep", "name": "Enable Sentry Mode", "text": "Toggle Sentry Mode on." },
+        {
+          "@type": "HowToStep",
+          "name": "Customize",
+          "text": "Set exclusions for Home, Work, or Favorites and confirm recording is allowed in your region."
+        }
+      ],
+      "isBasedOn": [
+        "https://www.tesla.com/ownersmanual/modely/en_us/",
+        "https://www.tesla.com/support/feature-tutorials/sentry-mode"
+      ]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Tesla Helper affiliated with Tesla?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Tesla Helper is an independent guide that links to official Tesla resources."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I install Tesla Helper as an app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Add Tesla Helper to your Home Screen to use it offline; the site includes a manifest and service worker."
+          }
+        }
+      ]
+    }
+  </script>
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-neutral-950 text-white">
+<body class="min-h-screen">
   <div id="root"></div>
   <!-- React and Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.43/dist/flexsearch.bundle.js"></script>
   <!-- App script compiled by Babel -->
   <script type="text/babel" src="main.js"></script>
 </body>

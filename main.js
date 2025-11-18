@@ -11,7 +11,7 @@
  */
 
 (() => {
-  const { useState, useEffect, useMemo } = React;
+  const { useState, useEffect, useMemo, useId } = React;
 
   /* ------------------------------------------------------------------
    * Brand definition
@@ -23,6 +23,39 @@
     defaultAccent: 'violet',
   };
   const SUPPORT_LINK = 'https://ts.la/richard834858';
+  const LAST_REVIEWED = { date: '2025-02-10', software: '2025.38' };
+  const SEARCH_SYNONYMS = {
+    sentry: ['dashcam', 'dash cam', 'security'],
+    dashcam: ['sentry', 'dash cam'],
+    autopilot: ['fsd', 'full self-driving', 'autosteer'],
+    fsd: ['autopilot', 'full self-driving'],
+    frunk: ['front trunk'],
+    'phone key': ['mobile key', 'phone-as-key'],
+    'pin to drive': ['pin', 'anti-theft'],
+    hw4: ['hardware 4', 'hw 4'],
+  };
+  const OFFICIAL_LINKS = [
+    {
+      label: 'Owner’s Manuals',
+      href: 'https://www.tesla.com/ownersmanual',
+      desc: 'Always cross-check with the latest manual for your region.',
+    },
+    {
+      label: 'FSD (Supervised) Support',
+      href: 'https://www.tesla.com/support/full-self-driving-subscription',
+      desc: 'Official overview of FSD features and availability.',
+    },
+    {
+      label: 'Safety Hub',
+      href: 'https://www.tesla.com/support/feature-tutorials/safety-security',
+      desc: 'Current safety tutorials and requirements.',
+    },
+    {
+      label: 'Tesla Legal & Trademarks',
+      href: 'https://www.tesla.com/legal/trademark-copyright',
+      desc: 'Reference for trademark and brand usage.',
+    },
+  ];
 
   /* ------------------------------------------------------------------
    * Accent color palette
@@ -71,6 +104,23 @@
    * ------------------------------------------------------------------ */
   function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
+  }
+
+  function expandSearchTerms(raw) {
+    const base = raw.trim().toLowerCase();
+    if (!base) return [];
+    const expanded = new Set([base]);
+    Object.entries(SEARCH_SYNONYMS).forEach(([k, syns]) => {
+      const key = k.toLowerCase();
+      const haystack = base;
+      if (haystack.includes(key)) {
+        syns.forEach((s) => expanded.add(s.toLowerCase()));
+      }
+      syns.forEach((s) => {
+        if (haystack.includes(s.toLowerCase())) expanded.add(key);
+      });
+    });
+    return Array.from(expanded);
   }
 
   /* ------------------------------------------------------------------
@@ -207,15 +257,22 @@
    * ------------------------------------------------------------------ */
   function CategoryAccordion({ cat, isDark }) {
     const [open, setOpen] = useState(false);
+    const disclosureId = useId();
     const borderSoft = isDark ? 'border-neutral-800' : 'border-neutral-200';
     const cardBg = isDark ? 'bg-neutral-900' : 'bg-neutral-50';
     return (
       <Card className={classNames(cardBg, 'border', borderSoft)}>
-        <button onClick={() => setOpen((o) => !o)} className="w-full text-left p-4 font-semibold">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls={`${disclosureId}-content`}
+          className="w-full text-left p-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
           {cat.name}
         </button>
         {open && (
-          <div className="px-4 pb-3">
+          <div id={`${disclosureId}-content`} role="region" aria-label={cat.name} className="px-4 pb-3">
             {cat.videos.map((v, i) => (
               <React.Fragment key={v.title + i}>
                 <VideoRow v={v} />
@@ -240,6 +297,7 @@
     const [modelFilter, setModelFilter] = useState('');
     const [yearFilter, setYearFilter] = useState('');
     const [q, setQ] = useState('');
+    const [searchIndex, setSearchIndex] = useState(null);
 
     const applyHashFilters = React.useCallback(() => {
       try {
@@ -258,7 +316,41 @@
       applyHashFilters();
       fetch('tesla_howto_library.json')
         .then((r) => r.json())
-        .then((json) => setLib(json))
+        .then((json) => {
+          const modelsWithIds = (json.models || []).map((m, modelIdx) => ({
+            ...m,
+            categories: (m.categories || []).map((cat, catIdx) => ({
+              ...cat,
+              videos: (cat.videos || []).map((v, vidIdx) => ({
+                ...v,
+                _searchId: `${modelIdx}-${catIdx}-${vidIdx}-${v.title}`,
+              })),
+            })),
+          }));
+          setLib({ ...json, models: modelsWithIds });
+          if (typeof FlexSearch !== 'undefined') {
+            const index = new FlexSearch.Document({
+              tokenize: 'forward',
+              document: { id: 'id', index: ['title', 'copy', 'model', 'category', 'year'] },
+            });
+            modelsWithIds.forEach((model) => {
+              (model.categories || []).forEach((cat) => {
+                (cat.videos || []).forEach((v) => {
+                  const payload = {
+                    id: v._searchId,
+                    title: v.title,
+                    copy: v.copy,
+                    model: model.model,
+                    category: cat.name,
+                    year: model.year_range || '',
+                  };
+                  index.add(payload);
+                });
+              });
+            });
+            setSearchIndex(index);
+          }
+        })
         .catch(() => setLib(null));
     }, [applyHashFilters]);
 
@@ -281,13 +373,35 @@
       return ms;
     }, [models, modelFilter, yearFilter]);
 
-    const searchLower = q.trim().toLowerCase();
+    const searchTerms = useMemo(() => expandSearchTerms(q), [q]);
+    const searchHits = useMemo(() => {
+      if (!searchIndex || searchTerms.length === 0) return null;
+      const ids = new Set();
+      searchTerms.forEach((term) => {
+        const res = searchIndex.search(term, { enrich: true }) || [];
+        res.forEach((group) => {
+          group.result.forEach((id) => ids.add(id));
+        });
+      });
+      return ids;
+    }, [searchIndex, searchTerms]);
+
+    function textContainsAny(str) {
+      return searchTerms.some((term) => str.includes(term));
+    }
+
+    function videoMatches(video) {
+      if (searchTerms.length === 0) return true;
+      if (searchHits && video._searchId) return searchHits.has(video._searchId);
+      const lowerTitle = (video.title || '').toLowerCase();
+      const lowerCopy = (video.copy || '').toLowerCase();
+      return textContainsAny(lowerTitle) || textContainsAny(lowerCopy);
+    }
+
     function catMatches(cat) {
-      if (!searchLower) return true;
-      if (cat.name.toLowerCase().includes(searchLower)) return true;
-      return cat.videos.some(
-        (v) => v.title.toLowerCase().includes(searchLower) || v.copy.toLowerCase().includes(searchLower)
-      );
+      if (searchTerms.length === 0) return true;
+      if (textContainsAny(cat.name.toLowerCase())) return true;
+      return cat.videos.some(videoMatches);
     }
 
     const borderSoft = isDark ? 'border-neutral-800' : 'border-neutral-200';
@@ -297,7 +411,7 @@
       <section id="library" className="mx-auto max-w-6xl px-4 pb-24">
         <SectionTitle
           title="How‑To Library"
-          subtitle="Concise videos from Tesla’s official guides, organized by model and year."
+          subtitle={`Concise videos from Tesla’s official guides, organized by model and year. Last reviewed: ${LAST_REVIEWED.date} · SW ${LAST_REVIEWED.software}.`}
         />
         <Card className={classNames('p-4 border', cardBg, borderSoft)}>
           <div className="grid md:grid-cols-4 gap-3">
@@ -409,6 +523,11 @@
       document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom)');
     }, []);
     useEffect(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
+    }, []);
+    useEffect(() => {
       const handleAnchorClick = (event) => {
         if (typeof document === 'undefined') return;
         const anchor = event.target?.closest?.('a[href^="#"]');
@@ -508,7 +627,7 @@
               </div>
               <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
             </div>
-            <div className="relative w-full">
+            <div className="relative w-full space-y-4">
               <Card className={classNames('p-4', isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-neutral-50 border border-neutral-200')}>
                 <div className="flex items-center justify-between">
                   <div className="font-semibold">Quick links</div>
@@ -533,6 +652,19 @@
                   ))}
                 </div>
               </Card>
+              <Card className={classNames('p-4', isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-neutral-50 border border-neutral-200')}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">Add to Home Screen</div>
+                    <p className="text-sm opacity-80">Install Tesla Helper as a PWA for offline garage use.</p>
+                    <ul className="mt-2 space-y-1 text-sm list-disc list-inside opacity-80">
+                      <li>iOS: Share → Add to Home Screen.</li>
+                      <li>Android/Chrome: ⋮ menu → Install app.</li>
+                    </ul>
+                  </div>
+                  <div className="text-2xl" aria-hidden="true">📲</div>
+                </div>
+              </Card>
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">
@@ -542,6 +674,38 @@
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} />
         <LibraryPanel accent={accent} isDark={isDark} />
+        <section className="mx-auto max-w-6xl px-4 pb-16">
+          <SectionTitle
+            title="Stay aligned with official guidance"
+            subtitle="Every tip links back to Tesla resources so you can verify details by model, region, and software."
+          />
+          <div className="grid md:grid-cols-2 gap-4">
+            {OFFICIAL_LINKS.map((link) => (
+              <Card
+                key={link.label}
+                className={classNames(
+                  'p-4 border',
+                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">{link.label}</div>
+                    <p className="text-sm opacity-80 mt-1">{link.desc}</p>
+                  </div>
+                  <a
+                    className={classNames('text-sm font-semibold hover:opacity-90', accent.btn, accent.hover, 'px-3 py-2 rounded-lg')}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open
+                  </a>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
         <footer className={classNames('border-t', isDark ? 'border-neutral-800' : 'border-neutral-200')}>
           <div className="mx-auto max-w-6xl px-4 py-8 text-sm opacity-80 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-center md:text-left">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
@@ -550,6 +714,12 @@
                 <a className="hover:opacity-100" href="#">Terms</a>
                 <a className="hover:opacity-100" href="#">Privacy</a>
                 <a className="hover:opacity-100" href="#">Accessibility</a>
+                <a className="hover:opacity-100" href="https://www.tesla.com/legal/trademark-copyright" target="_blank" rel="noreferrer">
+                  Tesla legal
+                </a>
+              </div>
+              <div className="text-center text-xs md:text-left max-w-xl">
+                Tesla Helper is an independent resource for Tesla owners. Not affiliated with or endorsed by Tesla, Inc. Always confirm details in your Owner’s Manual and Tesla Support pages.
               </div>
               <a
                 href={SUPPORT_LINK}

@@ -11,18 +11,69 @@
  */
 
 (() => {
-  const { useState, useEffect, useMemo } = React;
+  const { useState, useEffect, useMemo, useId } = React;
 
   /* ------------------------------------------------------------------
    * Brand definition
    * ------------------------------------------------------------------ */
+  const BRAND_NAME = 'Tesla Helper';
   const BRAND = {
-    name: 'Tesla Helper',
+    name: BRAND_NAME,
     tagline: 'Know your Tesla in minutes.',
-    logo: 'logo.svg',
     defaultAccent: 'violet',
+    wordmark: (
+      <span className="inline-flex items-center gap-2 font-black tracking-tight text-lg" aria-hidden="true">
+        <svg
+          className="h-6 w-6"
+          viewBox="0 0 32 32"
+          role="img"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect x="4" y="4" width="24" height="24" rx="6" className="fill-current opacity-90" />
+          <path
+            d="M10.5 21.5h4.25a3.75 3.75 0 0 0 3.75-3.75v-.5A3.25 3.25 0 0 0 15.25 14H10.5v-3h11v2h-4.25a3.25 3.25 0 0 1 0 6.5H10.5v2Z"
+            className="fill-white"
+          />
+        </svg>
+        <span>{BRAND_NAME}</span>
+      </span>
+    ),
   };
   const SUPPORT_LINK = 'https://ts.la/richard834858';
+  const LAST_REVIEWED = { date: '2025-02-10', software: '2025.38' };
+  const SEARCH_SYNONYMS = {
+    sentry: ['dashcam', 'dash cam', 'security'],
+    dashcam: ['sentry', 'dash cam'],
+    autopilot: ['fsd', 'full self-driving', 'autosteer'],
+    fsd: ['autopilot', 'full self-driving'],
+    frunk: ['front trunk'],
+    'phone key': ['mobile key', 'phone-as-key'],
+    'pin to drive': ['pin', 'anti-theft'],
+    hw4: ['hardware 4', 'hw 4'],
+  };
+  const OFFICIAL_LINKS = [
+    {
+      label: 'Owner’s Manuals',
+      href: 'https://www.tesla.com/ownersmanual',
+      desc: 'Always cross-check with the latest manual for your region.',
+    },
+    {
+      label: 'FSD (Supervised) Support',
+      href: 'https://www.tesla.com/support/full-self-driving-subscription',
+      desc: 'Official overview of FSD features and availability.',
+    },
+    {
+      label: 'Safety Hub',
+      href: 'https://www.tesla.com/support/feature-tutorials/safety-security',
+      desc: 'Current safety tutorials and requirements.',
+    },
+    {
+      label: 'Tesla Legal & Trademarks',
+      href: 'https://www.tesla.com/legal/trademark-copyright',
+      desc: 'Reference for trademark and brand usage.',
+    },
+  ];
 
   /* ------------------------------------------------------------------
    * Accent color palette
@@ -73,6 +124,23 @@
     return classes.filter(Boolean).join(' ');
   }
 
+  function expandSearchTerms(raw) {
+    const base = raw.trim().toLowerCase();
+    if (!base) return [];
+    const expanded = new Set([base]);
+    Object.entries(SEARCH_SYNONYMS).forEach(([k, syns]) => {
+      const key = k.toLowerCase();
+      const haystack = base;
+      if (haystack.includes(key)) {
+        syns.forEach((s) => expanded.add(s.toLowerCase()));
+      }
+      syns.forEach((s) => {
+        if (haystack.includes(s.toLowerCase())) expanded.add(key);
+      });
+    });
+    return Array.from(expanded);
+  }
+
   /* ------------------------------------------------------------------
    * Card component
    *
@@ -84,15 +152,73 @@
   }
 
   /* ------------------------------------------------------------------
+   * Button component
+   *
+   * Three variants (primary, secondary, ghost) and two sizes (md, sm)
+   * to enforce consistent interactions across the app.
+   * ------------------------------------------------------------------ */
+  function Button({
+    as: Tag = 'button',
+    variant = 'primary',
+    size = 'md',
+    className,
+    children,
+    isDark,
+    accent,
+    ...rest
+  }) {
+    const sizes = {
+      md: 'h-10 px-4 text-sm',
+      sm: 'h-8 px-3 text-sm',
+    };
+    const variantClasses = {
+      primary: classNames(
+        'text-white border-transparent',
+        accent?.btn || 'bg-violet-500',
+        accent?.hover || 'hover:bg-violet-600'
+      ),
+      secondary: classNames(
+        isDark ? 'bg-neutral-900/80 text-white border border-neutral-700 hover:bg-neutral-800' : 'bg-white text-neutral-900 border border-neutral-300 hover:bg-neutral-50'
+      ),
+      ghost: classNames(
+        'border border-transparent',
+        isDark ? 'text-white hover:bg-white/5' : 'text-neutral-900 hover:bg-neutral-100'
+      ),
+    };
+    return (
+      <Tag
+        className={classNames(
+          'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-[background-color,color,border-color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-60 disabled:cursor-not-allowed',
+          sizes[size] || sizes.md,
+          variantClasses[variant],
+          className
+        )}
+        {...rest}
+      >
+        {children}
+      </Tag>
+    );
+  }
+
+  /* ------------------------------------------------------------------
    * Section title component
    *
    * Displays a heading and optional subtitle.
    * ------------------------------------------------------------------ */
   function SectionTitle({ title, subtitle }) {
     return (
-      <div className="mb-5">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        {subtitle ? <p className="text-sm opacity-80 mt-1">{subtitle}</p> : null}
+      <div className="mb-5 max-w-3xl">
+        <h2
+          className="font-bold"
+          style={{ fontSize: 'clamp(1.125rem, 1.2vw + .75rem, 1.5rem)', letterSpacing: '0.1px', lineHeight: 1.35 }}
+        >
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="text-sm opacity-80 leading-relaxed" style={{ lineHeight: 1.5 }}>
+            {subtitle}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -134,7 +260,7 @@
    * Displays a car image with a button that scrolls to the library
    * filtered for the given model. The accent colours are passed in.
    * ------------------------------------------------------------------ */
-  function CarTile({ id, accent, carImages }) {
+  function CarTile({ id, accent, carImages, isDark }) {
     const m = CAR_META[id];
     // Use base64 image if available, otherwise fall back to the img field or an empty string.
     const imgSrc = (carImages && carImages[id]) || m.img || '';
@@ -149,12 +275,16 @@
               <div className="font-semibold">{m.label}</div>
               <div className="text-xs opacity-70">{m.note}</div>
             </div>
-            <a
+            <Button
+              as="a"
               href={'#library?model=' + encodeURIComponent(m.label)}
-              className={classNames('shrink-0 rounded-lg px-3 py-2 text-sm font-semibold hover:opacity-90', accent.btn, accent.hover)}
+              variant="primary"
+              size="md"
+              accent={accent}
+              isDark={isDark}
             >
               Open library
-            </a>
+            </Button>
           </div>
         </div>
       </Card>
@@ -166,14 +296,14 @@
    *
    * Displays all four models in a responsive grid.
    * ------------------------------------------------------------------ */
-  function CarsGrid({ accent, carImages }) {
+  function CarsGrid({ accent, carImages, isDark }) {
     const ids = ['model3', 'models', 'modelx', 'modely'];
     return (
       <section id="models" className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle title="Pick your Tesla" subtitle="Select a model to jump into its how‑to library." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {ids.map((id) => (
-          <CarTile key={id} id={id} accent={accent} carImages={carImages} />
+          <CarTile key={id} id={id} accent={accent} carImages={carImages} isDark={isDark} />
         ))}
         </div>
       </section>
@@ -207,15 +337,22 @@
    * ------------------------------------------------------------------ */
   function CategoryAccordion({ cat, isDark }) {
     const [open, setOpen] = useState(false);
+    const disclosureId = useId();
     const borderSoft = isDark ? 'border-neutral-800' : 'border-neutral-200';
     const cardBg = isDark ? 'bg-neutral-900' : 'bg-neutral-50';
     return (
       <Card className={classNames(cardBg, 'border', borderSoft)}>
-        <button onClick={() => setOpen((o) => !o)} className="w-full text-left p-4 font-semibold">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls={`${disclosureId}-content`}
+          className="w-full text-left p-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
           {cat.name}
         </button>
         {open && (
-          <div className="px-4 pb-3">
+          <div id={`${disclosureId}-content`} role="region" aria-label={cat.name} className="px-4 pb-3">
             {cat.videos.map((v, i) => (
               <React.Fragment key={v.title + i}>
                 <VideoRow v={v} />
@@ -240,6 +377,7 @@
     const [modelFilter, setModelFilter] = useState('');
     const [yearFilter, setYearFilter] = useState('');
     const [q, setQ] = useState('');
+    const [searchIndex, setSearchIndex] = useState(null);
 
     const applyHashFilters = React.useCallback(() => {
       try {
@@ -258,7 +396,41 @@
       applyHashFilters();
       fetch('tesla_howto_library.json')
         .then((r) => r.json())
-        .then((json) => setLib(json))
+        .then((json) => {
+          const modelsWithIds = (json.models || []).map((m, modelIdx) => ({
+            ...m,
+            categories: (m.categories || []).map((cat, catIdx) => ({
+              ...cat,
+              videos: (cat.videos || []).map((v, vidIdx) => ({
+                ...v,
+                _searchId: `${modelIdx}-${catIdx}-${vidIdx}-${v.title}`,
+              })),
+            })),
+          }));
+          setLib({ ...json, models: modelsWithIds });
+          if (typeof FlexSearch !== 'undefined') {
+            const index = new FlexSearch.Document({
+              tokenize: 'forward',
+              document: { id: 'id', index: ['title', 'copy', 'model', 'category', 'year'] },
+            });
+            modelsWithIds.forEach((model) => {
+              (model.categories || []).forEach((cat) => {
+                (cat.videos || []).forEach((v) => {
+                  const payload = {
+                    id: v._searchId,
+                    title: v.title,
+                    copy: v.copy,
+                    model: model.model,
+                    category: cat.name,
+                    year: model.year_range || '',
+                  };
+                  index.add(payload);
+                });
+              });
+            });
+            setSearchIndex(index);
+          }
+        })
         .catch(() => setLib(null));
     }, [applyHashFilters]);
 
@@ -281,13 +453,35 @@
       return ms;
     }, [models, modelFilter, yearFilter]);
 
-    const searchLower = q.trim().toLowerCase();
+    const searchTerms = useMemo(() => expandSearchTerms(q), [q]);
+    const searchHits = useMemo(() => {
+      if (!searchIndex || searchTerms.length === 0) return null;
+      const ids = new Set();
+      searchTerms.forEach((term) => {
+        const res = searchIndex.search(term, { enrich: true }) || [];
+        res.forEach((group) => {
+          group.result.forEach((id) => ids.add(id));
+        });
+      });
+      return ids;
+    }, [searchIndex, searchTerms]);
+
+    function textContainsAny(str) {
+      return searchTerms.some((term) => str.includes(term));
+    }
+
+    function videoMatches(video) {
+      if (searchTerms.length === 0) return true;
+      if (searchHits && video._searchId) return searchHits.has(video._searchId);
+      const lowerTitle = (video.title || '').toLowerCase();
+      const lowerCopy = (video.copy || '').toLowerCase();
+      return textContainsAny(lowerTitle) || textContainsAny(lowerCopy);
+    }
+
     function catMatches(cat) {
-      if (!searchLower) return true;
-      if (cat.name.toLowerCase().includes(searchLower)) return true;
-      return cat.videos.some(
-        (v) => v.title.toLowerCase().includes(searchLower) || v.copy.toLowerCase().includes(searchLower)
-      );
+      if (searchTerms.length === 0) return true;
+      if (textContainsAny(cat.name.toLowerCase())) return true;
+      return cat.videos.some(videoMatches);
     }
 
     const borderSoft = isDark ? 'border-neutral-800' : 'border-neutral-200';
@@ -297,7 +491,7 @@
       <section id="library" className="mx-auto max-w-6xl px-4 pb-24">
         <SectionTitle
           title="How‑To Library"
-          subtitle="Concise videos from Tesla’s official guides, organized by model and year."
+          subtitle={`Concise videos from Tesla’s official guides, organized by model and year. Last reviewed: ${LAST_REVIEWED.date} · SW ${LAST_REVIEWED.software}.`}
         />
         <Card className={classNames('p-4 border', cardBg, borderSoft)}>
           <div className="grid md:grid-cols-4 gap-3">
@@ -340,12 +534,17 @@
                 </option>
               ))}
             </select>
-            <a
+            <Button
+              as="a"
               href="#models"
-              className={classNames('text-center rounded-lg px-3 py-2 text-sm font-semibold hover:opacity-90', ACCENTS.violet.btn, ACCENTS.violet.hover)}
+              variant="primary"
+              size="md"
+              accent={ACCENTS.violet}
+              isDark={isDark}
+              className="text-center"
             >
               Back to Models
-            </a>
+            </Button>
           </div>
         </Card>
         <div className="mt-4 space-y-6">
@@ -384,12 +583,21 @@
    * the header, hero, car grid, and library panel.
    * ------------------------------------------------------------------ */
   function TeslaHelperApp() {
-    const [mode, setMode] = useState('dark');
+    const [mode, setMode] = useState(() => {
+      if (typeof window === 'undefined') return 'dark';
+      const stored = window.localStorage?.getItem('teslahelper-theme');
+      if (stored === 'light' || stored === 'dark') return stored;
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
+      return prefersDark ? 'dark' : 'light';
+    });
+    const [reduceMotion, setReduceMotion] = useState(false);
+    const [headerCompact, setHeaderCompact] = useState(false);
+    const [headerSearch, setHeaderSearch] = useState('');
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
-    const headerBg = isDark ? 'bg-neutral-900/95 border-neutral-800' : 'bg-white/90 border-neutral-200';
+    const headerBg = isDark ? 'bg-neutral-900/95 border-neutral-800' : 'bg-white/95 border-neutral-200';
 
     // Car images are loaded lazily from tesla_helper_base64_1280.json. The keys in
     // the JSON map correspond to model names (model3, models, modelx, modely).
@@ -407,6 +615,33 @@
     useEffect(() => {
       document.documentElement.style.setProperty('--safe-top', 'env(safe-area-inset-top)');
       document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom)');
+      const motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+      if (motionQuery) {
+        const handleMotion = (e) => setReduceMotion(e.matches);
+        setReduceMotion(motionQuery.matches);
+        motionQuery.addEventListener('change', handleMotion);
+        return () => motionQuery.removeEventListener('change', handleMotion);
+      }
+      return undefined;
+    }, []);
+    useEffect(() => {
+      if (typeof document !== 'undefined') {
+        document.body.dataset.theme = mode;
+      }
+      if (typeof window !== 'undefined') {
+        window.localStorage?.setItem('teslahelper-theme', mode);
+      }
+    }, [mode]);
+    useEffect(() => {
+      const onScroll = () => setHeaderCompact(window.scrollY > 12);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+    useEffect(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
     }, []);
     useEffect(() => {
       const handleAnchorClick = (event) => {
@@ -439,51 +674,124 @@
       document.addEventListener('click', handleAnchorClick);
       return () => document.removeEventListener('click', handleAnchorClick);
     }, []);
+
+    useEffect(() => {
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#library')) {
+        const params = new URLSearchParams(hash.replace(/^#library\??/, ''));
+        setHeaderSearch(params.get('q') || '');
+      }
+      const handleHashChange = () => {
+        const nextHash = window.location.hash || '';
+        if (nextHash.startsWith('#library')) {
+          const params = new URLSearchParams(nextHash.replace(/^#library\??/, ''));
+          setHeaderSearch(params.get('q') || '');
+        }
+      };
+      window.addEventListener('hashchange', handleHashChange);
+      return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    const headerStyle = reduceMotion ? {} : { transition: 'background-color 120ms ease' };
+    const handleSearchSubmit = (e) => {
+      e.preventDefault();
+      const params = new URLSearchParams();
+      if (headerSearch.trim()) params.set('q', headerSearch.trim());
+      const hash = params.toString() ? `#library?${params.toString()}` : '#library';
+      window.location.hash = hash;
+    };
     return (
       <div id="top" className={classNames('min-h-screen', pageBg)}>
-        <header className={classNames('sticky top-0 z-40 backdrop-blur border-b', headerBg)}>
-          <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
+        <header
+          className={classNames('sticky top-0 z-40 backdrop-blur border-b', headerBg, headerCompact ? 'py-2' : 'py-3')}
+          style={headerStyle}
+        >
+          <div className="mx-auto max-w-6xl px-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between min-h-[56px]">
+            <div className="flex items-center justify-between gap-3">
               <a href="#top" className="inline-flex items-center" aria-label={BRAND.name}>
-                <img src={BRAND.logo} alt={`${BRAND.name} logo`} className="h-8 w-auto" />
+                {BRAND.wordmark}
+                <span className="sr-only">{BRAND.name}</span>
               </a>
-              <div className="font-semibold hidden sm:block">{BRAND.name}</div>
-              <a
+              <div className="flex items-center gap-2 md:hidden">
+                <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={isDark}
+                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                  onClick={() => setMode(isDark ? 'light' : 'dark')}
+                  isDark={isDark}
+                >
+                  {isDark ? '🌞' : '🌙'}
+                </Button>
+              </div>
+            </div>
+            <form
+              className={classNames(
+                'flex flex-col gap-2 md:flex-row md:items-center md:gap-3 w-full md:w-auto md:flex-1 md:order-none order-first'
+              )}
+              role="search"
+              onSubmit={handleSearchSubmit}
+            >
+              <label className="sr-only" htmlFor="global-search">
+                Search the Tesla Helper library
+              </label>
+              <div className="flex-1 md:max-w-xl">
+                <input
+                  id="global-search"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="Search (e.g., Sentry, PIN to Drive, HW4)"
+                  className={classNames(
+                    'w-full rounded-lg h-10 px-3 text-sm border focus:outline-none focus:ring-2 shadow-sm',
+                    isDark
+                      ? 'bg-neutral-950 border-neutral-800 text-white focus:ring-violet-400'
+                      : 'bg-white border-neutral-300 text-neutral-900 focus:ring-violet-500'
+                  )}
+                />
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" size="sm" type="submit" isDark={isDark}>
+                  Search
+                </Button>
+              </div>
+            </form>
+            <div className="flex flex-wrap items-center gap-2 md:justify-end">
+              <div className="hidden md:flex items-center gap-2">
+                <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={isDark}
+                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                  onClick={() => setMode(isDark ? 'light' : 'dark')}
+                  isDark={isDark}
+                >
+                  {isDark ? '🌞' : '🌙'}
+                </Button>
+              </div>
+              <Button
+                as="a"
+                href="#library"
+                variant="primary"
+                size="md"
+                className="w-full md:w-auto"
+                accent={accent}
+                isDark={isDark}
+              >
+                Open Library
+              </Button>
+              <Button
+                as="a"
                 href={SUPPORT_LINK}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-full border border-red-500/60 bg-red-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-red-500/30 hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                variant="secondary"
+                size="sm"
+                isDark={isDark}
               >
-                <span aria-hidden="true">❤️</span> Support Us
-              </a>
-            </div>
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <a className="hover:opacity-80" href="#models">Models</a>
-              <a className="hover:opacity-80" href="#library">Library</a>
-            </nav>
-            <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row md:items-center md:justify-end">
-              <AccentPicker accentName={accentName} setAccentName={setAccentName} />
-              <button
-                data-testid="mode-toggle"
-                onClick={() => setMode(isDark ? 'light' : 'dark')}
-                className={classNames(
-                  'rounded-lg px-3 py-2 border text-sm hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                  isDark ? 'border-neutral-800' : 'border-neutral-200'
-                )}
-              >
-                {isDark ? 'Light' : 'Dark'}
-              </button>
-              <a
-                href="#library"
-                className={classNames(
-                  'px-3 py-2 rounded-lg text-sm font-semibold text-center hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                  'w-full md:w-auto',
-                  accent.btn,
-                  accent.hover
-                )}
-              >
-                Open Library
-              </a>
+                Contribute
+              </Button>
             </div>
           </div>
         </header>
@@ -492,23 +800,28 @@
           <div className="mx-auto max-w-6xl px-4 py-10 md:py-14 grid md:grid-cols-2 gap-6 items-start">
             <div>
               <p className="uppercase tracking-widest text-xs opacity-80">Your Tesla · Your Guide</p>
-              <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mt-2">The Tesla Helper App</h1>
+              <h1
+                className="font-extrabold leading-tight mt-2"
+                style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
+              >
+                The Tesla Helper App
+              </h1>
               <ul className="mt-4 space-y-1 text-sm opacity-90">
                 <li>• Find exactly what you need fast—charging, FSD, safety, and more.</li>
                 <li>• Organized by model and year so nothing is confusing or missing.</li>
                 <li>• Short, official videos with plain‑English summaries.</li>
               </ul>
               <div className="mt-6 flex gap-3 flex-wrap">
-                <a href="#models" className={classNames('px-4 py-3 rounded-xl font-semibold hover:opacity-90', accent.btn, accent.hover)}>
+                <Button as="a" href="#models" variant="primary" accent={accent} isDark={isDark}>
                   Pick your model
-                </a>
-                <a href="#library" className={classNames('px-4 py-3 rounded-xl font-semibold border hover:opacity-80', isDark ? 'border-neutral-800' : 'border-neutral-200')}>
+                </Button>
+                <Button as="a" href="#library" variant="secondary" isDark={isDark}>
                   Browse by topic
-                </a>
+                </Button>
               </div>
               <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
             </div>
-            <div className="relative w-full">
+            <div className="relative w-full space-y-4">
               <Card className={classNames('p-4', isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-neutral-50 border border-neutral-200')}>
                 <div className="flex items-center justify-between">
                   <div className="font-semibold">Quick links</div>
@@ -533,6 +846,19 @@
                   ))}
                 </div>
               </Card>
+              <Card className={classNames('p-4', isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-neutral-50 border border-neutral-200')}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">Add to Home Screen</div>
+                    <p className="text-sm opacity-80">Install Tesla Helper as a PWA for offline garage use.</p>
+                    <ul className="mt-2 space-y-1 text-sm list-disc list-inside opacity-80">
+                      <li>iOS: Share → Add to Home Screen.</li>
+                      <li>Android/Chrome: ⋮ menu → Install app.</li>
+                    </ul>
+                  </div>
+                  <div className="text-2xl" aria-hidden="true">📲</div>
+                </div>
+              </Card>
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">
@@ -540,8 +866,40 @@
           </div>
         </section>
         {/* Models and library */}
-        <CarsGrid accent={accent} carImages={carImages} />
+        <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <LibraryPanel accent={accent} isDark={isDark} />
+        <section className="mx-auto max-w-6xl px-4 pb-16">
+          <SectionTitle
+            title="Stay aligned with official guidance"
+            subtitle="Every tip links back to Tesla resources so you can verify details by model, region, and software."
+          />
+          <div className="grid md:grid-cols-2 gap-4">
+            {OFFICIAL_LINKS.map((link) => (
+              <Card
+                key={link.label}
+                className={classNames(
+                  'p-4 border',
+                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">{link.label}</div>
+                    <p className="text-sm opacity-80 mt-1">{link.desc}</p>
+                  </div>
+                  <a
+                    className={classNames('text-sm font-semibold hover:opacity-90', accent.btn, accent.hover, 'px-3 py-2 rounded-lg')}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open
+                  </a>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
         <footer className={classNames('border-t', isDark ? 'border-neutral-800' : 'border-neutral-200')}>
           <div className="mx-auto max-w-6xl px-4 py-8 text-sm opacity-80 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-center md:text-left">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
@@ -550,6 +908,12 @@
                 <a className="hover:opacity-100" href="#">Terms</a>
                 <a className="hover:opacity-100" href="#">Privacy</a>
                 <a className="hover:opacity-100" href="#">Accessibility</a>
+                <a className="hover:opacity-100" href="https://www.tesla.com/legal/trademark-copyright" target="_blank" rel="noreferrer">
+                  Tesla legal
+                </a>
+              </div>
+              <div className="text-center text-xs md:text-left max-w-xl">
+                Tesla Helper is an independent resource for Tesla owners. Not affiliated with or endorsed by Tesla, Inc. Always confirm details in your Owner’s Manual and Tesla Support pages.
               </div>
               <a
                 href={SUPPORT_LINK}

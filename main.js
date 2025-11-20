@@ -730,6 +730,7 @@
       window.location.hash = hash;
     };
     const exploreMenuItems = [
+      { href: '/', label: 'TeslaHelper.app' },
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
       { href: '/upsell', label: 'Upsell' },

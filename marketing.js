@@ -5,7 +5,7 @@
  */
 
 (() => {
-  const { useEffect, useMemo, useState } = React;
+  const { useEffect, useMemo, useRef, useState } = React;
 
   const APP_ENV = window.APP_ENV || {};
   const STORAGE_KEYS = {
@@ -55,6 +55,18 @@
       og: '/og-kit.png',
     },
   };
+
+  const EXPLORE_MENU_ITEMS = [
+    { href: '/', label: 'TeslaHelper.app' },
+    { href: '/start', label: 'Start' },
+    { href: '/kit', label: 'Kit' },
+    { href: '/upsell', label: 'Upsell' },
+    { href: '/accessories/model-y', label: 'Accessories' },
+    { href: '/chargers', label: 'Chargers' },
+    { href: '/insurance', label: 'Insurance' },
+    { href: '/disclosure', label: 'Disclosure' },
+    { href: '/thank-you', label: 'Thank you' },
+  ];
 
   const ACCESSORY_INTRO = 'We keep this list updated with day-one must-haves for each Tesla model. We may earn a commission when you buy through our links—it helps keep TeslaHelper free.';
 
@@ -414,19 +426,66 @@
   }
 
   function PageShell({ children }) {
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+      if (!menuOpen) return undefined;
+      const handleClick = (e) => {
+        if (menuRef.current && !menuRef.current.contains(e.target)) {
+          setMenuOpen(false);
+        }
+      };
+      const handleKey = (e) => {
+        if (e.key === 'Escape') setMenuOpen(false);
+      };
+      document.addEventListener('click', handleClick);
+      document.addEventListener('keydown', handleKey);
+      return () => {
+        document.removeEventListener('click', handleClick);
+        document.removeEventListener('keydown', handleKey);
+      };
+    }, [menuOpen]);
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-930 to-neutral-950 text-white">
         <header className="border-b border-white/10">
           <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-            <a href="/start" className="font-bold text-lg">TeslaHelper</a>
-            <nav className="flex items-center gap-4 text-sm">
-              <a href="/start" className="hover:opacity-80">Start</a>
-              <a href="/kit" className="hover:opacity-80">Kit</a>
-              <a href="/upsell" className="hover:opacity-80">Upsell</a>
-              <a href="/accessories/model-y" className="hover:opacity-80">Accessories</a>
-              <a href="/chargers" className="hover:opacity-80">Chargers</a>
-              <a href="/insurance" className="hover:opacity-80">Insurance</a>
-              <a href="/disclosure" className="hover:opacity-80">Disclosure</a>
+            <a href="/" className="font-bold text-lg" aria-label="TeslaHelper home">
+              TeslaHelper
+            </a>
+            <nav className="relative text-sm" ref={menuRef}>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 font-semibold shadow-sm transition hover:border-white/40 hover:bg-white/10"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                Explore
+                <span aria-hidden>▾</span>
+              </button>
+              {menuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-52 rounded-xl border border-white/10 bg-neutral-950/95 shadow-xl ring-1 ring-black/40"
+                  role="menu"
+                >
+                  <ul className="py-2">
+                    {EXPLORE_MENU_ITEMS.map((item) => (
+                      <li key={item.href}>
+                        <a
+                          href={item.href}
+                          className="block px-4 py-2 text-sm hover:bg-white/10 focus:bg-white/10 focus:outline-none"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </nav>
           </div>
         </header>

@@ -11,6 +11,22 @@
  */
 
 (() => {
+  // If React or ReactDOM fail to load (e.g., CDN/CSP/network issues), show a
+  // lightweight fallback so the page never stays blank.
+  if (!window.React || !window.ReactDOM) {
+    const root = document.getElementById('root') || document.body;
+    if (root) {
+      root.innerHTML = `
+        <div style="padding:24px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <h1 style="font-size:20px;font-weight:700;margin:0 0 8px;">Tesla Helper</h1>
+          <p style="margin:0 0 12px;">We couldn't load the app because required scripts were blocked. Please refresh or check your connection.</p>
+          <p style="margin:0;">If this keeps happening, visit <a href="https://teslahelper.app" style="color:#8b5cf6;font-weight:600;">teslahelper.app</a> on a trusted network.</p>
+        </div>`;
+    }
+    console.error('TeslaHelper: React or ReactDOM failed to load.');
+    return;
+  }
+
   const { useState, useEffect, useMemo, useId, useRef } = React;
 
   /* ------------------------------------------------------------------
@@ -113,6 +129,87 @@
     modelx: { label: 'Model X', alt: 'Tesla Model X', img: '', note: '2021+ & 2015–2020' },
     modely: { label: 'Model Y', alt: 'Tesla Model Y', img: '', note: '2025+ & 2020–2024' },
     cybertruck: { label: 'Cybertruck', alt: 'Tesla Cybertruck', img: '', note: 'All years' },
+  };
+
+  /* ------------------------------------------------------------------
+   * My Tesla data (static mock)
+   *
+   * Centralized sample telemetry/FSD/safety values used across the new
+   * My Tesla page and the customizable homepage widgets. These mirror
+   * the shape of data expected from the backend service.
+   * ------------------------------------------------------------------ */
+  const MY_TESLA_DATA = {
+    summary: {
+      totalMiles: 12340,
+      avgEfficiency: 274,
+      autopilotMiles: 4200,
+      autopilotPct: 34,
+      safetyScore: 92,
+      regenEnergy: 11.2,
+      netEnergy: 37.4,
+      longestApSession: 18.4,
+    },
+    trips: [
+      {
+        id: 't1',
+        name: 'Work commute – South Bay',
+        date: 'Feb 10, 7:40 AM',
+        distance: 34.6,
+        duration: '42m',
+        efficiency: 289,
+        autopilotPct: 62,
+        events: ['Hard brake', 'Aggressive turn'],
+        startSoc: 78,
+        endSoc: 73,
+      },
+      {
+        id: 't2',
+        name: 'Errands – City loop',
+        date: 'Feb 9, 5:10 PM',
+        distance: 12.3,
+        duration: '28m',
+        efficiency: 312,
+        autopilotPct: 18,
+        events: ['Speeding'],
+        startSoc: 65,
+        endSoc: 62,
+      },
+      {
+        id: 't3',
+        name: 'Weekend trip – Pacific Coast',
+        date: 'Feb 8, 9:05 AM',
+        distance: 84.2,
+        duration: '1h 22m',
+        efficiency: 268,
+        autopilotPct: 74,
+        events: ['None'],
+        startSoc: 91,
+        endSoc: 82,
+      },
+    ],
+    fsd: {
+      weeklyMiles: [
+        { label: 'Mon', miles: 42 },
+        { label: 'Tue', miles: 38 },
+        { label: 'Wed', miles: 27 },
+        { label: 'Thu', miles: 46 },
+        { label: 'Fri', miles: 18 },
+        { label: 'Sat', miles: 12 },
+        { label: 'Sun', miles: 8 },
+      ],
+      disengagements: 2,
+      longestSession: 18.4,
+      milesPerDisengagement: 42,
+    },
+    safety: {
+      events: { hardBrakes: 2, rapidAccel: 1, aggressiveTurns: 1, speeding: 1 },
+      recentAlerts: ['Hands-on-wheel nag – cleared', 'Speeding above 80 mph'],
+    },
+    achievements: [
+      { id: 'ap-1000', label: 'Century Autopilot Club', current: 420, target: 1000, desc: 'Miles driven on Autopilot' },
+      { id: 'safe-streak', label: 'Safe Driver – 5 clean trips', current: 3, target: 5, desc: 'Trips without safety events' },
+      { id: 'regen', label: 'Regen Master', current: 8.2, target: 12, desc: 'kWh recovered through regen' },
+    ],
   };
 
   /* ------------------------------------------------------------------
@@ -222,6 +319,478 @@
         </div>
       );
     }
+
+  /* ------------------------------------------------------------------
+   * Telemetry & analytics showcase components
+   *
+   * These cards visualize how telemetry, FSD, safety, and achievements
+   * will surface in the UI once backend data is connected.
+   * ------------------------------------------------------------------ */
+  function AnalyticsMetricCard({ label, value, helper, accent, isDark }) {
+    return (
+      <Card
+        className={classNames(
+          'border p-4 h-full',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+        )}
+      >
+        <div className="text-xs uppercase tracking-[0.25em] opacity-70">{label}</div>
+        <div className="mt-2 text-2xl font-bold leading-tight">{value}</div>
+        {helper ? <div className="mt-1 text-sm opacity-80">{helper}</div> : null}
+        <div className={classNames('mt-3 h-1 rounded-full', accent.underline)} aria-hidden="true" />
+      </Card>
+    );
+  }
+
+  function ProgressBar({ value, max, label, isDark }) {
+    const pct = Math.min(100, Math.round((value / max) * 100));
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between text-sm">
+          <span>{label}</span>
+          <span className="opacity-70">{pct}%</span>
+        </div>
+        <div className={classNames('h-2 rounded-full', isDark ? 'bg-neutral-800' : 'bg-neutral-200')} role="presentation">
+          <div
+            className="h-full rounded-full bg-emerald-500"
+            style={{ width: `${pct}%` }}
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  function TripAnalyticsCard({ trip, isDark, accent }) {
+    return (
+      <Card
+        className={classNames(
+          'border p-4 flex flex-col gap-3',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="font-semibold leading-tight">{trip.name}</div>
+            <div className="text-xs opacity-70">{trip.date}</div>
+          </div>
+          <div className={classNames('text-xs font-semibold px-2 py-1 rounded-full', accent.btn, 'text-white')}>
+            {trip.autopilotPct}% on AP
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="space-y-1">
+            <div className="text-xs uppercase opacity-70">Distance</div>
+            <div className="font-semibold">{trip.distance.toFixed(1)} mi</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs uppercase opacity-70">Duration</div>
+            <div className="font-semibold">{trip.duration}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs uppercase opacity-70">Efficiency</div>
+            <div className="font-semibold">{trip.efficiency} Wh/mi</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs uppercase opacity-70">SoC change</div>
+            <div className="font-semibold">
+              {trip.startSoc}% → {trip.endSoc}% ({trip.startSoc - trip.endSoc}% drop)
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {trip.events.map((ev) => (
+            <span
+              key={ev}
+              className={classNames(
+                'inline-flex items-center gap-1 rounded-full px-2 py-1 font-semibold',
+                isDark ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-800'
+              )}
+            >
+              <span aria-hidden="true">⚠️</span>
+              {ev}
+            </span>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  function FsdWeeklyChart({ weeklyMiles, isDark }) {
+    const maxMiles = Math.max(...weeklyMiles.map((d) => d.miles));
+    return (
+      <div className="flex items-end gap-2" aria-label="Autopilot miles this week">
+        {weeklyMiles.map((d) => {
+          const height = (d.miles / maxMiles) * 100;
+          return (
+            <div key={d.label} className="flex flex-col items-center gap-2 text-xs">
+              <div
+                className={classNames('w-9 rounded-md bg-blue-500/80', isDark ? 'bg-blue-500/80' : 'bg-blue-500/70')}
+                style={{ height: `${height}%`, minHeight: '32px' }}
+                aria-hidden="true"
+              />
+              <span className="opacity-80">{d.label}</span>
+              <span className="font-semibold">{d.miles} mi</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  /* ------------------------------------------------------------------
+   * Homepage widget deck
+   * ------------------------------------------------------------------ */
+  const WIDGET_METRICS = [
+    {
+      id: 'totalMiles',
+      label: 'Total miles',
+      helper: (data) => `${data.summary.autopilotPct}% on Autopilot`,
+      value: (data) => `${data.summary.totalMiles.toLocaleString()} mi`,
+    },
+    {
+      id: 'avgEfficiency',
+      label: 'Avg efficiency',
+      helper: () => 'Net energy incl. regen',
+      value: (data) => `${data.summary.avgEfficiency} Wh/mi`,
+    },
+    {
+      id: 'autopilotMiles',
+      label: 'Autopilot miles',
+      helper: (data) => `${data.summary.autopilotPct}% of driving`,
+      value: (data) => `${data.summary.autopilotMiles.toLocaleString()} mi`,
+    },
+    {
+      id: 'safetyScore',
+      label: 'Safety score',
+      helper: () => 'Weighted by braking, turns, speeding',
+      value: (data) => `${data.summary.safetyScore}/100`,
+    },
+    {
+      id: 'regenEnergy',
+      label: 'Regen captured',
+      helper: () => 'Energy recovered this week',
+      value: (data) => `${data.summary.regenEnergy.toFixed(1)} kWh`,
+    },
+    {
+      id: 'netEnergy',
+      label: 'Net energy used',
+      helper: () => 'Consumption minus regen',
+      value: (data) => `${data.summary.netEnergy.toFixed(1)} kWh`,
+    },
+    {
+      id: 'longestApSession',
+      label: 'Longest AP session',
+      helper: () => 'Continuous Autopilot distance',
+      value: (data) => `${data.summary.longestApSession} mi`,
+    },
+  ];
+
+  const WIDGET_TEMPLATES = {
+    compact6: { label: 'Six small cards', slots: ['sm', 'sm', 'sm', 'sm', 'sm', 'sm'] },
+    balanced: { label: '2 small + 2 medium', slots: ['sm', 'sm', 'md', 'md'] },
+    xlPair: { label: 'Two extra large', slots: ['xl', 'xl'] },
+  };
+
+  function getMetricById(id, data) {
+    const metric = WIDGET_METRICS.find((m) => m.id === id);
+    if (!metric) return null;
+    return {
+      ...metric,
+      valueText: typeof metric.value === 'function' ? metric.value(data) : metric.value,
+      helperText: typeof metric.helper === 'function' ? metric.helper(data) : metric.helper,
+    };
+  }
+
+  function HomeWidgetCard({ metric, size, accent, isDark }) {
+    const sizeClass = {
+      sm: 'min-h-[92px]',
+      md: 'min-h-[120px] col-span-2',
+      xl: 'min-h-[156px] col-span-2',
+    }[size];
+    return (
+      <Card
+        className={classNames(
+          'border p-3 flex flex-col justify-between gap-2 transition-transform duration-150 hover:translate-y-[-1px]',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200',
+          sizeClass
+        )}
+      >
+        <div className="text-[11px] uppercase tracking-[0.25em] opacity-70">{metric.label}</div>
+        <div className="text-2xl font-black leading-tight">{metric.valueText}</div>
+        {metric.helperText ? <div className="text-sm opacity-80">{metric.helperText}</div> : null}
+        <div className={classNames('h-1 rounded-full', accent.underline)} aria-hidden="true" />
+      </Card>
+    );
+  }
+
+  function HomeWidgetGrid({ data, config, accent, isDark }) {
+    const template = WIDGET_TEMPLATES[config.template] || WIDGET_TEMPLATES.compact6;
+    const availableIds = config.metricIds?.length ? config.metricIds : WIDGET_METRICS.map((m) => m.id);
+    const metrics = template.slots.map((_, idx) => {
+      const id = availableIds[idx % availableIds.length];
+      return getMetricById(id, data);
+    });
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        {metrics.map(
+          (metric, idx) =>
+            metric && (
+              <HomeWidgetCard
+                key={`${metric.id}-${idx}`}
+                metric={metric}
+                size={template.slots[idx]}
+                accent={accent}
+                isDark={isDark}
+              />
+            )
+        )}
+      </div>
+    );
+  }
+
+  function WidgetCustomizer({ config, setConfig, isDark }) {
+    const maxCards = WIDGET_TEMPLATES[config.template]?.slots.length || 6;
+    const toggleMetric = (id) => {
+      setConfig((prev) => {
+        const exists = prev.metricIds.includes(id);
+        let nextIds = exists ? prev.metricIds.filter((m) => m !== id) : [...prev.metricIds, id];
+        if (nextIds.length === 0) nextIds = [id];
+        return { ...prev, metricIds: nextIds.slice(0, maxCards) };
+      });
+    };
+
+    return (
+      <div
+        className={classNames(
+          'rounded-xl border p-3 space-y-3',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+        )}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="font-semibold text-sm">Homepage widgets</div>
+          <span className="text-xs opacity-70">Choose up to {maxCards} cards</span>
+        </div>
+        <label className="text-sm font-semibold flex flex-col gap-1">
+          Layout
+          <select
+            className={classNames(
+              'rounded-lg border px-3 py-2 text-sm',
+              isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
+            )}
+            value={config.template}
+            onChange={(e) => setConfig((prev) => ({ ...prev, template: e.target.value }))}
+          >
+            {Object.entries(WIDGET_TEMPLATES).map(([k, t]) => (
+              <option key={k} value={k}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          {WIDGET_METRICS.map((m) => (
+            <label key={m.id} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={config.metricIds.includes(m.id)}
+                onChange={() => toggleMetric(m.id)}
+                className="h-4 w-4"
+              />
+              <span>{m.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ------------------------------------------------------------------
+   * My Tesla page
+   * ------------------------------------------------------------------ */
+  function MyTeslaSection({ accent, isDark }) {
+    const { summary, trips, fsd, safety, achievements } = MY_TESLA_DATA;
+    return (
+      <section id="my-tesla" className="mx-auto max-w-6xl px-4 pb-16">
+        <SectionTitle
+          title="My Tesla"
+          subtitle="Live telemetry, Autopilot, safety, and achievements tailored to your garage."
+        />
+        <div className="grid gap-4 md:grid-cols-4">
+          <AnalyticsMetricCard
+            label="Total miles"
+            value={`${summary.totalMiles.toLocaleString()} mi`}
+            helper={`${summary.autopilotPct}% on Autopilot`}
+            accent={accent}
+            isDark={isDark}
+          />
+          <AnalyticsMetricCard
+            label="Avg efficiency"
+            value={`${summary.avgEfficiency} Wh/mi`}
+            helper="Net energy incl. regen"
+            accent={accent}
+            isDark={isDark}
+          />
+          <AnalyticsMetricCard
+            label="Autopilot miles"
+            value={`${summary.autopilotMiles.toLocaleString()} mi`}
+            helper={`${summary.autopilotPct}% of driving`}
+            accent={accent}
+            isDark={isDark}
+          />
+          <AnalyticsMetricCard
+            label="Safety score"
+            value={`${summary.safetyScore}/100`}
+            helper="Weighted by hard braking, turns, speeding"
+            accent={accent}
+            isDark={isDark}
+          />
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <Card className={classNames('border p-4', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.25em] opacity-70">Recent trips</div>
+                  <div className="font-semibold">Trip distance, efficiency, Autopilot, and safety events</div>
+                </div>
+                <Button as="a" href="#" variant="secondary" size="sm" isDark={isDark}>
+                  Open trip detail
+                </Button>
+              </div>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {trips.map((trip) => (
+                  <TripAnalyticsCard key={trip.id} trip={trip} isDark={isDark} accent={accent} />
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <Card className={classNames('border p-4 space-y-4', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+            <div className="text-xs uppercase tracking-[0.25em] opacity-70">Autopilot week</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm opacity-80">Miles per disengagement</div>
+                <div className="text-2xl font-bold leading-tight">{fsd.milesPerDisengagement} mi</div>
+              </div>
+              <div className="text-right text-sm opacity-80">
+                <div>{fsd.disengagements} disengagements</div>
+                <div>{fsd.longestSession} mi longest session</div>
+              </div>
+            </div>
+            <FsdWeeklyChart weeklyMiles={fsd.weeklyMiles} isDark={isDark} />
+          </Card>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs uppercase tracking-[0.25em] opacity-70">Safety events</div>
+                <div className="font-semibold">Hard braking, acceleration, turns, speeding</div>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-1 text-xs font-semibold text-amber-400">
+                Real-time from telemetry
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-xs uppercase opacity-70">Hard brakes</div>
+                <div className="text-xl font-bold">{safety.events.hardBrakes}</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase opacity-70">Rapid accel</div>
+                <div className="text-xl font-bold">{safety.events.rapidAccel}</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase opacity-70">Aggressive turns</div>
+                <div className="text-xl font-bold">{safety.events.aggressiveTurns}</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase opacity-70">Speeding</div>
+                <div className="text-xl font-bold">{safety.events.speeding}</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {safety.recentAlerts.map((alert) => (
+                <div
+                  key={alert}
+                  className={classNames(
+                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm',
+                    isDark ? 'bg-neutral-800' : 'bg-neutral-100'
+                  )}
+                >
+                  <span aria-hidden="true">🚨</span>
+                  <span className="font-semibold">{alert}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs uppercase tracking-[0.25em] opacity-70">Achievements</div>
+                <div className="font-semibold">Badges tracked across trips</div>
+              </div>
+              <span className="text-2xl" aria-hidden="true">✨</span>
+            </div>
+            <div className="space-y-3">
+              {achievements.map((a) => (
+                <div key={a.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold">{a.label}</span>
+                    <span className="opacity-70">
+                      {a.current} / {a.target}
+                    </span>
+                  </div>
+                  <div className="text-xs opacity-70">{a.desc}</div>
+                  <ProgressBar value={a.current} max={a.target} label="Progress" isDark={isDark} />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs uppercase tracking-[0.25em] opacity-70">Trip detail preview</div>
+                <div className="font-semibold">Route, AP segments, energy, events</div>
+              </div>
+              <Button as="a" href="#library" variant="ghost" size="sm" isDark={isDark}>
+                View library
+              </Button>
+            </div>
+            <div
+              className={classNames(
+                'aspect-[4/3] w-full rounded-xl border bg-gradient-to-br from-blue-500/40 via-emerald-500/30 to-violet-500/30',
+                isDark ? 'border-neutral-800' : 'border-neutral-200'
+              )}
+              aria-hidden="true"
+            />
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-xs uppercase opacity-70">Energy used</div>
+                <div className="font-semibold">{summary.netEnergy.toFixed(1)} kWh (regen {summary.regenEnergy.toFixed(1)} kWh)</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase opacity-70">Max speed</div>
+                <div className="font-semibold">72 mph</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase opacity-70">Autopilot</div>
+                <div className="font-semibold">{summary.autopilotPct}% of trip</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase opacity-70">Disengagements</div>
+                <div className="font-semibold">{fsd.disengagements} total</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   /* ------------------------------------------------------------------
    * Accent picker component
@@ -597,6 +1166,24 @@
     const navMenuRef = useRef(null);
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
+    const widgetFallback = {
+      template: 'balanced',
+      metricIds: WIDGET_METRICS.slice(0, 4).map((m) => m.id),
+    };
+    const [widgetConfig, setWidgetConfig] = useState(() => {
+      if (typeof window === 'undefined') return widgetFallback;
+      try {
+        const stored = window.localStorage?.getItem('teslahelper-widgets');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.template && Array.isArray(parsed.metricIds)) return parsed;
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+      return widgetFallback;
+    });
+    const [showWidgetEditor, setShowWidgetEditor] = useState(false);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
@@ -635,6 +1222,11 @@
         window.localStorage?.setItem('teslahelper-theme', mode);
       }
     }, [mode]);
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        window.localStorage?.setItem('teslahelper-widgets', JSON.stringify(widgetConfig));
+      }
+    }, [widgetConfig]);
     useEffect(() => {
       const onScroll = () => setHeaderCompact(window.scrollY > 12);
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -732,6 +1324,7 @@
     };
     const exploreMenuItems = [
       { href: '/', label: 'Homepage' },
+      { href: '#my-tesla', label: 'My Tesla' },
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
       { href: '/upsell', label: 'Upsell' },
@@ -937,7 +1530,33 @@
               </div>
               <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
             </div>
-            <div className="relative w-full space-y-4" aria-hidden="true" />
+            <div className="relative w-full space-y-4">
+              <Card
+                className={classNames(
+                  'border p-3 md:p-4 space-y-3 shadow-[0_10px_50px_-30px_rgba(0,0,0,0.8)]',
+                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+                )}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.25em] opacity-70">Home widgets</div>
+                    <div className="font-semibold">Telemetry, FSD, and safety at a glance</div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isDark={isDark}
+                    onClick={() => setShowWidgetEditor((o) => !o)}
+                  >
+                    {showWidgetEditor ? 'Hide' : 'Customize'}
+                  </Button>
+                </div>
+                <HomeWidgetGrid data={MY_TESLA_DATA} config={widgetConfig} accent={accent} isDark={isDark} />
+              </Card>
+              {showWidgetEditor ? (
+                <WidgetCustomizer config={widgetConfig} setConfig={setWidgetConfig} isDark={isDark} />
+              ) : null}
+            </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
@@ -952,6 +1571,7 @@
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2 w-full md:w-auto">
                 {[
+                  { label: 'My Tesla', href: '#my-tesla', icon: '📊' },
                   { label: 'Models', href: '#models', icon: '🚗' },
                   { label: 'Video Library', href: '#library', icon: '🎞️' },
                   { label: 'Charging', href: '#library?q=charging', icon: '🔌' },
@@ -976,6 +1596,7 @@
             </div>
           </Card>
         </section>
+        <MyTeslaSection accent={accent} isDark={isDark} />
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <LibraryPanel accent={accent} isDark={isDark} />

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeslaHelper</title>
+  <meta name="description" content="TeslaHelper accessories" />
+  <base href="/" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0b0f" />
+  <meta name="color-scheme" content="dark light" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    window.APP_ENV = window.APP_ENV || {
+      plausibleDomain: 'teslahelper.app',
+      metaPixelId: 'xxxxxxxxxxxxxxx',
+      googleAdsId: 'AW-XXXXXXXXX',
+      beehiivEmbedId: 'bhv_XXXXXXXX',
+    };
+  </script>
+</head>
+<body class="min-h-screen">
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" src="/marketing.js"></script>
+</body>
+</html>

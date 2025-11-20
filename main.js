@@ -205,23 +205,23 @@
    *
    * Displays a heading and optional subtitle.
    * ------------------------------------------------------------------ */
-  function SectionTitle({ title, subtitle }) {
-    return (
-      <div className="mb-5 max-w-3xl">
-        <h2
-          className="font-bold"
-          style={{ fontSize: 'clamp(1.125rem, 1.2vw + .75rem, 1.5rem)', letterSpacing: '0.1px', lineHeight: 1.35 }}
-        >
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="text-sm opacity-80 leading-relaxed" style={{ lineHeight: 1.5 }}>
-            {subtitle}
-          </p>
-        ) : null}
-      </div>
-    );
-  }
+    function SectionTitle({ title, subtitle }) {
+      return (
+        <div className="mb-5 max-w-3xl">
+          <h2
+            className="font-bold"
+            style={{ fontSize: 'clamp(1.125rem, 1.2vw + .75rem, 1.5rem)', letterSpacing: '0.1px', lineHeight: 1.35 }}
+          >
+            {title}
+          </h2>
+          {subtitle ? (
+            <p className="text-sm opacity-80 leading-relaxed" style={{ lineHeight: 1.5 }}>
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+      );
+    }
 
   /* ------------------------------------------------------------------
    * Accent picker component
@@ -595,6 +595,7 @@
     const [headerSearch, setHeaderSearch] = useState('');
     const [navMenuOpen, setNavMenuOpen] = useState(false);
     const navMenuRef = useRef(null);
+    const [showInstallModal, setShowInstallModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
@@ -930,55 +931,50 @@
                 <Button as="a" href="#models" variant="primary" accent={accent} isDark={isDark}>
                   Pick your model
                 </Button>
-                <Button as="a" href="#library" variant="secondary" isDark={isDark}>
-                  Browse by topic
+                <Button onClick={() => setShowInstallModal(true)} variant="secondary" isDark={isDark}>
+                  Add to Home Screen
                 </Button>
               </div>
               <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
             </div>
-            <div className="relative w-full space-y-4">
-              <Card className={classNames('p-4', isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-neutral-50 border border-neutral-200')}>
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">Quick links</div>
-                </div>
-                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[ 
-                    { label: 'Models', href: '#models', icon: '🚗' },
-                    { label: 'Video Library', href: '#library', icon: '🎞️' },
-                    { label: 'Charging', href: '#library?q=charging', icon: '🔌' },
-                    { label: 'Autopilot / FSD', href: '#library?q=autopilot', icon: '🧭' },
-                    { label: 'Safety', href: '#library?q=sentry', icon: '🛡️' },
-                  ].map((q) => (
-                    <a
-                      key={q.label}
-                      data-quicklink
-                      href={q.href}
-                      className={classNames('rounded-xl px-3 py-3 text-sm font-semibold text-center text-white hover:opacity-90', accent.btn, accent.hover)}
-                    >
-                      <div className="text-lg mb-1">{q.icon}</div>
-                      {q.label}
-                    </a>
-                  ))}
-                </div>
-              </Card>
-              <Card className={classNames('p-4', isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-neutral-50 border border-neutral-200')}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold">Add to Home Screen</div>
-                    <p className="text-sm opacity-80">Install Tesla Helper as a PWA for offline garage use.</p>
-                    <ul className="mt-2 space-y-1 text-sm list-disc list-inside opacity-80">
-                      <li>iOS: Share → Add to Home Screen.</li>
-                      <li>Android/Chrome: ⋮ menu → Install app.</li>
-                    </ul>
-                  </div>
-                  <div className="text-2xl" aria-hidden="true">📲</div>
-                </div>
-              </Card>
-            </div>
+            <div className="relative w-full space-y-4" aria-hidden="true" />
           </div>
           <div className="mx-auto max-w-6xl px-4">
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
           </div>
+        </section>
+        <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Quick links">
+          <Card className={classNames('border px-3 py-3 md:px-4 md:py-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200')}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="font-semibold flex items-center gap-2">
+                <span className="text-lg" aria-hidden="true">⭐</span>
+                Quick links
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2 w-full md:w-auto">
+                {[
+                  { label: 'Models', href: '#models', icon: '🚗' },
+                  { label: 'Video Library', href: '#library', icon: '🎞️' },
+                  { label: 'Charging', href: '#library?q=charging', icon: '🔌' },
+                  { label: 'Autopilot / FSD', href: '#library?q=autopilot', icon: '🧭' },
+                  { label: 'Safety', href: '#library?q=sentry', icon: '🛡️' },
+                ].map((q) => (
+                  <a
+                    key={q.label}
+                    data-quicklink
+                    href={q.href}
+                    className={classNames(
+                      'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold justify-center hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                      isDark ? 'bg-neutral-800 text-white' : 'bg-white text-black',
+                      accent.hover
+                    )}
+                  >
+                    <span aria-hidden="true">{q.icon}</span>
+                    {q.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </Card>
         </section>
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
@@ -1042,6 +1038,44 @@
             </div>
           </div>
         </footer>
+        {showInstallModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add Tesla Helper to your home screen"
+            onClick={() => setShowInstallModal(false)}
+          >
+            <div className="absolute inset-0 bg-black/60" />
+            <Card
+              className={classNames(
+                'relative z-10 max-w-lg w-full p-5 shadow-2xl',
+                isDark ? 'bg-neutral-900/90 border border-neutral-800' : 'bg-white'
+              )}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="absolute top-3 right-3 text-lg opacity-80 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                aria-label="Close"
+                onClick={() => setShowInstallModal(false)}
+              >
+                ×
+              </button>
+              <div className="flex items-start gap-3">
+                <div className="text-3xl" aria-hidden="true">📲</div>
+                <div>
+                  <h3 className="font-semibold text-lg">Add Tesla Helper to your Home Screen</h3>
+                  <p className="text-sm opacity-80 mt-1">Install the app for quick access and offline garage use.</p>
+                  <ul className="mt-3 space-y-2 text-sm list-disc list-inside opacity-90">
+                    <li>iOS (Safari): Share → Add to Home Screen.</li>
+                    <li>Android/Chrome: ⋮ menu → Install app.</li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     );
   }

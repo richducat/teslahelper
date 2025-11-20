@@ -730,7 +730,7 @@
       window.location.hash = hash;
     };
     const exploreMenuItems = [
-      { href: '/', label: 'TeslaHelper.app' },
+      { href: '/', label: 'Homepage' },
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
       { href: '/upsell', label: 'Upsell' },
@@ -749,7 +749,7 @@
         >
           <div className="mx-auto max-w-6xl px-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between min-h-[56px]">
             <div className="flex items-center justify-between gap-3">
-              <a href="#top" className="inline-flex items-center" aria-label={BRAND.name}>
+              <a href="https://teslahelper.app" className="inline-flex items-center" aria-label={BRAND.name}>
                 {BRAND.wordmark}
                 <span className="sr-only">{BRAND.name}</span>
               </a>

@@ -877,7 +877,7 @@
                 href="#library"
                 variant="primary"
                 size="md"
-                className="w-full md:w-auto"
+                className="w-full md:w-auto min-w-[132px]"
                 accent={accent}
                 isDark={isDark}
               >
@@ -891,6 +891,7 @@
                 variant="secondary"
                 size="sm"
                 isDark={isDark}
+                className="w-full md:w-auto min-w-[132px]"
               >
                 Contribute
               </Button>

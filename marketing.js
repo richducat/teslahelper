@@ -217,15 +217,9 @@
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const storedUtm = getStoredUtm();
-    const actionUrl = useMemo(() => {
-      if (!formEmbedId && !APP_ENV.beehiivEmbedId) return '#';
-      const embed = formEmbedId || APP_ENV.beehiivEmbedId;
-      if (embed.startsWith('http')) return embed;
-      return `https://embeds.beehiiv.com/subscribe/${embed.replace(/^\//, '')}`;
-    }, [formEmbedId]);
-    const targetName = useMemo(() => `beehiiv_iframe_${(formEmbedId || APP_ENV.beehiivEmbedId || 'default').replace(/[^a-zA-Z0-9]/g, '')}`, [formEmbedId]);
 
-    const handleSubmit = () => {
+    const handleSubmit = (e) => {
+      e.preventDefault();
       setSubmitted(true);
       trackEvent('lead', { variant: resolveVariant('landingHeadline') });
       if (window.fbq) window.fbq('track', 'Lead');
@@ -233,17 +227,11 @@
       onComplete && onComplete();
       setTimeout(() => {
         window.location.href = '/kit';
-      }, 600);
+      }, 300);
     };
 
     return (
-      <form
-        action={actionUrl}
-        method="post"
-        target={targetName}
-        onSubmit={handleSubmit}
-        className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3"
-      >
+      <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
         <label className="block text-sm font-semibold" htmlFor="email">Get the quick-start</label>
         <input
           id="email"
@@ -265,13 +253,6 @@
           {submitted ? 'Thanks! Check your email' : 'Get my free quick-start'}
         </button>
         <p className="text-xs opacity-75">We respect your inbox. Unsubscribe anytime.</p>
-        <iframe
-          name={targetName}
-          title="Beehiiv signup"
-          className="sr-only"
-          tabIndex={-1}
-          aria-hidden="true"
-        />
       </form>
     );
   }
@@ -383,7 +364,7 @@
     }
     if (parsed[key]) return parsed[key];
     const options = AB_CONFIG[key] || [];
-    const value = options.length ? options[Math.floor(Math.random() * options.length)] : 'default';
+    const value = options.length ? options[0] : 'default';
     parsed[key] = value;
     sessionStorage.setItem(STORAGE_KEYS.ab, JSON.stringify(parsed));
     return value;

@@ -730,10 +730,9 @@
       window.location.hash = hash;
     };
     const exploreMenuItems = [
-      { href: '/', label: 'Home' },
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
-      { href: '/upsell', label: 'Partners' },
+      { href: '/upsell', label: 'Upsell' },
       { href: '/accessories/model-y', label: 'Accessories' },
       { href: '/chargers', label: 'Chargers' },
       { href: '/insurance', label: 'Insurance' },

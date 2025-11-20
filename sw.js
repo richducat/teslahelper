@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teslahelper-v1';
+const CACHE_NAME = 'teslahelper-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [
   '/',
@@ -27,6 +27,7 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE);
@@ -45,6 +46,7 @@ self.addEventListener('activate', (event) => {
       )
     )
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -52,20 +54,17 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
+    fetch(request)
+      .then((response) => {
+        if (response && response.ok) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          if (response.ok) return response;
-          if (request.mode === 'navigate') return caches.match('/index.html');
-          return response;
-        })
-        .catch(() => {
-          if (request.mode === 'navigate') return caches.match('/index.html');
-          return caches.match(request, { ignoreSearch: true }) || caches.match(OFFLINE_URL);
-        });
-    })
+        }
+        return response;
+      })
+      .catch(() => {
+        if (request.mode === 'navigate') return caches.match('/index.html');
+        return caches.match(request, { ignoreSearch: true }) || caches.match(OFFLINE_URL);
+      })
   );
 });

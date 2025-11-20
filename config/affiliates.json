@@ -1,0 +1,11 @@
+{
+  "abstractOcean": { "base": "https://abstractocean.com/", "code": "YOUR_CODE" },
+  "jowua": { "base": "https://jowua-life.com/", "id": "YOUR_ID" },
+  "pimpMyEv": { "base": "https://pimpmyev.com/", "id": "YOUR_ID" },
+  "threeDMats": { "base": "https://3dmatsusa.com/", "id": "YOUR_ID" },
+  "lectron": { "base": "https://yazing.com/deals/lectron?ref=", "id": "YOUR_ID" },
+  "emporia": { "base": "YOUR_EMPORIA_AFFILIATE_URL" },
+  "insurify": { "base": "YOUR_INSURIFY_AFFILIATE_URL" },
+  "jerry": { "base": "https://jerry.ai/affiliate/REF", "id": "YOUR_REF" },
+  "policygenius": { "base": "https://share.policygenius.com/REF" }
+}

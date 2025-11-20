@@ -5,7 +5,7 @@
  */
 
 (() => {
-  const { useEffect, useMemo, useRef, useState } = React;
+  const { useEffect, useMemo, useState } = React;
 
   const APP_ENV = window.APP_ENV || {};
   const STORAGE_KEYS = {
@@ -217,15 +217,9 @@
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const storedUtm = getStoredUtm();
-    const actionUrl = useMemo(() => {
-      if (!formEmbedId && !APP_ENV.beehiivEmbedId) return '#';
-      const embed = formEmbedId || APP_ENV.beehiivEmbedId;
-      if (embed.startsWith('http')) return embed;
-      return `https://embeds.beehiiv.com/subscribe/${embed.replace(/^\//, '')}`;
-    }, [formEmbedId]);
-    const targetName = useMemo(() => `beehiiv_iframe_${(formEmbedId || APP_ENV.beehiivEmbedId || 'default').replace(/[^a-zA-Z0-9]/g, '')}`, [formEmbedId]);
 
-    const handleSubmit = () => {
+    const handleSubmit = (e) => {
+      e.preventDefault();
       setSubmitted(true);
       trackEvent('lead', { variant: resolveVariant('landingHeadline') });
       if (window.fbq) window.fbq('track', 'Lead');
@@ -233,17 +227,11 @@
       onComplete && onComplete();
       setTimeout(() => {
         window.location.href = '/kit';
-      }, 600);
+      }, 300);
     };
 
     return (
-      <form
-        action={actionUrl}
-        method="post"
-        target={targetName}
-        onSubmit={handleSubmit}
-        className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3"
-      >
+      <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
         <label className="block text-sm font-semibold" htmlFor="email">Get the quick-start</label>
         <input
           id="email"
@@ -265,13 +253,6 @@
           {submitted ? 'Thanks! Check your email' : 'Get my free quick-start'}
         </button>
         <p className="text-xs opacity-75">We respect your inbox. Unsubscribe anytime.</p>
-        <iframe
-          name={targetName}
-          title="Beehiiv signup"
-          className="sr-only"
-          tabIndex={-1}
-          aria-hidden="true"
-        />
       </form>
     );
   }
@@ -383,7 +364,7 @@
     }
     if (parsed[key]) return parsed[key];
     const options = AB_CONFIG[key] || [];
-    const value = options.length ? options[Math.floor(Math.random() * options.length)] : 'default';
+    const value = options.length ? options[0] : 'default';
     parsed[key] = value;
     sessionStorage.setItem(STORAGE_KEYS.ab, JSON.stringify(parsed));
     return value;
@@ -433,91 +414,19 @@
   }
 
   function PageShell({ children }) {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef(null);
-    const menuItems = [
-      { href: '/start', label: 'Start' },
-      { href: '/kit', label: 'Kit' },
-      { href: '/upsell', label: 'Upsell' },
-      { href: '/accessories/model-y', label: 'Accessories' },
-      { href: '/chargers', label: 'Chargers' },
-      { href: '/insurance', label: 'Insurance' },
-      { href: '/disclosure', label: 'Disclosure' },
-      { href: '/thank-you', label: 'Thank you' },
-    ];
-
-    useEffect(() => {
-      function handleClickAway(e) {
-        if (menuRef.current && !menuRef.current.contains(e.target)) {
-          setMenuOpen(false);
-        }
-      }
-      if (menuOpen) {
-        document.addEventListener('mousedown', handleClickAway);
-        document.addEventListener('touchstart', handleClickAway);
-      }
-      return () => {
-        document.removeEventListener('mousedown', handleClickAway);
-        document.removeEventListener('touchstart', handleClickAway);
-      };
-    }, [menuOpen]);
-
     return (
       <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-930 to-neutral-950 text-white">
         <header className="border-b border-white/10">
           <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
             <a href="/start" className="font-bold text-lg">TeslaHelper</a>
-            <nav className="flex items-center gap-3 text-sm relative">
-              <a href="/start" className="hover:opacity-80 hidden md:inline-block">Start</a>
-              <a href="/kit" className="hover:opacity-80 hidden md:inline-block">Kit</a>
-              <div className="relative" ref={menuRef}>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white hover:border-white/40 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                  aria-controls="nav-explore-menu"
-                  onClick={() => setMenuOpen((o) => !o)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setMenuOpen(false);
-                      e.currentTarget.focus();
-                    }
-                  }}
-                >
-                  Explore
-                  <span aria-hidden="true">▾</span>
-                </button>
-                {menuOpen && (
-                  <div
-                    id="nav-explore-menu"
-                    className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-white/10 bg-neutral-900/95 backdrop-blur shadow-lg ring-1 ring-black/20"
-                    role="menu"
-                  >
-                    <ul className="py-2">
-                      {menuItems.map((item) => (
-                        <li key={item.href}>
-                          <a
-                            className="block px-4 py-2 text-sm hover:bg-white/10 focus:bg-white/10 focus:outline-none"
-                            href={item.href}
-                            role="menuitem"
-                            onClick={() => setMenuOpen(false)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Escape') {
-                                e.preventDefault();
-                                setMenuOpen(false);
-                                menuRef.current?.querySelector('button')?.focus();
-                              }
-                            }}
-                          >
-                            {item.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+            <nav className="flex items-center gap-4 text-sm">
+              <a href="/start" className="hover:opacity-80">Start</a>
+              <a href="/kit" className="hover:opacity-80">Kit</a>
+              <a href="/upsell" className="hover:opacity-80">Upsell</a>
+              <a href="/accessories/model-y" className="hover:opacity-80">Accessories</a>
+              <a href="/chargers" className="hover:opacity-80">Chargers</a>
+              <a href="/insurance" className="hover:opacity-80">Insurance</a>
+              <a href="/disclosure" className="hover:opacity-80">Disclosure</a>
             </nav>
           </div>
         </header>

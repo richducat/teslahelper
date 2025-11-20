@@ -68,6 +68,15 @@
     { href: '/thank-you', label: 'Thank you' },
   ];
 
+  const ACCENTS = {
+    violet: { btn: 'bg-violet-500', hover: 'hover:bg-violet-600', underline: 'bg-violet-500' },
+    emerald: { btn: 'bg-emerald-500', hover: 'hover:bg-emerald-600', underline: 'bg-emerald-500' },
+    blue: { btn: 'bg-blue-500', hover: 'hover:bg-blue-600', underline: 'bg-blue-500' },
+    amber: { btn: 'bg-amber-500', hover: 'hover:bg-amber-600', underline: 'bg-amber-500' },
+  };
+
+  const SUPPORT_LINK = 'https://ts.la/richard834858';
+
   const BRAND_WORDMARK = (
     <span className="inline-flex items-center gap-2 font-black tracking-tight text-lg" aria-hidden="true">
       <svg className="h-6 w-6" viewBox="0 0 32 32" role="img" aria-hidden="true" focusable="false">
@@ -125,6 +134,52 @@
 
   function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
+  }
+
+  function AccentPicker({ accentName, setAccentName }) {
+    const options = [
+      { k: 'violet', hex: '#8b5cf6' },
+      { k: 'emerald', hex: '#10b981' },
+      { k: 'blue', hex: '#3b82f6' },
+      { k: 'amber', hex: '#f59e0b' },
+    ];
+    return (
+      <div className="flex flex-wrap items-center gap-2" aria-label="Accent color">
+        {options.map((c) => (
+          <button
+            key={c.k}
+            aria-label={'Accent ' + c.k}
+            type="button"
+            onClick={() => setAccentName(c.k)}
+            className={classNames(
+              'h-6 w-6 rounded-full ring-2 hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+              accentName === c.k ? 'ring-white' : 'ring-transparent'
+            )}
+            style={{ backgroundColor: c.hex }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  function NavButton({ as: Tag = 'button', variant = 'primary', accent, className, children, ...rest }) {
+    const variants = {
+      primary: classNames('text-white border-transparent', accent?.btn || 'bg-violet-500', accent?.hover || 'hover:bg-violet-600'),
+      secondary: 'bg-neutral-900/80 text-white border border-neutral-700 hover:bg-neutral-800',
+      ghost: 'border border-transparent text-white hover:bg-white/5',
+    };
+    return (
+      <Tag
+        className={classNames(
+          'inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-[background-color,color,border-color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-60 disabled:cursor-not-allowed',
+          variants[variant],
+          className
+        )}
+        {...rest}
+      >
+        {children}
+      </Tag>
+    );
   }
 
   function normalizePath(pathname) {
@@ -273,7 +328,7 @@
         <input type="hidden" name="formEmbedId" value={formEmbedId || APP_ENV.beehiivEmbedId} />
         <button
           type="submit"
-          className="w-full rounded-lg bg-red-500 px-4 py-2 font-semibold text-white hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="w-full rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           {submitted ? 'Thanks! Check your email' : 'Get my free quick-start'}
         </button>
@@ -317,7 +372,7 @@
           ))}
         </ul>
         <a
-          className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-red-500 px-4 py-3 font-semibold hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-violet-600 px-4 py-3 font-semibold hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           href={buttonHref}
         >
           Buy now
@@ -347,7 +402,7 @@
         </div>
         <button
           onClick={onClick}
-          className="rounded-lg bg-red-500 px-4 py-2 font-semibold text-white hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           {clicked ? 'Opening…' : 'View pick'}
         </button>
@@ -440,7 +495,10 @@
 
   function PageShell({ children }) {
     const [navMenuOpen, setNavMenuOpen] = useState(false);
+    const [headerSearch, setHeaderSearch] = useState('');
+    const [accentName, setAccentName] = useState('violet');
     const navMenuRef = useRef(null);
+    const accent = ACCENTS[accentName] || ACCENTS.violet;
 
     useEffect(() => {
       if (!navMenuOpen) return undefined;
@@ -460,75 +518,128 @@
       };
     }, [navMenuOpen]);
 
+    const handleSearchSubmit = (e) => {
+      e.preventDefault();
+      const query = headerSearch.trim();
+      const target = query ? `/#library?q=${encodeURIComponent(query)}` : '/#library';
+      window.location.href = target;
+    };
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-930 to-neutral-950 text-white">
         <header className="border-b border-white/10">
-          <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-            <a
-              href="https://teslahelper.app"
-              className="inline-flex items-center"
-              aria-label="TeslaHelper home"
-            >
-              {BRAND_WORDMARK}
-              <span className="sr-only">Tesla Helper</span>
-            </a>
-            <nav className="relative text-sm" ref={navMenuRef}>
-              <button
-                type="button"
-                className={classNames(
-                  'inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition',
-                  'border-white/10 bg-white/5 text-white hover:border-white/30'
-                )}
-                aria-haspopup="menu"
-                aria-expanded={navMenuOpen}
-                aria-controls="marketing-nav-explore-menu"
-                onClick={() => setNavMenuOpen((open) => !open)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setNavMenuOpen(false);
-                    e.currentTarget.focus();
-                  }
-                }}
-              >
-                Explore
-                <span aria-hidden>▾</span>
-              </button>
-              {navMenuOpen && (
-                <div
-                  id="marketing-nav-explore-menu"
-                  className={classNames(
-                    'absolute right-0 mt-2 w-48 rounded-xl border shadow-lg ring-1',
-                    'border-white/10 bg-neutral-900/95 text-white ring-black/30'
-                  )}
-                  role="menu"
-                >
-                  <ul className="py-2">
-                    {EXPLORE_MENU_ITEMS.map((item) => (
-                      <li key={item.href}>
-                        <a
-                          className={classNames(
-                            'block px-4 py-2 text-sm focus:outline-none',
-                            'hover:bg-white/10 focus:bg-white/10'
-                          )}
-                          href={item.href}
-                          role="menuitem"
-                          onClick={() => setNavMenuOpen(false)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                              e.preventDefault();
-                              setNavMenuOpen(false);
-                              navMenuRef.current?.querySelector('button')?.focus();
-                            }
-                          }}
-                        >
-                          {item.label}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+          <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <a href="/" className="inline-flex items-center" aria-label="TeslaHelper home">
+                {BRAND_WORDMARK}
+                <span className="sr-only">Tesla Helper</span>
+              </a>
+            </div>
+            <form
+              className={classNames(
+                'flex flex-col gap-2 md:flex-row md:items-center md:gap-3 w-full md:w-auto md:flex-1 md:order-none order-first'
               )}
-            </nav>
+              role="search"
+              onSubmit={handleSearchSubmit}
+            >
+              <label className="sr-only" htmlFor="marketing-global-search">
+                Search the Tesla Helper library
+              </label>
+              <div className="flex-1 md:max-w-xl">
+                <input
+                  id="marketing-global-search"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="Search (e.g., Sentry, PIN to Drive, HW4)"
+                  className={classNames(
+                    'w-full rounded-lg h-10 px-3 text-sm border focus:outline-none focus:ring-2 shadow-sm',
+                    'bg-neutral-950 border-neutral-800 text-white focus:ring-violet-400'
+                  )}
+                />
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <NavButton variant="ghost" type="submit">Search</NavButton>
+              </div>
+            </form>
+            <div className="flex flex-wrap items-center gap-2 md:justify-end">
+              <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+              <div className="relative" ref={navMenuRef}>
+                <button
+                  type="button"
+                  className={classNames(
+                    'inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition',
+                    'border-white/10 bg-white/5 text-white hover:border-white/30'
+                  )}
+                  aria-haspopup="menu"
+                  aria-expanded={navMenuOpen}
+                  aria-controls="marketing-nav-explore-menu"
+                  onClick={() => setNavMenuOpen((open) => !open)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setNavMenuOpen(false);
+                      e.currentTarget.focus();
+                    }
+                  }}
+                >
+                  Explore
+                  <span aria-hidden>▾</span>
+                </button>
+                {navMenuOpen && (
+                  <div
+                    id="marketing-nav-explore-menu"
+                    className={classNames(
+                      'absolute right-0 mt-2 w-48 rounded-xl border shadow-lg ring-1',
+                      'border-white/10 bg-neutral-900/95 text-white ring-black/30'
+                    )}
+                    role="menu"
+                  >
+                    <ul className="py-2">
+                      {EXPLORE_MENU_ITEMS.map((item) => (
+                        <li key={item.href}>
+                          <a
+                            className={classNames(
+                              'block px-4 py-2 text-sm focus:outline-none',
+                              'hover:bg-white/10 focus:bg-white/10'
+                            )}
+                            href={item.href}
+                            role="menuitem"
+                            onClick={() => setNavMenuOpen(false)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') {
+                                e.preventDefault();
+                                setNavMenuOpen(false);
+                                navMenuRef.current?.querySelector('button')?.focus();
+                              }
+                            }}
+                          >
+                            {item.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <NavButton
+                as="a"
+                href="/#library"
+                variant="primary"
+                accent={accent}
+                className="w-full md:w-auto min-w-[132px]"
+              >
+                Open Library
+              </NavButton>
+              <NavButton
+                as="a"
+                href={SUPPORT_LINK}
+                target="_blank"
+                rel="noreferrer"
+                variant="secondary"
+                className="w-full md:w-auto min-w-[132px]"
+              >
+                Contribute
+              </NavButton>
+            </div>
           </div>
         </header>
         <main>{children}</main>
@@ -682,7 +793,7 @@
             <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-xs text-neutral-200">We may earn a commission when you buy through our links.</div>
           </div>
           <AccessoriesGrid modelKey={modelKey} affiliates={affiliates} />
-          <div className="rounded-2xl border border-white/10 bg-red-500/10 p-4 text-white">
+          <div className="rounded-2xl border border-white/10 bg-violet-500/10 p-4 text-white">
             <div className="font-semibold">As seen in the Starter Kit</div>
             <p className="text-sm opacity-80">Bundle these picks plus coupons inside the kit.</p>
             <a className="underline font-semibold" href="/kit">Open Starter Kit offer</a>
@@ -786,7 +897,7 @@
         <section className="mx-auto max-w-4xl px-4 py-12 space-y-4">
           <h1 className="text-3xl font-bold">Thank you!</h1>
           <p className="text-sm opacity-80">Your Tesla Helper kit is on the way. Ready for charging guidance?</p>
-          <a className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 font-semibold text-white" href="/upsell">See the charging mini-course</a>
+          <a className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700" href="/upsell">See the charging mini-course</a>
         </section>
       </PageShell>
     );

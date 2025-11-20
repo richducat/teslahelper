@@ -132,22 +132,17 @@
   };
 
   /* ------------------------------------------------------------------
-   * My Tesla data (static mock)
-   *
-   * Centralized sample telemetry/FSD/safety values used across the new
-   * My Tesla page and the customizable homepage widgets. These mirror
-   * the shape of data expected from the backend service.
+   * Mock analytics data used to showcase the telemetry/FSD dashboard
+   * capabilities described in the SPEC. These values are static for now
+   * but mirror the structure we expect from the backend service.
    * ------------------------------------------------------------------ */
-  const MY_TESLA_DATA = {
+  const ANALYTICS_MOCK = {
     summary: {
       totalMiles: 12340,
       avgEfficiency: 274,
       autopilotMiles: 4200,
       autopilotPct: 34,
       safetyScore: 92,
-      regenEnergy: 11.2,
-      netEnergy: 37.4,
-      longestApSession: 18.4,
     },
     trips: [
       {
@@ -437,183 +432,14 @@
       </div>
     );
   }
-  /* ------------------------------------------------------------------
-   * Homepage widget deck
-   * ------------------------------------------------------------------ */
-  const WIDGET_METRICS = [
-    {
-      id: 'totalMiles',
-      label: 'Total miles',
-      helper: (data) => `${data.summary.autopilotPct}% on Autopilot`,
-      value: (data) => `${data.summary.totalMiles.toLocaleString()} mi`,
-    },
-    {
-      id: 'avgEfficiency',
-      label: 'Avg efficiency',
-      helper: () => 'Net energy incl. regen',
-      value: (data) => `${data.summary.avgEfficiency} Wh/mi`,
-    },
-    {
-      id: 'autopilotMiles',
-      label: 'Autopilot miles',
-      helper: (data) => `${data.summary.autopilotPct}% of driving`,
-      value: (data) => `${data.summary.autopilotMiles.toLocaleString()} mi`,
-    },
-    {
-      id: 'safetyScore',
-      label: 'Safety score',
-      helper: () => 'Weighted by braking, turns, speeding',
-      value: (data) => `${data.summary.safetyScore}/100`,
-    },
-    {
-      id: 'regenEnergy',
-      label: 'Regen captured',
-      helper: () => 'Energy recovered this week',
-      value: (data) => `${data.summary.regenEnergy.toFixed(1)} kWh`,
-    },
-    {
-      id: 'netEnergy',
-      label: 'Net energy used',
-      helper: () => 'Consumption minus regen',
-      value: (data) => `${data.summary.netEnergy.toFixed(1)} kWh`,
-    },
-    {
-      id: 'longestApSession',
-      label: 'Longest AP session',
-      helper: () => 'Continuous Autopilot distance',
-      value: (data) => `${data.summary.longestApSession} mi`,
-    },
-  ];
 
-  const WIDGET_TEMPLATES = {
-    compact6: { label: 'Six small cards', slots: ['sm', 'sm', 'sm', 'sm', 'sm', 'sm'] },
-    balanced: { label: '2 small + 2 medium', slots: ['sm', 'sm', 'md', 'md'] },
-    xlPair: { label: 'Two extra large', slots: ['xl', 'xl'] },
-  };
-
-  function getMetricById(id, data) {
-    const metric = WIDGET_METRICS.find((m) => m.id === id);
-    if (!metric) return null;
-    return {
-      ...metric,
-      valueText: typeof metric.value === 'function' ? metric.value(data) : metric.value,
-      helperText: typeof metric.helper === 'function' ? metric.helper(data) : metric.helper,
-    };
-  }
-
-  function HomeWidgetCard({ metric, size, accent, isDark }) {
-    const sizeClass = {
-      sm: 'min-h-[92px]',
-      md: 'min-h-[120px] col-span-2',
-      xl: 'min-h-[156px] col-span-2',
-    }[size];
+  function TelemetryAnalyticsSection({ accent, isDark }) {
+    const { summary, trips, fsd, safety, achievements } = ANALYTICS_MOCK;
     return (
-      <Card
-        className={classNames(
-          'border p-3 flex flex-col justify-between gap-2 transition-transform duration-150 hover:translate-y-[-1px]',
-          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200',
-          sizeClass
-        )}
-      >
-        <div className="text-[11px] uppercase tracking-[0.25em] opacity-70">{metric.label}</div>
-        <div className="text-2xl font-black leading-tight">{metric.valueText}</div>
-        {metric.helperText ? <div className="text-sm opacity-80">{metric.helperText}</div> : null}
-        <div className={classNames('h-1 rounded-full', accent.underline)} aria-hidden="true" />
-      </Card>
-    );
-  }
-
-  function HomeWidgetGrid({ data, config, accent, isDark }) {
-    const template = WIDGET_TEMPLATES[config.template] || WIDGET_TEMPLATES.compact6;
-    const availableIds = config.metricIds?.length ? config.metricIds : WIDGET_METRICS.map((m) => m.id);
-    const metrics = template.slots.map((_, idx) => {
-      const id = availableIds[idx % availableIds.length];
-      return getMetricById(id, data);
-    });
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        {metrics.map(
-          (metric, idx) =>
-            metric && (
-              <HomeWidgetCard
-                key={`${metric.id}-${idx}`}
-                metric={metric}
-                size={template.slots[idx]}
-                accent={accent}
-                isDark={isDark}
-              />
-            )
-        )}
-      </div>
-    );
-  }
-
-  function WidgetCustomizer({ config, setConfig, isDark }) {
-    const maxCards = WIDGET_TEMPLATES[config.template]?.slots.length || 6;
-    const toggleMetric = (id) => {
-      setConfig((prev) => {
-        const exists = prev.metricIds.includes(id);
-        let nextIds = exists ? prev.metricIds.filter((m) => m !== id) : [...prev.metricIds, id];
-        if (nextIds.length === 0) nextIds = [id];
-        return { ...prev, metricIds: nextIds.slice(0, maxCards) };
-      });
-    };
-
-    return (
-      <div
-        className={classNames(
-          'rounded-xl border p-3 space-y-3',
-          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
-        )}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="font-semibold text-sm">Homepage widgets</div>
-          <span className="text-xs opacity-70">Choose up to {maxCards} cards</span>
-        </div>
-        <label className="text-sm font-semibold flex flex-col gap-1">
-          Layout
-          <select
-            className={classNames(
-              'rounded-lg border px-3 py-2 text-sm',
-              isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
-            )}
-            value={config.template}
-            onChange={(e) => setConfig((prev) => ({ ...prev, template: e.target.value }))}
-          >
-            {Object.entries(WIDGET_TEMPLATES).map(([k, t]) => (
-              <option key={k} value={k}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {WIDGET_METRICS.map((m) => (
-            <label key={m.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={config.metricIds.includes(m.id)}
-                onChange={() => toggleMetric(m.id)}
-                className="h-4 w-4"
-              />
-              <span>{m.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  /* ------------------------------------------------------------------
-   * My Tesla page
-   * ------------------------------------------------------------------ */
-  function MyTeslaSection({ accent, isDark }) {
-    const { summary, trips, fsd, safety, achievements } = MY_TESLA_DATA;
-    return (
-      <section id="my-tesla" className="mx-auto max-w-6xl px-4 pb-16">
+      <section id="analytics" className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
-          title="My Tesla"
-          subtitle="Live telemetry, Autopilot, safety, and achievements tailored to your garage."
+          title="Telemetry, FSD, and safety analytics"
+          subtitle="Preview the dashboard experience powered by Tesla Fleet telemetry: trip summaries, Autopilot usage, safety events, and achievements."
         />
         <div className="grid gap-4 md:grid-cols-4">
           <AnalyticsMetricCard
@@ -771,7 +597,7 @@
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <div className="text-xs uppercase opacity-70">Energy used</div>
-                <div className="font-semibold">{summary.netEnergy.toFixed(1)} kWh (regen {summary.regenEnergy.toFixed(1)} kWh)</div>
+                <div className="font-semibold">12.4 kWh (regen 2.1 kWh)</div>
               </div>
               <div>
                 <div className="text-xs uppercase opacity-70">Max speed</div>
@@ -779,11 +605,11 @@
               </div>
               <div>
                 <div className="text-xs uppercase opacity-70">Autopilot</div>
-                <div className="font-semibold">{summary.autopilotPct}% of trip</div>
+                <div className="font-semibold">62% of trip</div>
               </div>
               <div>
                 <div className="text-xs uppercase opacity-70">Disengagements</div>
-                <div className="font-semibold">{fsd.disengagements} total</div>
+                <div className="font-semibold">1 manual, 0 system</div>
               </div>
             </div>
           </Card>
@@ -1166,20 +992,24 @@
     const navMenuRef = useRef(null);
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
-    const widgetConfig = useMemo(
-      () => ({
-        template: 'compact6',
-        metricIds: [
-          'totalMiles',
-          'autopilotMiles',
-          'avgEfficiency',
-          'safetyScore',
-          'regenEnergy',
-          'longestApSession',
-        ],
-      }),
-      []
-    );
+    const widgetFallback = {
+      template: 'balanced',
+      metricIds: WIDGET_METRICS.slice(0, 4).map((m) => m.id),
+    };
+    const [widgetConfig, setWidgetConfig] = useState(() => {
+      if (typeof window === 'undefined') return widgetFallback;
+      try {
+        const stored = window.localStorage?.getItem('teslahelper-widgets');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.template && Array.isArray(parsed.metricIds)) return parsed;
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+      return widgetFallback;
+    });
+    const [showWidgetEditor, setShowWidgetEditor] = useState(false);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
@@ -1218,6 +1048,11 @@
         window.localStorage?.setItem('teslahelper-theme', mode);
       }
     }, [mode]);
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        window.localStorage?.setItem('teslahelper-widgets', JSON.stringify(widgetConfig));
+      }
+    }, [widgetConfig]);
     useEffect(() => {
       const onScroll = () => setHeaderCompact(window.scrollY > 12);
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -1533,9 +1368,20 @@
                     <div className="text-xs uppercase tracking-[0.25em] opacity-70">Home widgets</div>
                     <div className="font-semibold">Telemetry, FSD, and safety at a glance</div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isDark={isDark}
+                    onClick={() => setShowWidgetEditor((o) => !o)}
+                  >
+                    {showWidgetEditor ? 'Hide' : 'Customize'}
+                  </Button>
                 </div>
                 <HomeWidgetGrid data={MY_TESLA_DATA} config={widgetConfig} accent={accent} isDark={isDark} />
               </Card>
+              {showWidgetEditor ? (
+                <WidgetCustomizer config={widgetConfig} setConfig={setWidgetConfig} isDark={isDark} />
+              ) : null}
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">
@@ -1576,7 +1422,7 @@
             </div>
           </Card>
         </section>
-        <MyTeslaSection accent={accent} isDark={isDark} />
+        <TelemetryAnalyticsSection accent={accent} isDark={isDark} />
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <LibraryPanel accent={accent} isDark={isDark} />

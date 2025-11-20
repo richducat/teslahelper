@@ -74,7 +74,6 @@
       desc: 'Reference for trademark and brand usage.',
     },
   ];
-
   /* ------------------------------------------------------------------
    * Accent color palette
    *
@@ -875,6 +874,18 @@
               </div>
               <Button
                 as="a"
+                href="https://auth.tesla.com/"
+                target="_blank"
+                rel="noreferrer"
+                variant="secondary"
+                size="md"
+                className="w-full md:w-auto min-w-[132px]"
+                isDark={isDark}
+              >
+                Log into Tesla
+              </Button>
+              <Button
+                as="a"
                 href="#library"
                 variant="primary"
                 size="md"
@@ -931,7 +942,7 @@
                   <div className="font-semibold">Quick links</div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
+                  {[ 
                     { label: 'Models', href: '#models', icon: '🚗' },
                     { label: 'Video Library', href: '#library', icon: '🎞️' },
                     { label: 'Charging', href: '#library?q=charging', icon: '🔌' },

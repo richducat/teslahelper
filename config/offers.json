@@ -1,0 +1,5 @@
+{
+  "tripwire": { "name": "Tesla Owner Starter Kit", "price": 19, "gumroadUrl": "https://gum.co/STARTER_KIT" },
+  "orderBump": { "name": "Accessories Quick Picks & Coupons", "price": 7, "gumroadAddOn": "https://gum.co/ACCESSORIES_ADDON" },
+  "upsell": { "name": "Home Charging Mini-Course", "price": 49, "gumroadUpsellUrl": "https://gum.co/CHARGING_COURSE" }
+}

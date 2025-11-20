@@ -11,7 +11,7 @@
  */
 
 (() => {
-  const { useState, useEffect, useMemo, useId } = React;
+  const { useState, useEffect, useMemo, useId, useRef } = React;
 
   /* ------------------------------------------------------------------
    * Brand definition
@@ -593,6 +593,8 @@
     const [reduceMotion, setReduceMotion] = useState(false);
     const [headerCompact, setHeaderCompact] = useState(false);
     const [headerSearch, setHeaderSearch] = useState('');
+    const [navMenuOpen, setNavMenuOpen] = useState(false);
+    const navMenuRef = useRef(null);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
@@ -638,6 +640,28 @@
       onScroll();
       return () => window.removeEventListener('scroll', onScroll);
     }, []);
+    useEffect(() => {
+      function handleClickAway(e) {
+        if (navMenuRef.current && !navMenuRef.current.contains(e.target)) {
+          setNavMenuOpen(false);
+        }
+      }
+      if (navMenuOpen) {
+        document.addEventListener('mousedown', handleClickAway);
+        document.addEventListener('touchstart', handleClickAway);
+        document.addEventListener('keydown', handleEscape, true);
+      }
+      function handleEscape(e) {
+        if (e.key === 'Escape') {
+          setNavMenuOpen(false);
+        }
+      }
+      return () => {
+        document.removeEventListener('mousedown', handleClickAway);
+        document.removeEventListener('touchstart', handleClickAway);
+        document.removeEventListener('keydown', handleEscape, true);
+      };
+    }, [navMenuOpen]);
     useEffect(() => {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -705,6 +729,18 @@
       const hash = params.toString() ? `#library?${params.toString()}` : '#library';
       window.location.hash = hash;
     };
+    const exploreMenuItems = [
+      { href: '/', label: 'Home' },
+      { href: '/start', label: 'Start' },
+      { href: '/kit', label: 'Kit' },
+      { href: '/upsell', label: 'Partners' },
+      { href: '/accessories/model-y', label: 'Accessories' },
+      { href: '/chargers', label: 'Chargers' },
+      { href: '/insurance', label: 'Insurance' },
+      { href: '/disclosure', label: 'Disclosure' },
+      { href: '/thank-you', label: 'Thank you' },
+    ];
+
     return (
       <div id="top" className={classNames('min-h-screen', pageBg)}>
         <header
@@ -774,6 +810,67 @@
                 >
                   {isDark ? '🌞' : '🌙'}
                 </Button>
+              </div>
+              <div className="relative" ref={navMenuRef}>
+                <button
+                  type="button"
+                  className={classNames(
+                    'inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition',
+                    isDark
+                      ? 'border-white/10 bg-white/5 text-white hover:border-white/30'
+                      : 'border-neutral-300 bg-white text-neutral-900 hover:border-neutral-400'
+                  )}
+                  aria-haspopup="menu"
+                  aria-expanded={navMenuOpen}
+                  aria-controls="main-nav-explore-menu"
+                  onClick={() => setNavMenuOpen((open) => !open)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setNavMenuOpen(false);
+                      e.currentTarget.focus();
+                    }
+                  }}
+                >
+                  Explore
+                  <span aria-hidden="true">▾</span>
+                </button>
+                {navMenuOpen && (
+                  <div
+                    id="main-nav-explore-menu"
+                    className={classNames(
+                      'absolute right-0 mt-2 w-48 rounded-xl border shadow-lg ring-1',
+                      isDark
+                        ? 'border-white/10 bg-neutral-900/95 text-white ring-black/30'
+                        : 'border-neutral-200 bg-white text-neutral-900 ring-black/5'
+                    )}
+                    role="menu"
+                  >
+                    <ul className="py-2">
+                      {exploreMenuItems.map((item) => (
+                        <li key={item.href}>
+                          <a
+                            className={classNames(
+                              'block px-4 py-2 text-sm focus:outline-none',
+                              isDark ? 'hover:bg-white/10 focus:bg-white/10' : 'hover:bg-neutral-100 focus:bg-neutral-100'
+                            )}
+                            href={item.href}
+                            role="menuitem"
+                            onClick={() => setNavMenuOpen(false)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') {
+                                e.preventDefault();
+                                setNavMenuOpen(false);
+                                navMenuRef.current?.querySelector('button')?.focus();
+                              }
+                            }}
+                          >
+                            {item.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               <Button
                 as="a"

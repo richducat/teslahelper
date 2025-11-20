@@ -588,7 +588,7 @@
                   <div
                     id="marketing-nav-explore-menu"
                     className={classNames(
-                      'absolute right-0 mt-2 w-48 rounded-xl border shadow-lg ring-1',
+                      'absolute left-1/2 mt-2 w-48 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border shadow-lg ring-1 sm:left-auto sm:right-0 sm:translate-x-0',
                       'border-white/10 bg-neutral-900/95 text-white ring-black/30'
                     )}
                     role="menu"

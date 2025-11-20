@@ -976,6 +976,24 @@
     const navMenuRef = useRef(null);
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
+    const widgetFallback = {
+      template: 'balanced',
+      metricIds: WIDGET_METRICS.slice(0, 4).map((m) => m.id),
+    };
+    const [widgetConfig, setWidgetConfig] = useState(() => {
+      if (typeof window === 'undefined') return widgetFallback;
+      try {
+        const stored = window.localStorage?.getItem('teslahelper-widgets');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.template && Array.isArray(parsed.metricIds)) return parsed;
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+      return widgetFallback;
+    });
+    const [showWidgetEditor, setShowWidgetEditor] = useState(false);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
@@ -1014,6 +1032,11 @@
         window.localStorage?.setItem('teslahelper-theme', mode);
       }
     }, [mode]);
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        window.localStorage?.setItem('teslahelper-widgets', JSON.stringify(widgetConfig));
+      }
+    }, [widgetConfig]);
     useEffect(() => {
       const onScroll = () => setHeaderCompact(window.scrollY > 12);
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -1111,6 +1134,7 @@
     };
     const exploreMenuItems = [
       { href: '/', label: 'Homepage' },
+      { href: '#my-tesla', label: 'My Tesla' },
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
       { href: '/upsell', label: 'Upsell' },
@@ -1316,7 +1340,33 @@
               </div>
               <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
             </div>
-            <div className="relative w-full space-y-4" aria-hidden="true" />
+            <div className="relative w-full space-y-4">
+              <Card
+                className={classNames(
+                  'border p-3 md:p-4 space-y-3 shadow-[0_10px_50px_-30px_rgba(0,0,0,0.8)]',
+                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+                )}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.25em] opacity-70">Home widgets</div>
+                    <div className="font-semibold">Telemetry, FSD, and safety at a glance</div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isDark={isDark}
+                    onClick={() => setShowWidgetEditor((o) => !o)}
+                  >
+                    {showWidgetEditor ? 'Hide' : 'Customize'}
+                  </Button>
+                </div>
+                <HomeWidgetGrid data={MY_TESLA_DATA} config={widgetConfig} accent={accent} isDark={isDark} />
+              </Card>
+              {showWidgetEditor ? (
+                <WidgetCustomizer config={widgetConfig} setConfig={setWidgetConfig} isDark={isDark} />
+              ) : null}
+            </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
@@ -1331,6 +1381,7 @@
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2 w-full md:w-auto">
                 {[
+                  { label: 'My Tesla', href: '#my-tesla', icon: '📊' },
                   { label: 'Models', href: '#models', icon: '🚗' },
                   { label: 'Video Library', href: '#library', icon: '🎞️' },
                   { label: 'Charging', href: '#library?q=charging', icon: '🔌' },

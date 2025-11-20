@@ -57,7 +57,7 @@
   };
 
   const EXPLORE_MENU_ITEMS = [
-    { href: '/', label: 'TeslaHelper.app' },
+    { href: '/', label: 'Homepage' },
     { href: '/start', label: 'Start' },
     { href: '/kit', label: 'Kit' },
     { href: '/upsell', label: 'Upsell' },
@@ -67,6 +67,19 @@
     { href: '/disclosure', label: 'Disclosure' },
     { href: '/thank-you', label: 'Thank you' },
   ];
+
+  const BRAND_WORDMARK = (
+    <span className="inline-flex items-center gap-2 font-black tracking-tight text-lg" aria-hidden="true">
+      <svg className="h-6 w-6" viewBox="0 0 32 32" role="img" aria-hidden="true" focusable="false">
+        <rect x="4" y="4" width="24" height="24" rx="6" className="fill-current opacity-90" />
+        <path
+          d="M10.5 21.5h4.25a3.75 3.75 0 0 0 3.75-3.75v-.5A3.25 3.25 0 0 0 15.25 14H10.5v-3h11v2h-4.25a3.25 3.25 0 0 1 0 6.5H10.5v2Z"
+          className="fill-white"
+        />
+      </svg>
+      <span>Tesla Helper</span>
+    </span>
+  );
 
   const ACCESSORY_INTRO = 'We keep this list updated with day-one must-haves for each Tesla model. We may earn a commission when you buy through our links—it helps keep TeslaHelper free.';
 
@@ -426,18 +439,18 @@
   }
 
   function PageShell({ children }) {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef(null);
+    const [navMenuOpen, setNavMenuOpen] = useState(false);
+    const navMenuRef = useRef(null);
 
     useEffect(() => {
-      if (!menuOpen) return undefined;
+      if (!navMenuOpen) return undefined;
       const handleClick = (e) => {
-        if (menuRef.current && !menuRef.current.contains(e.target)) {
-          setMenuOpen(false);
+        if (navMenuRef.current && !navMenuRef.current.contains(e.target)) {
+          setNavMenuOpen(false);
         }
       };
       const handleKey = (e) => {
-        if (e.key === 'Escape') setMenuOpen(false);
+        if (e.key === 'Escape') setNavMenuOpen(false);
       };
       document.addEventListener('click', handleClick);
       document.addEventListener('keydown', handleKey);
@@ -445,39 +458,68 @@
         document.removeEventListener('click', handleClick);
         document.removeEventListener('keydown', handleKey);
       };
-    }, [menuOpen]);
+    }, [navMenuOpen]);
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-930 to-neutral-950 text-white">
         <header className="border-b border-white/10">
           <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-            <a href="/" className="font-bold text-lg" aria-label="TeslaHelper home">
-              TeslaHelper
+            <a
+              href="https://teslahelper.app"
+              className="inline-flex items-center"
+              aria-label="TeslaHelper home"
+            >
+              {BRAND_WORDMARK}
+              <span className="sr-only">Tesla Helper</span>
             </a>
-            <nav className="relative text-sm" ref={menuRef}>
+            <nav className="relative text-sm" ref={navMenuRef}>
               <button
                 type="button"
+                className={classNames(
+                  'inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition',
+                  'border-white/10 bg-white/5 text-white hover:border-white/30'
+                )}
                 aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 font-semibold shadow-sm transition hover:border-white/40 hover:bg-white/10"
-                onClick={() => setMenuOpen((open) => !open)}
+                aria-expanded={navMenuOpen}
+                aria-controls="marketing-nav-explore-menu"
+                onClick={() => setNavMenuOpen((open) => !open)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setNavMenuOpen(false);
+                    e.currentTarget.focus();
+                  }
+                }}
               >
                 Explore
                 <span aria-hidden>▾</span>
               </button>
-              {menuOpen && (
+              {navMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-52 rounded-xl border border-white/10 bg-neutral-950/95 shadow-xl ring-1 ring-black/40"
+                  id="marketing-nav-explore-menu"
+                  className={classNames(
+                    'absolute right-0 mt-2 w-48 rounded-xl border shadow-lg ring-1',
+                    'border-white/10 bg-neutral-900/95 text-white ring-black/30'
+                  )}
                   role="menu"
                 >
                   <ul className="py-2">
                     {EXPLORE_MENU_ITEMS.map((item) => (
                       <li key={item.href}>
                         <a
+                          className={classNames(
+                            'block px-4 py-2 text-sm focus:outline-none',
+                            'hover:bg-white/10 focus:bg-white/10'
+                          )}
                           href={item.href}
-                          className="block px-4 py-2 text-sm hover:bg-white/10 focus:bg-white/10 focus:outline-none"
                           role="menuitem"
-                          onClick={() => setMenuOpen(false)}
+                          onClick={() => setNavMenuOpen(false)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              e.preventDefault();
+                              setNavMenuOpen(false);
+                              navMenuRef.current?.querySelector('button')?.focus();
+                            }
+                          }}
                         >
                           {item.label}
                         </a>

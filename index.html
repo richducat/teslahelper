@@ -8,6 +8,7 @@
     name="description"
     content="Owner-first Tesla tips with official videos, how-tos, and FAQs organized by model, year, hardware, and software version."
   />
+  <base href="/" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
@@ -83,6 +84,14 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    window.APP_ENV = {
+      plausibleDomain: 'teslahelper.app',
+      metaPixelId: 'xxxxxxxxxxxxxxx',
+      googleAdsId: 'AW-XXXXXXXXX',
+      beehiivEmbedId: 'bhv_XXXXXXXX'
+    };
+  </script>
 </head>
 <body class="min-h-screen">
   <div id="root"></div>

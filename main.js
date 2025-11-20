@@ -11,6 +11,22 @@
  */
 
 (() => {
+  // If React or ReactDOM fail to load (e.g., CDN/CSP/network issues), show a
+  // lightweight fallback so the page never stays blank.
+  if (!window.React || !window.ReactDOM) {
+    const root = document.getElementById('root') || document.body;
+    if (root) {
+      root.innerHTML = `
+        <div style="padding:24px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+          <h1 style="font-size:20px;font-weight:700;margin:0 0 8px;">Tesla Helper</h1>
+          <p style="margin:0 0 12px;">We couldn't load the app because required scripts were blocked. Please refresh or check your connection.</p>
+          <p style="margin:0;">If this keeps happening, visit <a href="https://teslahelper.app" style="color:#8b5cf6;font-weight:600;">teslahelper.app</a> on a trusted network.</p>
+        </div>`;
+    }
+    console.error('TeslaHelper: React or ReactDOM failed to load.');
+    return;
+  }
+
   const { useState, useEffect, useMemo, useId, useRef } = React;
 
   /* ------------------------------------------------------------------

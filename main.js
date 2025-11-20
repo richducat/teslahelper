@@ -113,6 +113,12 @@
     models: { label: 'Model S', alt: 'Tesla Model S', img: '', note: '2024+ & 2012–2020' },
     modelx: { label: 'Model X', alt: 'Tesla Model X', img: '', note: '2021+ & 2015–2020' },
     modely: { label: 'Model Y', alt: 'Tesla Model Y', img: '', note: '2025+ & 2020–2024' },
+    cybertruck: {
+      label: 'Cybertruck',
+      alt: 'Tesla Cybertruck',
+      img: 'https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto,w_1280/Cybertruck_Desktop',
+      note: 'All years',
+    },
   };
 
   /* ------------------------------------------------------------------
@@ -297,11 +303,11 @@
    * Displays all four models in a responsive grid.
    * ------------------------------------------------------------------ */
   function CarsGrid({ accent, carImages, isDark }) {
-    const ids = ['model3', 'models', 'modelx', 'modely'];
+    const ids = ['model3', 'models', 'modelx', 'modely', 'cybertruck'];
     return (
       <section id="models" className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle title="Pick your Tesla" subtitle="Select a model to jump into its how‑to library." />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {ids.map((id) => (
           <CarTile key={id} id={id} accent={accent} carImages={carImages} isDark={isDark} />
         ))}
@@ -602,7 +608,7 @@
     const headerBg = isDark ? 'bg-neutral-900/95 border-neutral-800' : 'bg-white/95 border-neutral-200';
 
     // Car images are loaded lazily from tesla_helper_base64_1280.json. The keys in
-    // the JSON map correspond to model names (model3, models, modelx, modely).
+    // the JSON map correspond to model names (model3, models, modelx, modely, cybertruck).
     const [carImages, setCarImages] = useState({});
     useEffect(() => {
       fetch('tesla_helper_base64_1280.json')

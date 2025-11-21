@@ -1352,6 +1352,13 @@
     };
     const exploreMenuItems = [
       { href: '/', label: 'Homepage' },
+      { href: '#library', label: 'Open Library' },
+      {
+        href: 'https://auth.tesla.com/',
+        label: 'Log into Tesla',
+        target: '_blank',
+        rel: 'noreferrer',
+      },
       { href: '#my-tesla', label: 'My Tesla' },
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
@@ -1453,7 +1460,7 @@
                     }
                   }}
                 >
-                  Explore
+                  Menu
                   <span aria-hidden="true">▾</span>
                 </button>
                 {navMenuOpen && (
@@ -1476,6 +1483,8 @@
                               isDark ? 'hover:bg-white/10 focus:bg-white/10' : 'hover:bg-neutral-100 focus:bg-neutral-100'
                             )}
                             href={item.href}
+                            target={item.target}
+                            rel={item.rel}
                             role="menuitem"
                             onClick={() => setNavMenuOpen(false)}
                             onKeyDown={(e) => {
@@ -1501,7 +1510,7 @@
                 rel="noreferrer"
                 variant="secondary"
                 size="md"
-                className="w-full md:w-auto min-w-[132px]"
+                className="hidden md:inline-flex md:w-auto min-w-[132px]"
                 isDark={isDark}
               >
                 Log into Tesla
@@ -1511,7 +1520,7 @@
                 href="#library"
                 variant="primary"
                 size="md"
-                className="w-full md:w-auto min-w-[132px]"
+                className="hidden md:inline-flex md:w-auto min-w-[132px]"
                 accent={accent}
                 isDark={isDark}
               >

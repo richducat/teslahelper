@@ -524,52 +524,24 @@
       const target = query ? `/#library?q=${encodeURIComponent(query)}` : '/#library';
       window.location.href = target;
     };
+    const navTabs = [
+      { href: '/#library', label: 'Library' },
+      { href: '/start', label: 'Start' },
+      { href: '/kit', label: 'Starter Kit' },
+      { href: '/upsell', label: 'Charging course' },
+      { href: '/accessories/model-y', label: 'Accessories' },
+      { href: '/chargers', label: 'Chargers' },
+    ];
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-930 to-neutral-950 text-white">
-        <header className="border-b border-white/10">
-          <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-neutral-950/90 backdrop-blur">
+          <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <a href="/" className="inline-flex items-center" aria-label="TeslaHelper home">
-                {BRAND_WORDMARK}
-                <span className="sr-only">Tesla Helper</span>
-              </a>
-            </div>
-            <form
-              className={classNames(
-                'flex flex-col gap-2 md:flex-row md:items-center md:gap-3 w-full md:w-auto md:flex-1 md:order-none order-first'
-              )}
-              role="search"
-              onSubmit={handleSearchSubmit}
-            >
-              <label className="sr-only" htmlFor="marketing-global-search">
-                Search the Tesla Helper library
-              </label>
-              <div className="flex-1 md:max-w-xl">
-                <input
-                  id="marketing-global-search"
-                  value={headerSearch}
-                  onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="Search (e.g., Sentry, PIN to Drive, HW4)"
-                  className={classNames(
-                    'w-full rounded-lg h-10 px-3 text-sm border focus:outline-none focus:ring-2 shadow-sm',
-                    'bg-neutral-950 border-neutral-800 text-white focus:ring-violet-400'
-                  )}
-                />
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <NavButton variant="ghost" type="submit">Search</NavButton>
-              </div>
-            </form>
-            <div className="flex flex-wrap items-center gap-2 md:justify-end">
-              <AccentPicker accentName={accentName} setAccentName={setAccentName} />
               <div className="relative" ref={navMenuRef}>
                 <button
                   type="button"
-                  className={classNames(
-                    'inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition',
-                    'border-white/10 bg-white/5 text-white hover:border-white/30'
-                  )}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white transition hover:border-white/30"
                   aria-haspopup="menu"
                   aria-expanded={navMenuOpen}
                   aria-controls="marketing-nav-explore-menu"
@@ -581,26 +553,24 @@
                     }
                   }}
                 >
-                  Explore
-                  <span aria-hidden>▾</span>
+                  <span className="sr-only">Toggle navigation</span>
+                  <div className="flex flex-col justify-center space-y-1" aria-hidden="true">
+                    <span className="block h-0.5 w-5 rounded-full bg-current" />
+                    <span className="block h-0.5 w-4 rounded-full bg-current" />
+                    <span className="block h-0.5 w-5 rounded-full bg-current" />
+                  </div>
                 </button>
                 {navMenuOpen && (
                   <div
                     id="marketing-nav-explore-menu"
-                    className={classNames(
-                      'absolute left-1/2 mt-2 w-48 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border shadow-lg ring-1 sm:left-auto sm:right-0 sm:translate-x-0',
-                      'border-white/10 bg-neutral-900/95 text-white ring-black/30'
-                    )}
+                    className="absolute left-0 mt-2 w-52 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-neutral-900/95 text-white shadow-lg ring-1 ring-black/30"
                     role="menu"
                   >
                     <ul className="py-2">
                       {EXPLORE_MENU_ITEMS.map((item) => (
                         <li key={item.href}>
                           <a
-                            className={classNames(
-                              'block px-4 py-2 text-sm focus:outline-none',
-                              'hover:bg-white/10 focus:bg-white/10'
-                            )}
+                            className="block px-4 py-2 text-sm focus:outline-none hover:bg-white/10 focus:bg-white/10"
                             href={item.href}
                             role="menuitem"
                             onClick={() => setNavMenuOpen(false)}
@@ -620,26 +590,70 @@
                   </div>
                 )}
               </div>
-              <NavButton
-                as="a"
-                href="/#library"
-                variant="primary"
-                accent={accent}
-                className="w-full md:w-auto min-w-[132px]"
-              >
-                Open Library
+              <a href="/" className="flex-1 inline-flex items-center justify-center md:justify-start" aria-label="TeslaHelper home">
+                {BRAND_WORDMARK}
+                <span className="sr-only">Tesla Helper</span>
+              </a>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
+                  <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+                </div>
+                <NavButton as="a" href="/#library" variant="primary" accent={accent} className="hidden md:inline-flex rounded-full px-4">
+                  Open Library
+                </NavButton>
+                <NavButton
+                  as="a"
+                  href={SUPPORT_LINK}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="secondary"
+                  className="hidden md:inline-flex rounded-full px-4"
+                >
+                  Contribute
+                </NavButton>
+              </div>
+            </div>
+            <form className="flex w-full items-center gap-3" role="search" onSubmit={handleSearchSubmit}>
+              <label className="sr-only" htmlFor="marketing-global-search">
+                Search the Tesla Helper library
+              </label>
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true">
+                  🔍
+                </span>
+                <input
+                  id="marketing-global-search"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="Search for news, tickers, or Tesla tips"
+                  className="w-full rounded-full h-11 pl-11 pr-4 text-sm border border-white/10 bg-neutral-950/90 text-white shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-400/80 focus:border-emerald-400/80"
+                />
+              </div>
+              <NavButton variant="primary" type="submit" accent={accent} className="hidden md:inline-flex rounded-full px-4">
+                Search
               </NavButton>
-              <NavButton
-                as="a"
-                href={SUPPORT_LINK}
-                target="_blank"
-                rel="noreferrer"
-                variant="secondary"
-                className="w-full md:w-auto min-w-[132px]"
-              >
-                Contribute
+            </form>
+            <div className="flex items-center gap-2 sm:hidden">
+              <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+              <NavButton as="a" href="/#library" variant="primary" accent={accent} className="rounded-full px-3">
+                Library
               </NavButton>
             </div>
+            <nav className="flex items-center overflow-x-auto pt-1" aria-label="Primary">
+              <ul className="flex items-center gap-3 text-sm font-semibold">
+                {navTabs.map((item) => (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-white/80 transition hover:text-white hover:bg-white/10"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className={classNames('h-[3px] w-full rounded-full', accent.underline)} />
           </div>
         </header>
         <main>{children}</main>

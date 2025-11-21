@@ -225,11 +225,6 @@
     ...(typeof window !== 'undefined' && window.APP_ENV?.teslaAuth ? window.APP_ENV.teslaAuth : {}),
   };
 
-  const TESLA_AUTH_CONFIG = {
-    ...TESLA_AUTH_DEFAULT,
-    ...(typeof window !== 'undefined' && window.APP_ENV?.teslaAuth ? window.APP_ENV.teslaAuth : {}),
-  };
-
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
 
   function loadStoredAuth() {

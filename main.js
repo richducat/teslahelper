@@ -27,7 +27,7 @@
     return;
   }
 
-  const { useState, useEffect, useMemo, useId, useRef } = React;
+  const { useState, useEffect, useMemo, useId, useRef, useCallback } = React;
 
   /* ------------------------------------------------------------------
    * Brand definition
@@ -207,11 +207,274 @@
     ],
   };
 
+  const TESLA_AUTH_CONFIG = {
+    clientId: 'ownerapi',
+    scope: 'openid offline_access vehicle_device_data vehicle_cmds',
+    audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
+    tokenEndpoint: 'https://auth.tesla.com/oauth2/v3/token',
+    apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+  };
+
+  const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
+
+  function loadStoredAuth() {
+    if (typeof window === 'undefined') return { status: 'signedOut' };
+    try {
+      const saved = localStorage.getItem(TESLA_AUTH_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : { status: 'signedOut' };
+    } catch (error) {
+      console.warn('TeslaHelper: failed to read auth storage', error);
+      return { status: 'signedOut' };
+    }
+  }
+
+  function persistAuth(state) {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(TESLA_AUTH_STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.warn('TeslaHelper: failed to persist auth', error);
+    }
+  }
+
+  function normalizeTelemetryFromFleet(payload, fallback = ANALYTICS_MOCK) {
+    const vehicles = payload?.response || [];
+    const first = vehicles[0] || payload?.vehicle || {};
+    const vehicleData = first.vehicle_data || first;
+
+    const odometer = Math.round(vehicleData?.vehicle_state?.odometer ?? fallback.summary.totalMiles);
+    const whPerMile = Math.round(vehicleData?.charge_state?.wh_per_mile || fallback.summary.avgEfficiency);
+    const autopilotPct = fallback.summary.autopilotPct;
+    const autopilotMiles = autopilotPct && odometer ? Math.round((autopilotPct / 100) * odometer) : fallback.summary.autopilotMiles;
+    const batteryLevel = vehicleData?.charge_state?.battery_level ?? fallback.trips?.[0]?.endSoc;
+
+    const trip = {
+      id: 'latest-trip',
+      name: first.display_name || vehicleData?.vehicle_config?.car_type || 'Latest drive',
+      date: new Date().toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+      distance: Math.max(5, Math.round((vehicleData?.drive_state?.heading || 90) / 3)),
+      duration: vehicleData?.drive_state?.active_route_minutes_to_arrival
+        ? `${vehicleData.drive_state.active_route_minutes_to_arrival}m`
+        : 'Live mileage',
+      efficiency: whPerMile || fallback.summary.avgEfficiency,
+      autopilotPct: autopilotPct || fallback.summary.autopilotPct,
+      events: batteryLevel !== undefined ? [`Battery ${batteryLevel}%`] : fallback.trips[0].events,
+      startSoc: Math.max(0, (batteryLevel || fallback.trips?.[0]?.startSoc || 0) - 2),
+      endSoc: batteryLevel || fallback.trips?.[0]?.endSoc || 0,
+    };
+
+    return {
+      summary: {
+        ...fallback.summary,
+        totalMiles: odometer,
+        avgEfficiency: whPerMile || fallback.summary.avgEfficiency,
+        autopilotMiles,
+        autopilotPct: autopilotPct || fallback.summary.autopilotPct,
+      },
+      trips: [trip, ...(fallback.trips || []).slice(0, 2)],
+      fsd: fallback.fsd,
+      safety: fallback.safety,
+      achievements: fallback.achievements,
+    };
+  }
+
+  function useTeslaTelemetry() {
+    const [telemetryData, setTelemetryData] = useState(ANALYTICS_MOCK);
+    const [telemetrySource, setTelemetrySource] = useState('demo');
+    const [authState, setAuthState] = useState(() => loadStoredAuth());
+    const [deviceAuth, setDeviceAuth] = useState(null);
+    const [authError, setAuthError] = useState('');
+    const [isPolling, setIsPolling] = useState(false);
+    const [isLoadingTelemetry, setIsLoadingTelemetry] = useState(false);
+    const [lastSynced, setLastSynced] = useState(null);
+
+    const resetToDemo = useCallback(() => {
+      setAuthState({ status: 'signedOut' });
+      setTelemetryData(ANALYTICS_MOCK);
+      setTelemetrySource('demo');
+      setDeviceAuth(null);
+      setLastSynced(null);
+      setAuthError('');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(TESLA_AUTH_STORAGE_KEY);
+      }
+    }, []);
+
+    const refreshAccessToken = useCallback(async () => {
+      if (!authState?.refreshToken) return null;
+      const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: TESLA_AUTH_CONFIG.clientId,
+          refresh_token: authState.refreshToken,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error_description || 'Unable to refresh Tesla session.');
+      const refreshed = {
+        status: 'connected',
+        accessToken: payload.access_token,
+        refreshToken: payload.refresh_token || authState.refreshToken,
+        expiresAt: Date.now() + (payload.expires_in || 0) * 1000,
+      };
+      setAuthState(refreshed);
+      persistAuth(refreshed);
+      return refreshed;
+    }, [authState?.refreshToken]);
+
+    const fetchTelemetry = useCallback(
+      async (tokenOverride) => {
+        const activeToken = tokenOverride || authState.accessToken;
+        if (!activeToken) {
+          setAuthError('Sign in with your Tesla account to load telemetry.');
+          return;
+        }
+        setIsLoadingTelemetry(true);
+        try {
+          const response = await fetch(`${TESLA_AUTH_CONFIG.apiBase}/api/1/vehicles`, {
+            headers: { Authorization: `Bearer ${activeToken}` },
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.error_description || payload.error || 'Unable to reach Tesla Fleet API.');
+          }
+          const normalized = normalizeTelemetryFromFleet(payload, ANALYTICS_MOCK);
+          setTelemetryData(normalized);
+          setTelemetrySource('tesla');
+          setLastSynced(new Date().toISOString());
+        } catch (error) {
+          setAuthError(error.message || 'Tesla data request failed.');
+        } finally {
+          setIsLoadingTelemetry(false);
+        }
+      },
+      [authState?.accessToken]
+    );
+
+    const startDeviceLogin = useCallback(async () => {
+      try {
+        setAuthError('');
+        setTelemetrySource('demo');
+        const response = await fetch(TESLA_AUTH_CONFIG.deviceCodeEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: TESLA_AUTH_CONFIG.clientId,
+            scope: TESLA_AUTH_CONFIG.scope,
+            audience: TESLA_AUTH_CONFIG.audience,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Tesla authentication is unavailable right now. Please try again.');
+        }
+
+        const payload = await response.json();
+        const deviceState = {
+          userCode: payload.user_code,
+          verificationUri: payload.verification_uri_complete || payload.verification_uri,
+          deviceCode: payload.device_code,
+          interval: payload.interval || 5,
+          expiresAt: Date.now() + (payload.expires_in || 600) * 1000,
+        };
+
+        setDeviceAuth(deviceState);
+        setAuthState({ status: 'pendingUser', deviceCode: deviceState.deviceCode });
+        setIsPolling(true);
+      } catch (error) {
+        setAuthError(error.message || 'Unable to start Tesla login.');
+      }
+    }, []);
+
+    useEffect(() => {
+      if (authState?.status === 'connected' && authState.accessToken) {
+        fetchTelemetry(authState.accessToken);
+      }
+    }, [authState?.accessToken, authState?.status, fetchTelemetry]);
+
+    useEffect(() => {
+      if (!deviceAuth || !isPolling) return undefined;
+      const intervalMs = Math.max(5, deviceAuth.interval) * 1000;
+      const timer = setInterval(async () => {
+        if (Date.now() > deviceAuth.expiresAt) {
+          setAuthError('Tesla verification code expired. Start again.');
+          setIsPolling(false);
+          setDeviceAuth(null);
+          return;
+        }
+
+        try {
+          const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+              client_id: TESLA_AUTH_CONFIG.clientId,
+              device_code: deviceAuth.deviceCode,
+            }),
+          });
+
+          const payload = await response.json();
+
+          if (payload.error === 'authorization_pending' || payload.error === 'slow_down') return;
+
+          if (!response.ok) {
+            throw new Error(payload.error_description || 'Tesla login failed.');
+          }
+
+          const nextAuth = {
+            status: 'connected',
+            accessToken: payload.access_token,
+            refreshToken: payload.refresh_token,
+            expiresAt: Date.now() + (payload.expires_in || 0) * 1000,
+          };
+
+          setAuthState(nextAuth);
+          persistAuth(nextAuth);
+          setIsPolling(false);
+          setDeviceAuth(null);
+          fetchTelemetry(nextAuth.accessToken);
+        } catch (error) {
+          setAuthError(error.message || 'Tesla login failed.');
+          setIsPolling(false);
+        }
+      }, intervalMs);
+
+      return () => clearInterval(timer);
+    }, [deviceAuth, isPolling, fetchTelemetry]);
+
+    useEffect(() => {
+      if (authState?.status !== 'connected' || !authState.expiresAt) return;
+      const timeRemaining = authState.expiresAt - Date.now();
+      if (timeRemaining > 5 * 60 * 1000) return;
+
+      refreshAccessToken().catch((error) => setAuthError(error.message || 'Session refresh failed.'));
+    }, [authState?.expiresAt, authState?.status, refreshAccessToken]);
+
+    return {
+      telemetryData,
+      telemetrySource,
+      authState,
+      authError,
+      deviceAuth,
+      startDeviceLogin,
+      resetToDemo,
+      isLoadingTelemetry,
+      isPolling,
+      lastSynced,
+      refreshTelemetry: fetchTelemetry,
+    };
+  }
+
   /* ------------------------------------------------------------------
    * Widget metric definitions
    *
    * A compact telemetry summary for the hero section. Each metric
-   * defines how to extract and format its value from ``MY_TESLA_DATA``.
+   * defines how to extract and format its value from live telemetry
+   * data (Tesla or demo).
    * ``WIDGET_TEMPLATES`` provides a few quick presets for the editor.
    * ------------------------------------------------------------------ */
   const WIDGET_METRICS = [
@@ -271,8 +534,6 @@
     autonomy: ['autopilotPct', 'autopilotMiles', 'fsdLongest', 'safetyScore'],
     efficiency: ['avgEfficiency', 'regen', 'totalMiles', 'safetyScore'],
   };
-
-  const MY_TESLA_DATA = ANALYTICS_MOCK;
 
   const WIDGET_LOOKUP = new Map(WIDGET_METRICS.map((m) => [m.id, m]));
 
@@ -412,7 +673,7 @@
     );
   }
 
-  function WidgetCustomizer({ config, setConfig, isDark }) {
+  function WidgetCustomizer({ config, setConfig, isDark, sampleData = ANALYTICS_MOCK }) {
     const MAX_WIDGETS = 4;
     const metricIds = config?.metricIds?.length ? config.metricIds : WIDGET_TEMPLATES.balanced;
 
@@ -479,7 +740,7 @@
                 <div>
                   <div className="text-sm font-semibold">{metric.label}</div>
                   {metric.caption ? (
-                    <div className="text-xs opacity-70">{metric.caption(MY_TESLA_DATA)}</div>
+                    <div className="text-xs opacity-70">{metric.caption(sampleData)}</div>
                   ) : null}
                   {active ? <div className="text-xs text-emerald-500 font-semibold">Selected</div> : null}
                 </div>
@@ -511,6 +772,118 @@
           </p>
         ) : null}
       </div>
+    );
+  }
+
+  function TeslaConnectCard({
+    accent,
+    isDark,
+    telemetrySource,
+    authState,
+    authError,
+    deviceAuth,
+    lastSynced,
+    isLoadingTelemetry,
+    isPolling,
+    onStartLogin,
+    onReset,
+    onRefresh,
+  }) {
+    const isConnected = authState?.status === 'connected' && telemetrySource === 'tesla';
+    return (
+      <Card
+        className={classNames(
+          'border p-4 md:p-5 mb-6',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+        )}
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-[0.25em] opacity-70">Tesla account</div>
+            <div className="font-semibold text-lg">{isConnected ? 'Connected to Tesla' : 'Connect your Tesla account'}</div>
+            <p className="text-sm opacity-80 max-w-2xl">
+              Sign in with Tesla OAuth to replace the demo telemetry with your live vehicle data. We use Tesla’s device code
+              flow so you never enter credentials directly into Tesla Helper.
+            </p>
+            <div className="flex flex-wrap gap-2 text-xs opacity-80">
+              <span
+                className={classNames(
+                  'rounded-full px-3 py-1 font-semibold',
+                  telemetrySource === 'tesla'
+                    ? 'bg-emerald-500/20 text-emerald-500'
+                    : isDark
+                      ? 'bg-neutral-800 text-white'
+                      : 'bg-neutral-100 text-neutral-800'
+                )}
+              >
+                {telemetrySource === 'tesla' ? 'Live from Tesla Fleet API' : 'Demo preview'}
+              </span>
+              {lastSynced ? <span>Last synced {new Date(lastSynced).toLocaleString()}</span> : null}
+              {isLoadingTelemetry ? <span>Refreshing…</span> : null}
+              {isPolling ? <span>Waiting for approval…</span> : null}
+            </div>
+            {authError ? (
+              <div
+                className={classNames(
+                  'rounded-lg border px-3 py-2 text-sm',
+                  isDark ? 'border-amber-500/50 text-amber-200 bg-amber-500/10' : 'border-amber-400 text-amber-700 bg-amber-50'
+                )}
+              >
+                {authError}
+              </div>
+            ) : null}
+            {deviceAuth ? (
+              <div
+                className={classNames(
+                  'grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-[auto,1fr] sm:items-center',
+                  isDark ? 'border-neutral-800 bg-neutral-900/60' : 'border-neutral-200 bg-neutral-50'
+                )}
+              >
+                <div className="font-mono text-lg font-semibold" aria-label="Tesla verification code">
+                  {deviceAuth.userCode}
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold">Approve the login with Tesla</div>
+                  <p className="opacity-80">
+                    Open
+                    <a className="ml-1 underline" href={deviceAuth.verificationUri} target="_blank" rel="noreferrer">
+                      {deviceAuth.verificationUri}
+                    </a>
+                    , then enter the code shown here. We’ll update the dashboard as soon as Tesla confirms.
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <Button
+                    as="a"
+                    href={deviceAuth.verificationUri}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="primary"
+                    accent={accent}
+                    isDark={isDark}
+                    className="w-full sm:w-auto"
+                  >
+                    Open Tesla login
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:w-72">
+            <Button
+              onClick={isConnected ? onRefresh : onStartLogin}
+              accent={accent}
+              isDark={isDark}
+              disabled={isLoadingTelemetry || isPolling}
+            >
+              {isConnected ? (isLoadingTelemetry ? 'Refreshing…' : 'Refresh telemetry') : deviceAuth ? 'Awaiting approval…' : 'Connect Tesla account'}
+            </Button>
+            <Button variant="secondary" isDark={isDark} onClick={onReset} disabled={isPolling}>
+              {isConnected ? 'Disconnect Tesla' : 'Stay on demo data'}
+            </Button>
+          </div>
+        </div>
+      </Card>
     );
   }
 
@@ -632,10 +1005,21 @@
     );
   }
 
-  function TelemetryAnalyticsSection({ accent, isDark, sectionId = 'analytics', title, subtitle }) {
+  function TelemetryAnalyticsSection({
+    accent,
+    isDark,
+    sectionId = 'analytics',
+    title,
+    subtitle,
+    data = ANALYTICS_MOCK,
+    telemetrySource,
+    lastSynced,
+    isLoadingTelemetry,
+    onRefresh,
+  }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const disclosureId = useId();
-    const { summary, trips, fsd, safety, achievements } = ANALYTICS_MOCK;
+    const { summary, trips, fsd, safety, achievements } = data || ANALYTICS_MOCK;
     return (
       <section id={sectionId} className="mx-auto max-w-6xl px-4 pb-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -657,7 +1041,37 @@
             >
               {isExpanded ? 'Hide telemetry' : 'Show telemetry'}
             </Button>
-            {!isExpanded && <span className="text-xs opacity-70">Collapsed by default</span>}
+            <div className="flex flex-wrap gap-2 text-xs opacity-80">
+              {!isExpanded && <span>Collapsed by default</span>}
+              {telemetrySource ? (
+                <span
+                  className={classNames(
+                    'rounded-full px-2 py-1 font-semibold',
+                    telemetrySource === 'tesla'
+                      ? 'bg-emerald-500/20 text-emerald-500'
+                      : isDark
+                        ? 'bg-neutral-800 text-white'
+                        : 'bg-neutral-100 text-neutral-800'
+                  )}
+                >
+                  {telemetrySource === 'tesla' ? 'Live Tesla data' : 'Demo data'}
+                </span>
+              ) : null}
+              {lastSynced ? <span>Synced {new Date(lastSynced).toLocaleString()}</span> : null}
+              {isLoadingTelemetry ? <span>Refreshing…</span> : null}
+              {typeof onRefresh === 'function' ? (
+                <button
+                  type="button"
+                  className={classNames(
+                    'underline underline-offset-4 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500',
+                    isDark ? 'text-white' : 'text-neutral-800'
+                  )}
+                  onClick={() => onRefresh()}
+                >
+                  Refresh now
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -1238,6 +1652,19 @@
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
     const headerBg = isDark ? 'bg-neutral-900/95 border-neutral-800' : 'bg-white/95 border-neutral-200';
+    const {
+      telemetryData,
+      telemetrySource,
+      authState,
+      authError,
+      deviceAuth,
+      startDeviceLogin,
+      resetToDemo,
+      isLoadingTelemetry,
+      isPolling,
+      lastSynced,
+      refreshTelemetry,
+    } = useTeslaTelemetry();
 
     // Car images are loaded lazily from tesla_helper_base64_1280.json. The keys in
     // the JSON map correspond to model names (model3, models, modelx, modely, cybertruck).
@@ -1376,10 +1803,9 @@
       { href: '/', label: 'Homepage' },
       { href: '#library', label: 'Open Library' },
       {
-        href: 'https://auth.tesla.com/',
+        href: '#my-tesla',
         label: 'Log into Tesla',
-        target: '_blank',
-        rel: 'noreferrer',
+        onClick: () => startDeviceLogin(),
       },
       { href: '#my-tesla', label: 'My Tesla' },
       { href: '/start', label: 'Start' },
@@ -1508,7 +1934,13 @@
                             target={item.target}
                             rel={item.rel}
                             role="menuitem"
-                            onClick={() => setNavMenuOpen(false)}
+                            onClick={(e) => {
+                              if (item.onClick) {
+                                e.preventDefault();
+                                item.onClick();
+                              }
+                              setNavMenuOpen(false);
+                            }}
                             onKeyDown={(e) => {
                               if (e.key === 'Escape') {
                                 e.preventDefault();
@@ -1526,10 +1958,7 @@
                 )}
               </div>
               <Button
-                as="a"
-                href="https://auth.tesla.com/"
-                target="_blank"
-                rel="noreferrer"
+                onClick={startDeviceLogin}
                 variant="secondary"
                 size="md"
                 className="hidden md:inline-flex md:w-auto min-w-[132px]"
@@ -1610,10 +2039,15 @@
                     {showWidgetEditor ? 'Hide' : 'Customize'}
                   </Button>
                 </div>
-                <HomeWidgetGrid data={MY_TESLA_DATA} config={widgetConfig} accent={accent} isDark={isDark} />
+                <HomeWidgetGrid data={telemetryData} config={widgetConfig} accent={accent} isDark={isDark} />
               </Card>
               {showWidgetEditor ? (
-                <WidgetCustomizer config={widgetConfig} setConfig={setWidgetConfig} isDark={isDark} />
+                <WidgetCustomizer
+                  config={widgetConfig}
+                  setConfig={setWidgetConfig}
+                  isDark={isDark}
+                  sampleData={telemetryData}
+                />
               ) : null}
             </div>
           </div>
@@ -1621,12 +2055,31 @@
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
           </div>
         </section>
+        <TeslaConnectCard
+          accent={accent}
+          isDark={isDark}
+          telemetrySource={telemetrySource}
+          authState={authState}
+          authError={authError}
+          deviceAuth={deviceAuth}
+          lastSynced={lastSynced}
+          isLoadingTelemetry={isLoadingTelemetry}
+          isPolling={isPolling}
+          onStartLogin={startDeviceLogin}
+          onReset={resetToDemo}
+          onRefresh={refreshTelemetry}
+        />
         <TelemetryAnalyticsSection
           sectionId="my-tesla"
           title="My Tesla telemetry"
           subtitle="Trip history, Autopilot usage, and safety signals in one dashboard preview."
           accent={accent}
           isDark={isDark}
+          data={telemetryData}
+          telemetrySource={telemetrySource}
+          lastSynced={lastSynced}
+          isLoadingTelemetry={isLoadingTelemetry}
+          onRefresh={refreshTelemetry}
         />
         <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Quick links">
           <Card className={classNames('border px-3 py-3 md:px-4 md:py-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200')}>

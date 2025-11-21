@@ -457,7 +457,11 @@
         setAuthState({ status: 'pendingUser', deviceCode: deviceState.deviceCode });
         setIsPolling(true);
       } catch (error) {
-        setAuthError(interpretTeslaFetchError(error, 'Unable to start Tesla login.'));
+        const message =
+          error?.message === 'Failed to fetch'
+            ? 'Tesla sign-in was blocked by the browser or a network filter. Allow auth.tesla.com and try again.'
+            : error?.message || 'Unable to start Tesla login.';
+        setAuthError(message);
       }
     }, [interpretTeslaFetchError]);
 
@@ -519,7 +523,11 @@
           setDeviceAuth(null);
           fetchTelemetry(nextAuth.accessToken);
         } catch (error) {
-          setAuthError(interpretTeslaFetchError(error, 'Tesla login failed.'));
+          const message =
+            error?.message === 'Failed to fetch'
+              ? 'Tesla sign-in was blocked by the browser or a network filter. Allow auth.tesla.com and try again.'
+              : error?.message || 'Tesla login failed.';
+          setAuthError(message);
           setIsPolling(false);
         }
       }, intervalMs);

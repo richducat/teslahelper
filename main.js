@@ -208,6 +208,75 @@
   };
 
   /* ------------------------------------------------------------------
+   * Widget metric definitions
+   *
+   * A compact telemetry summary for the hero section. Each metric
+   * defines how to extract and format its value from ``MY_TESLA_DATA``.
+   * ``WIDGET_TEMPLATES`` provides a few quick presets for the editor.
+   * ------------------------------------------------------------------ */
+  const WIDGET_METRICS = [
+    {
+      id: 'totalMiles',
+      label: 'Lifetime miles',
+      value: (d) => `${(d?.summary?.totalMiles || 0).toLocaleString()} mi`,
+      caption: () => 'Across all trips',
+      icon: '📈',
+    },
+    {
+      id: 'avgEfficiency',
+      label: 'Avg efficiency',
+      value: (d) => `${d?.summary?.avgEfficiency || 0} Wh/mi`,
+      caption: () => 'Last 30 days',
+      icon: '⚡',
+    },
+    {
+      id: 'autopilotPct',
+      label: 'Autopilot usage',
+      value: (d) => `${d?.summary?.autopilotPct || 0}%`,
+      caption: (d) => `${(d?.summary?.autopilotMiles || 0).toLocaleString()} mi`,
+      icon: '🧠',
+    },
+    {
+      id: 'autopilotMiles',
+      label: 'Autopilot miles',
+      value: (d) => `${(d?.summary?.autopilotMiles || 0).toLocaleString()} mi`,
+      caption: (d) => `${d?.summary?.autopilotPct || 0}% of your miles`,
+      icon: '🛣️',
+    },
+    {
+      id: 'safetyScore',
+      label: 'Safety score',
+      value: (d) => `${d?.summary?.safetyScore || 0}`,
+      caption: () => 'Tesla Insurance style',
+      icon: '🛡️',
+    },
+    {
+      id: 'fsdLongest',
+      label: 'Longest FSD session',
+      value: (d) => `${d?.fsd?.longestSession || 0} mi`,
+      caption: (d) => `${d?.fsd?.disengagements || 0} disengagements`,
+      icon: '🛰️',
+    },
+    {
+      id: 'regen',
+      label: 'Energy recovered',
+      value: (d) => `${(d?.achievements?.find((a) => a.id === 'regen')?.current || 0).toFixed(1)} kWh`,
+      caption: () => 'Through regenerative braking',
+      icon: '🌿',
+    },
+  ];
+
+  const WIDGET_TEMPLATES = {
+    balanced: ['totalMiles', 'avgEfficiency', 'autopilotPct', 'safetyScore'],
+    autonomy: ['autopilotPct', 'autopilotMiles', 'fsdLongest', 'safetyScore'],
+    efficiency: ['avgEfficiency', 'regen', 'totalMiles', 'safetyScore'],
+  };
+
+  const MY_TESLA_DATA = ANALYTICS_MOCK;
+
+  const WIDGET_LOOKUP = new Map(WIDGET_METRICS.map((m) => [m.id, m]));
+
+  /* ------------------------------------------------------------------
    * Utility: classNames
    *
    * Joins an array of class names while filtering out falsy values.
@@ -293,27 +362,157 @@
   }
 
   /* ------------------------------------------------------------------
+   * Home widgets (telemetry chips)
+   *
+   * A small grid displayed in the hero to prove the site is loading
+   * correctly and to show future telemetry/FSD hooks. These widgets are
+   * intentionally simple to keep runtime light.
+   * ------------------------------------------------------------------ */
+  function WidgetMetricCard({ metric, data, accent, isDark }) {
+    const value = metric.value ? metric.value(data) : '—';
+    const caption = metric.caption ? metric.caption(data) : null;
+    return (
+      <Card
+        className={classNames(
+          'border p-3 h-full',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="text-2xl" aria-hidden="true">
+            {metric.icon || '📊'}
+          </div>
+          <div className={classNames('mt-1 h-1 rounded-full w-16', accent?.underline || 'bg-violet-500')} aria-hidden="true" />
+        </div>
+        <div className="mt-2 text-sm opacity-80">{metric.label}</div>
+        <div className="text-xl font-bold leading-tight">{value}</div>
+        {caption ? <div className="text-xs opacity-70 mt-1">{caption}</div> : null}
+      </Card>
+    );
+  }
+
+  function HomeWidgetGrid({ data, config, accent, isDark }) {
+    const defaultIds = WIDGET_TEMPLATES[config?.template] || WIDGET_TEMPLATES.balanced;
+    const metricIds = (config?.metricIds && config.metricIds.length ? config.metricIds : defaultIds) || [];
+    const selected = metricIds
+      .map((id) => WIDGET_LOOKUP.get(id))
+      .filter(Boolean)
+      .slice(0, 4);
+
+    if (selected.length === 0) {
+      selected.push(...WIDGET_METRICS.slice(0, 4));
+    }
+
+    return (
+      <div className="grid sm:grid-cols-2 gap-3">
+        {selected.map((metric) => (
+          <WidgetMetricCard key={metric.id} metric={metric} data={data} accent={accent} isDark={isDark} />
+        ))}
+      </div>
+    );
+  }
+
+  function WidgetCustomizer({ config, setConfig, isDark }) {
+    const MAX_WIDGETS = 4;
+    const metricIds = config?.metricIds?.length ? config.metricIds : WIDGET_TEMPLATES.balanced;
+
+    function toggleMetric(id) {
+      setConfig((prev) => {
+        const current = prev?.metricIds || [];
+        const exists = current.includes(id);
+        let nextIds = exists ? current.filter((m) => m !== id) : [...current, id];
+        if (nextIds.length > MAX_WIDGETS) {
+          nextIds = nextIds.slice(nextIds.length - MAX_WIDGETS);
+        }
+        return { template: 'custom', metricIds: nextIds };
+      });
+    }
+
+    function applyTemplate(key) {
+      const ids = WIDGET_TEMPLATES[key] || WIDGET_TEMPLATES.balanced;
+      setConfig({ template: key, metricIds: ids });
+    }
+
+    return (
+      <Card className={classNames('border p-4', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-sm font-semibold">Customize your widgets</div>
+            <p className="text-sm opacity-70">Pick up to four tiles. Templates provide quick starting points.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(WIDGET_TEMPLATES).map((k) => (
+              <Button
+                key={k}
+                size="sm"
+                variant={config?.template === k ? 'primary' : 'secondary'}
+                onClick={() => applyTemplate(k)}
+                isDark={isDark}
+              >
+                {k.charAt(0).toUpperCase() + k.slice(1)}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {WIDGET_METRICS.map((metric) => {
+            const active = metricIds.includes(metric.id);
+            return (
+              <button
+                key={metric.id}
+                type="button"
+                onClick={() => toggleMetric(metric.id)}
+                className={classNames(
+                  'flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500',
+                  active
+                    ? isDark
+                      ? 'border-emerald-400/60 bg-emerald-400/10'
+                      : 'border-emerald-500 bg-emerald-50'
+                    : isDark
+                      ? 'border-neutral-800 hover:border-neutral-700'
+                      : 'border-neutral-200 hover:border-neutral-300'
+                )}
+              >
+                <div className="text-xl" aria-hidden="true">
+                  {metric.icon || '📊'}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{metric.label}</div>
+                  {metric.caption ? (
+                    <div className="text-xs opacity-70">{metric.caption(MY_TESLA_DATA)}</div>
+                  ) : null}
+                  {active ? <div className="text-xs text-emerald-500 font-semibold">Selected</div> : null}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+    );
+  }
+
+  /* ------------------------------------------------------------------
    * Section title component
    *
    * Displays a heading and optional subtitle.
    * ------------------------------------------------------------------ */
-    function SectionTitle({ title, subtitle }) {
-      return (
-        <div className="mb-5 max-w-3xl">
-          <h2
-            className="font-bold"
-            style={{ fontSize: 'clamp(1.125rem, 1.2vw + .75rem, 1.5rem)', letterSpacing: '0.1px', lineHeight: 1.35 }}
-          >
-            {title}
-          </h2>
-          {subtitle ? (
-            <p className="text-sm opacity-80 leading-relaxed" style={{ lineHeight: 1.5 }}>
-              {subtitle}
-            </p>
-          ) : null}
-        </div>
-      );
-    }
+  function SectionTitle({ title, subtitle }) {
+    return (
+      <div className="mb-5 max-w-3xl">
+        <h2
+          className="font-bold"
+          style={{ fontSize: 'clamp(1.125rem, 1.2vw + .75rem, 1.5rem)', letterSpacing: '0.1px', lineHeight: 1.35 }}
+        >
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="text-sm opacity-80 leading-relaxed" style={{ lineHeight: 1.5 }}>
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   /* ------------------------------------------------------------------
    * Telemetry & analytics showcase components
@@ -433,13 +632,16 @@
     );
   }
 
-  function TelemetryAnalyticsSection({ accent, isDark }) {
+  function TelemetryAnalyticsSection({ accent, isDark, sectionId = 'analytics', title, subtitle }) {
     const { summary, trips, fsd, safety, achievements } = ANALYTICS_MOCK;
     return (
-      <section id="analytics" className="mx-auto max-w-6xl px-4 pb-16">
+      <section id={sectionId} className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
-          title="Telemetry, FSD, and safety analytics"
-          subtitle="Preview the dashboard experience powered by Tesla Fleet telemetry: trip summaries, Autopilot usage, safety events, and achievements."
+          title={title || 'Telemetry, FSD, and safety analytics'}
+          subtitle={
+            subtitle ||
+            'Preview the dashboard experience powered by Tesla Fleet telemetry: trip summaries, Autopilot usage, safety events, and achievements.'
+          }
         />
         <div className="grid gap-4 md:grid-cols-4">
           <AnalyticsMetricCard
@@ -1388,6 +1590,13 @@
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
           </div>
         </section>
+        <TelemetryAnalyticsSection
+          sectionId="my-tesla"
+          title="My Tesla telemetry"
+          subtitle="Trip history, Autopilot usage, and safety signals in one dashboard preview."
+          accent={accent}
+          isDark={isDark}
+        />
         <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Quick links">
           <Card className={classNames('border px-3 py-3 md:px-4 md:py-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200')}>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1422,7 +1631,6 @@
             </div>
           </Card>
         </section>
-        <TelemetryAnalyticsSection accent={accent} isDark={isDark} />
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <LibraryPanel accent={accent} isDark={isDark} />

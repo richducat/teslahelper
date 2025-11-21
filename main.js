@@ -1820,82 +1820,36 @@
       { href: '/disclosure', label: 'Disclosure' },
       { href: '/thank-you', label: 'Thank you' },
     ];
+    const navTabs = [
+      { href: '#top', label: 'Home' },
+      { href: '#library', label: 'Library' },
+      { href: '#models', label: 'Models' },
+      { href: '#my-tesla', label: 'My Tesla' },
+      { href: '/start', label: 'Start' },
+      { href: '/accessories/model-y', label: 'Accessories' },
+    ];
 
     return (
       <div id="top" className={classNames('min-h-screen', pageBg)}>
         <header
-          className={classNames('sticky top-0 z-40 backdrop-blur border-b', headerBg, headerCompact ? 'py-2' : 'py-3')}
+          className={classNames(
+            'sticky top-0 z-40 backdrop-blur border-b shadow-[0_1px_0_rgba(255,255,255,0.04)]',
+            headerBg
+          )}
           style={headerStyle}
         >
-          <div className="mx-auto max-w-6xl px-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between min-h-[56px]">
-            <div className="flex items-center justify-between gap-3">
-              <a href="https://teslahelper.app" className="inline-flex items-center" aria-label={BRAND.name}>
-                {BRAND.wordmark}
-                <span className="sr-only">{BRAND.name}</span>
-              </a>
-              <div className="flex items-center gap-2 md:hidden">
-                <AccentPicker accentName={accentName} setAccentName={setAccentName} />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-pressed={isDark}
-                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-                  onClick={() => setMode(isDark ? 'light' : 'dark')}
-                  isDark={isDark}
-                >
-                  {isDark ? '🌞' : '🌙'}
-                </Button>
-              </div>
-            </div>
-            <form
-              className={classNames(
-                'flex flex-col gap-2 md:flex-row md:items-center md:gap-3 w-full md:w-auto md:flex-1 md:order-none order-first'
-              )}
-              role="search"
-              onSubmit={handleSearchSubmit}
-            >
-              <label className="sr-only" htmlFor="global-search">
-                Search the Tesla Helper library
-              </label>
-              <div className="flex-1 md:max-w-xl">
-                <input
-                  id="global-search"
-                  value={headerSearch}
-                  onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="Search (e.g., Sentry, PIN to Drive, HW4)"
-                  className={classNames(
-                    'w-full rounded-lg h-10 px-3 text-sm border focus:outline-none focus:ring-2 shadow-sm',
-                    isDark
-                      ? 'bg-neutral-950 border-neutral-800 text-white focus:ring-violet-400'
-                      : 'bg-white border-neutral-300 text-neutral-900 focus:ring-violet-500'
-                  )}
-                />
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <Button variant="ghost" size="sm" type="submit" isDark={isDark}>
-                  Search
-                </Button>
-              </div>
-            </form>
-            <div className="flex flex-wrap items-center gap-2 md:justify-end">
-              <div className="hidden md:flex items-center gap-2">
-                <AccentPicker accentName={accentName} setAccentName={setAccentName} />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-pressed={isDark}
-                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-                  onClick={() => setMode(isDark ? 'light' : 'dark')}
-                  isDark={isDark}
-                >
-                  {isDark ? '🌞' : '🌙'}
-                </Button>
-              </div>
+          <div
+            className={classNames(
+              'mx-auto max-w-6xl px-4 flex flex-col transition-[gap] duration-150',
+              headerCompact ? 'gap-2 py-2' : 'gap-3 py-3'
+            )}
+          >
+            <div className="flex items-center gap-3">
               <div className="relative" ref={navMenuRef}>
                 <button
                   type="button"
                   className={classNames(
-                    'inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition',
+                    'inline-flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition',
                     isDark
                       ? 'border-white/10 bg-white/5 text-white hover:border-white/30'
                       : 'border-neutral-300 bg-white text-neutral-900 hover:border-neutral-400'
@@ -1911,14 +1865,18 @@
                     }
                   }}
                 >
-                  Menu
-                  <span aria-hidden="true">▾</span>
+                  <span className="sr-only">Toggle navigation</span>
+                  <div className="flex flex-col justify-center space-y-1" aria-hidden="true">
+                    <span className="block h-0.5 w-5 rounded-full bg-current" />
+                    <span className="block h-0.5 w-4 rounded-full bg-current" />
+                    <span className="block h-0.5 w-5 rounded-full bg-current" />
+                  </div>
                 </button>
                 {navMenuOpen && (
                   <div
                     id="main-nav-explore-menu"
                     className={classNames(
-                      'absolute left-1/2 mt-2 w-48 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border shadow-lg ring-1 sm:left-auto sm:right-0 sm:translate-x-0',
+                      'absolute left-0 mt-2 w-52 max-w-[calc(100vw-2rem)] rounded-xl border shadow-lg ring-1',
                       isDark
                         ? 'border-white/10 bg-neutral-900/95 text-white ring-black/30'
                         : 'border-neutral-200 bg-white text-neutral-900 ring-black/5'
@@ -1960,39 +1918,138 @@
                   </div>
                 )}
               </div>
+              <a
+                href="https://teslahelper.app"
+                className="flex-1 inline-flex items-center justify-center md:justify-start"
+                aria-label={BRAND.name}
+              >
+                {BRAND.wordmark}
+                <span className="sr-only">{BRAND.name}</span>
+              </a>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
+                  <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-pressed={isDark}
+                    aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                    onClick={() => setMode(isDark ? 'light' : 'dark')}
+                    isDark={isDark}
+                  >
+                    {isDark ? '🌞' : '🌙'}
+                  </Button>
+                </div>
+                <Button
+                  as="a"
+                  href="#library"
+                  variant="primary"
+                  size="sm"
+                  accent={accent}
+                  isDark={isDark}
+                  className="hidden md:inline-flex rounded-full"
+                >
+                  Open Library
+                </Button>
+                <Button
+                  onClick={() => setShowTeslaModal(true)}
+                  variant="secondary"
+                  size="sm"
+                  className="hidden md:inline-flex rounded-full"
+                  isDark={isDark}
+                >
+                  Connect
+                </Button>
+                <Button
+                  as="a"
+                  href={SUPPORT_LINK}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="ghost"
+                  size="sm"
+                  isDark={isDark}
+                  className="rounded-full"
+                >
+                  Contribute
+                </Button>
+              </div>
+            </div>
+            <form className="flex w-full items-center gap-3" role="search" onSubmit={handleSearchSubmit}>
+              <label className="sr-only" htmlFor="global-search">
+                Search the Tesla Helper library
+              </label>
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true">
+                  🔍
+                </span>
+                <input
+                  id="global-search"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="Search for news, tickers, or Tesla tips"
+                  className={classNames(
+                    'w-full rounded-full h-11 pl-11 pr-4 text-sm border focus:outline-none focus:ring-2 shadow-inner',
+                    isDark
+                      ? 'bg-neutral-900/90 border-white/10 text-white focus:ring-emerald-400/80 focus:border-emerald-400/80'
+                      : 'bg-white border-neutral-300 text-neutral-900 focus:ring-emerald-500/70 focus:border-emerald-500/70'
+                  )}
+                />
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                accent={accent}
+                isDark={isDark}
+                className="hidden md:inline-flex rounded-full px-4"
+              >
+                Search
+              </Button>
+            </form>
+            <div className="flex items-center gap-2 sm:hidden">
+              <AccentPicker accentName={accentName} setAccentName={setAccentName} />
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-pressed={isDark}
+                aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                onClick={() => setMode(isDark ? 'light' : 'dark')}
+                isDark={isDark}
+                className="rounded-full"
+              >
+                {isDark ? '🌞' : '🌙'}
+              </Button>
               <Button
                 onClick={() => setShowTeslaModal(true)}
                 variant="secondary"
-                size="md"
-                className="hidden md:inline-flex md:w-auto min-w-[132px]"
-                isDark={isDark}
-              >
-                Connect Tesla
-              </Button>
-              <Button
-                as="a"
-                href="#library"
-                variant="primary"
-                size="md"
-                className="hidden md:inline-flex md:w-auto min-w-[132px]"
-                accent={accent}
-                isDark={isDark}
-              >
-                Open Library
-              </Button>
-              <Button
-                as="a"
-                href={SUPPORT_LINK}
-                target="_blank"
-                rel="noreferrer"
-                variant="secondary"
                 size="sm"
+                className="rounded-full"
                 isDark={isDark}
-                className="w-full md:w-auto min-w-[132px]"
               >
-                Contribute
+                Connect
               </Button>
             </div>
+            <nav className="flex items-center overflow-x-auto pt-1" aria-label="Primary">
+              <ul className="flex items-center gap-3 text-sm font-semibold">
+                {navTabs.map((item) => (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      className={classNames(
+                        'inline-flex items-center gap-1 rounded-full px-3 py-2 transition',
+                        isDark
+                          ? 'text-white/80 hover:text-white hover:bg-white/10'
+                          : 'text-neutral-800 hover:text-black hover:bg-neutral-100',
+                        accent.hover
+                      )}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className={classNames('h-[3px] w-full rounded-full', accent.underline)} />
           </div>
         </header>
         {/* Hero / quick links */}

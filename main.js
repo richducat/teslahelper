@@ -288,6 +288,14 @@
     };
   }
 
+  const TESLA_AUTH_NETWORK_BLOCKED_MESSAGE =
+    'Tesla sign-in was blocked or the network could not reach auth.tesla.com. Disable VPN/ad blockers and try again.';
+
+  function isTeslaNetworkBlockedError(rawMessage) {
+    const normalized = (rawMessage || '').toLowerCase();
+    return normalized === 'failed to fetch' || normalized === 'load failed' || normalized.includes('networkerror');
+  }
+
   function useTeslaTelemetry() {
     const [telemetryData, setTelemetryData] = useState(ANALYTICS_MOCK);
     const [telemetrySource, setTelemetrySource] = useState('demo');
@@ -312,8 +320,8 @@
 
     const interpretTeslaFetchError = useCallback((error, fallbackMessage) => {
       const raw = error?.message || '';
-      if (raw === 'Failed to fetch' || raw.includes('NetworkError')) {
-        return 'Tesla sign-in was blocked or the network could not reach auth.tesla.com. Disable VPN/ad blockers and try again.';
+      if (isTeslaNetworkBlockedError(raw)) {
+        return TESLA_AUTH_NETWORK_BLOCKED_MESSAGE;
       }
       return raw || fallbackMessage;
     }, []);
@@ -457,13 +465,12 @@
         setAuthState({ status: 'pendingUser', deviceCode: deviceState.deviceCode });
         setIsPolling(true);
       } catch (error) {
-        const message =
-          error?.message === 'Failed to fetch'
-            ? 'Tesla sign-in was blocked by the browser or a network filter. Allow auth.tesla.com and try again.'
-            : error?.message || 'Unable to start Tesla login.';
+        const message = isTeslaNetworkBlockedError(error?.message)
+          ? TESLA_AUTH_NETWORK_BLOCKED_MESSAGE
+          : error?.message || 'Unable to start Tesla login.';
         setAuthError(message);
       }
-    }, [interpretTeslaFetchError]);
+    }, []);
 
     useEffect(() => {
       if (authState?.status === 'connected' && authState.accessToken) {
@@ -523,10 +530,9 @@
           setDeviceAuth(null);
           fetchTelemetry(nextAuth.accessToken);
         } catch (error) {
-          const message =
-            error?.message === 'Failed to fetch'
-              ? 'Tesla sign-in was blocked by the browser or a network filter. Allow auth.tesla.com and try again.'
-              : error?.message || 'Tesla login failed.';
+          const message = isTeslaNetworkBlockedError(error?.message)
+            ? TESLA_AUTH_NETWORK_BLOCKED_MESSAGE
+            : error?.message || 'Tesla login failed.';
           setAuthError(message);
           setIsPolling(false);
         }

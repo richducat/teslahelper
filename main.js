@@ -632,13 +632,16 @@
     );
   }
 
-  function TelemetryAnalyticsSection({ accent, isDark }) {
+  function TelemetryAnalyticsSection({ accent, isDark, sectionId = 'analytics', title, subtitle }) {
     const { summary, trips, fsd, safety, achievements } = ANALYTICS_MOCK;
     return (
-      <section id="analytics" className="mx-auto max-w-6xl px-4 pb-16">
+      <section id={sectionId} className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
-          title="Telemetry, FSD, and safety analytics"
-          subtitle="Preview the dashboard experience powered by Tesla Fleet telemetry: trip summaries, Autopilot usage, safety events, and achievements."
+          title={title || 'Telemetry, FSD, and safety analytics'}
+          subtitle={
+            subtitle ||
+            'Preview the dashboard experience powered by Tesla Fleet telemetry: trip summaries, Autopilot usage, safety events, and achievements.'
+          }
         />
         <div className="grid gap-4 md:grid-cols-4">
           <AnalyticsMetricCard
@@ -1587,6 +1590,13 @@
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
           </div>
         </section>
+        <TelemetryAnalyticsSection
+          sectionId="my-tesla"
+          title="My Tesla telemetry"
+          subtitle="Trip history, Autopilot usage, and safety signals in one dashboard preview."
+          accent={accent}
+          isDark={isDark}
+        />
         <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Quick links">
           <Card className={classNames('border px-3 py-3 md:px-4 md:py-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200')}>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1621,7 +1631,6 @@
             </div>
           </Card>
         </section>
-        <TelemetryAnalyticsSection accent={accent} isDark={isDark} />
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <LibraryPanel accent={accent} isDark={isDark} />

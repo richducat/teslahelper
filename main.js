@@ -215,6 +215,13 @@
     deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
     tokenEndpoint: 'https://auth.tesla.com/oauth2/v3/token',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    // Refresh one minute before expiry to avoid racing Tesla's tokens expiring mid-request.
+    refreshSafetyWindowMs: 60 * 1000,
+  };
+
+  const TESLA_AUTH_CONFIG = {
+    ...TESLA_AUTH_DEFAULT,
+    ...(typeof window !== 'undefined' && window.APP_ENV?.teslaAuth ? window.APP_ENV.teslaAuth : {}),
   };
 
   const TESLA_AUTH_CONFIG = {
@@ -309,14 +316,20 @@
 
     const refreshAccessToken = useCallback(async () => {
       if (!authState?.refreshToken) return null;
+      const params = new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: TESLA_AUTH_CONFIG.clientId,
+        refresh_token: authState.refreshToken,
+      });
+
+      if (TESLA_AUTH_CONFIG.clientSecret) {
+        params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+      }
+
       const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          client_id: TESLA_AUTH_CONFIG.clientId,
-          refresh_token: authState.refreshToken,
-        }),
+        body: params,
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error_description || 'Unable to refresh Tesla session.');
@@ -331,9 +344,27 @@
       return refreshed;
     }, [authState?.refreshToken]);
 
+    const ensureFreshAccessToken = useCallback(async () => {
+      if (!authState?.accessToken) return null;
+
+      if (!authState?.expiresAt) return authState.accessToken;
+
+      const shouldRefresh = authState.expiresAt - Date.now() <= TESLA_AUTH_CONFIG.refreshSafetyWindowMs;
+      if (!shouldRefresh) return authState.accessToken;
+
+      try {
+        const refreshed = await refreshAccessToken();
+        return refreshed?.accessToken || authState.accessToken;
+      } catch (error) {
+        setAuthError(error.message || 'Session refresh failed.');
+        resetToDemo();
+        return null;
+      }
+    }, [authState?.accessToken, authState?.expiresAt, refreshAccessToken, resetToDemo]);
+
     const fetchTelemetry = useCallback(
       async (tokenOverride) => {
-        const activeToken = tokenOverride || authState.accessToken;
+        const activeToken = tokenOverride || (await ensureFreshAccessToken());
         if (!activeToken) {
           setAuthError('Sign in with your Tesla account to load telemetry.');
           return;
@@ -344,6 +375,14 @@
             headers: { Authorization: `Bearer ${activeToken}` },
           });
           const payload = await response.json();
+          if (response.status === 401 && !tokenOverride) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed?.accessToken) {
+              await fetchTelemetry(refreshed.accessToken);
+              return;
+            }
+          }
+
           if (!response.ok) {
             throw new Error(payload.error_description || payload.error || 'Unable to reach Tesla Fleet API.');
           }
@@ -357,21 +396,27 @@
           setIsLoadingTelemetry(false);
         }
       },
-      [authState?.accessToken]
+      [authState?.accessToken, ensureFreshAccessToken, refreshAccessToken]
     );
 
     const startDeviceLogin = useCallback(async () => {
       try {
         setAuthError('');
         setTelemetrySource('demo');
+        const params = new URLSearchParams({
+          client_id: TESLA_AUTH_CONFIG.clientId,
+          scope: TESLA_AUTH_CONFIG.scope,
+          audience: TESLA_AUTH_CONFIG.audience,
+        });
+
+        if (TESLA_AUTH_CONFIG.clientSecret) {
+          params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+        }
+
         const response = await fetch(TESLA_AUTH_CONFIG.deviceCodeEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            client_id: TESLA_AUTH_CONFIG.clientId,
-            scope: TESLA_AUTH_CONFIG.scope,
-            audience: TESLA_AUTH_CONFIG.audience,
-          }),
+          body: params,
         });
 
         if (!response.ok) {
@@ -413,14 +458,20 @@
         }
 
         try {
+          const params = new URLSearchParams({
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+            client_id: TESLA_AUTH_CONFIG.clientId,
+            device_code: deviceAuth.deviceCode,
+          });
+
+          if (TESLA_AUTH_CONFIG.clientSecret) {
+            params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+          }
+
           const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-              grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-              client_id: TESLA_AUTH_CONFIG.clientId,
-              device_code: deviceAuth.deviceCode,
-            }),
+            body: params,
           });
 
           const payload = await response.json();
@@ -805,13 +856,13 @@
           isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
         )}
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-[0.25em] opacity-70">Tesla account</div>
             <div className="font-semibold text-lg">{isConnected ? 'Connected to Tesla' : 'Connect your Tesla account'}</div>
             <p className="text-sm opacity-80 max-w-2xl">
-              Sign in with Tesla OAuth to replace the demo telemetry with your live vehicle data. We use Tesla’s device code
-              flow so you never enter credentials directly into Tesla Helper.
+              Sign in with Tesla OAuth to load live vehicle data. We use Tesla’s device code flow so you never enter
+              credentials directly into Tesla Helper.
             </p>
             <div className="flex flex-wrap gap-2 text-xs opacity-80">
               <span
@@ -824,7 +875,7 @@
                       : 'bg-neutral-100 text-neutral-800'
                 )}
               >
-                {telemetrySource === 'tesla' ? 'Live from Tesla Fleet API' : 'Demo preview'}
+                {telemetrySource === 'tesla' ? 'Live from Tesla Fleet API' : 'Waiting for Tesla sign-in'}
               </span>
               {lastSynced ? <span>Last synced {new Date(lastSynced).toLocaleString()}</span> : null}
               {isLoadingTelemetry ? <span>Refreshing…</span> : null}
@@ -884,10 +935,16 @@
               isDark={isDark}
               disabled={isLoadingTelemetry || isPolling}
             >
-              {isConnected ? (isLoadingTelemetry ? 'Refreshing…' : 'Refresh telemetry') : deviceAuth ? 'Awaiting approval…' : 'Connect Tesla account'}
+              {isConnected
+                ? isLoadingTelemetry
+                  ? 'Refreshing…'
+                  : 'Refresh telemetry'
+                : deviceAuth
+                  ? 'Awaiting approval…'
+                  : 'Connect Tesla account'}
             </Button>
             <Button variant="secondary" isDark={isDark} onClick={onReset} disabled={isPolling}>
-              {isConnected ? 'Disconnect Tesla' : 'Stay on demo data'}
+              {isConnected ? 'Disconnect Tesla' : 'Browse without signing in'}
             </Button>
           </div>
         </div>

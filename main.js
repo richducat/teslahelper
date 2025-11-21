@@ -207,13 +207,19 @@
     ],
   };
 
-  const TESLA_AUTH_CONFIG = {
+  const TESLA_AUTH_DEFAULT = {
     clientId: 'ownerapi',
+    clientSecret: '',
     scope: 'openid offline_access vehicle_device_data vehicle_cmds',
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
     tokenEndpoint: 'https://auth.tesla.com/oauth2/v3/token',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+  };
+
+  const TESLA_AUTH_CONFIG = {
+    ...TESLA_AUTH_DEFAULT,
+    ...(typeof window !== 'undefined' && window.APP_ENV?.teslaAuth ? window.APP_ENV.teslaAuth : {}),
   };
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';

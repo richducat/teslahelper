@@ -105,24 +105,6 @@
     window.APP_ENV = { ...defaultEnv, ...runtimeEnv };
     window.APP_ENV.teslaAuth = { ...defaultTeslaAuth, ...(runtimeEnv.teslaAuth || {}) };
   </script>
-  <script>
-    // If Babel/React fails to hydrate the app (CSP or network issues), show a
-    // readable fallback after a short delay so the page never stays blank.
-    window.__TESLAHELPER_HYDRATED = false;
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        if (window.__TESLAHELPER_HYDRATED) return;
-        const root = document.getElementById('root') || document.body;
-        if (!root) return;
-        root.innerHTML = `
-          <div style="padding:24px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;max-width:640px;">
-            <h1 style="font-size:22px;font-weight:800;margin:0 0 8px;">Tesla Helper</h1>
-            <p style="margin:0 0 8px;">We couldn't load the interactive app because a required script was blocked.</p>
-            <p style="margin:0;">Please refresh on a trusted connection or disable strict content blockers.</p>
-          </div>`;
-      }, 3000);
-    });
-  </script>
 </head>
 <body class="min-h-screen">
   <div id="root"></div>

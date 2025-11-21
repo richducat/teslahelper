@@ -1,7 +1,7 @@
 // Bump the cache version whenever critical assets (like CSP updates) change to
 // force browsers to refresh their cached copies. This helps ensure users pick
 // up the latest index.html and JS when the service worker is already installed.
-const CACHE_NAME = 'teslahelper-v3';
+const CACHE_NAME = 'teslahelper-v4';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [
   '/',
@@ -13,6 +13,7 @@ const PRECACHE = [
   '/logo.svg',
   '/tesla_howto_library.json',
   '/tesla_helper_base64_1280.json',
+  '/config/runtime-env.js',
   '/config/affiliates.json',
   '/config/offers.json',
   '/start/index.html',

@@ -411,8 +411,11 @@
 
         const response = await fetch(TESLA_AUTH_CONFIG.deviceCodeEndpoint, {
           method: 'POST',
+          mode: 'cors',
+          cache: 'no-store',
+          referrerPolicy: 'no-referrer',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params,
+          body: params.toString(),
         });
 
         if (!response.ok) {
@@ -432,7 +435,11 @@
         setAuthState({ status: 'pendingUser', deviceCode: deviceState.deviceCode });
         setIsPolling(true);
       } catch (error) {
-        setAuthError(error.message || 'Unable to start Tesla login.');
+        const message =
+          error?.message === 'Failed to fetch'
+            ? 'Tesla sign-in was blocked by the browser or a network filter. Allow auth.tesla.com and try again.'
+            : error?.message || 'Unable to start Tesla login.';
+        setAuthError(message);
       }
     }, []);
 
@@ -466,8 +473,11 @@
 
           const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
             method: 'POST',
+            mode: 'cors',
+            cache: 'no-store',
+            referrerPolicy: 'no-referrer',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params,
+            body: params.toString(),
           });
 
           const payload = await response.json();
@@ -491,7 +501,11 @@
           setDeviceAuth(null);
           fetchTelemetry(nextAuth.accessToken);
         } catch (error) {
-          setAuthError(error.message || 'Tesla login failed.');
+          const message =
+            error?.message === 'Failed to fetch'
+              ? 'Tesla sign-in was blocked by the browser or a network filter. Allow auth.tesla.com and try again.'
+              : error?.message || 'Tesla login failed.';
+          setAuthError(message);
           setIsPolling(false);
         }
       }, intervalMs);

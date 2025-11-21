@@ -625,7 +625,7 @@
                   id="marketing-global-search"
                   value={headerSearch}
                   onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="Search for news, tickers, or Tesla tips"
+                  placeholder="Search for news or Tesla tips"
                   className="w-full rounded-full h-11 pl-11 pr-4 text-sm border border-white/10 bg-neutral-950/90 text-white shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-400/80 focus:border-emerald-400/80"
                 />
               </div>

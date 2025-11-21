@@ -310,6 +310,14 @@
       }
     }, []);
 
+    const interpretTeslaFetchError = useCallback((error, fallbackMessage) => {
+      const raw = error?.message || '';
+      if (raw === 'Failed to fetch' || raw.includes('NetworkError')) {
+        return 'Tesla sign-in was blocked or the network could not reach auth.tesla.com. Disable VPN/ad blockers and try again.';
+      }
+      return raw || fallbackMessage;
+    }, []);
+
     const refreshAccessToken = useCallback(async () => {
       if (!authState?.refreshToken) return null;
       const params = new URLSearchParams({
@@ -322,23 +330,33 @@
         params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
       }
 
-      const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params,
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error_description || 'Unable to refresh Tesla session.');
-      const refreshed = {
-        status: 'connected',
-        accessToken: payload.access_token,
-        refreshToken: payload.refresh_token || authState.refreshToken,
-        expiresAt: Date.now() + (payload.expires_in || 0) * 1000,
-      };
-      setAuthState(refreshed);
-      persistAuth(refreshed);
-      return refreshed;
-    }, [authState?.refreshToken]);
+      try {
+        const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-store',
+          referrerPolicy: 'no-referrer',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error_description || 'Unable to refresh Tesla session.');
+        const refreshed = {
+          status: 'connected',
+          accessToken: payload.access_token,
+          refreshToken: payload.refresh_token || authState.refreshToken,
+          expiresAt: Date.now() + (payload.expires_in || 0) * 1000,
+        };
+        setAuthState(refreshed);
+        persistAuth(refreshed);
+        return refreshed;
+      } catch (error) {
+        const message = interpretTeslaFetchError(error, 'Unable to refresh Tesla session.');
+        setAuthError(message);
+        resetToDemo();
+        throw new Error(message);
+      }
+    }, [authState?.refreshToken, interpretTeslaFetchError, resetToDemo]);
 
     const ensureFreshAccessToken = useCallback(async () => {
       if (!authState?.accessToken) return null;
@@ -368,6 +386,10 @@
         setIsLoadingTelemetry(true);
         try {
           const response = await fetch(`${TESLA_AUTH_CONFIG.apiBase}/api/1/vehicles`, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-store',
+            referrerPolicy: 'no-referrer',
             headers: { Authorization: `Bearer ${activeToken}` },
           });
           const payload = await response.json();
@@ -387,12 +409,12 @@
           setTelemetrySource('tesla');
           setLastSynced(new Date().toISOString());
         } catch (error) {
-          setAuthError(error.message || 'Tesla data request failed.');
+          setAuthError(interpretTeslaFetchError(error, 'Tesla data request failed.'));
         } finally {
           setIsLoadingTelemetry(false);
         }
       },
-      [authState?.accessToken, ensureFreshAccessToken, refreshAccessToken]
+      [authState?.accessToken, ensureFreshAccessToken, interpretTeslaFetchError, refreshAccessToken]
     );
 
     const startDeviceLogin = useCallback(async () => {
@@ -441,7 +463,7 @@
             : error?.message || 'Unable to start Tesla login.';
         setAuthError(message);
       }
-    }, []);
+    }, [interpretTeslaFetchError]);
 
     useEffect(() => {
       if (authState?.status === 'connected' && authState.accessToken) {
@@ -511,7 +533,7 @@
       }, intervalMs);
 
       return () => clearInterval(timer);
-    }, [deviceAuth, isPolling, fetchTelemetry]);
+    }, [deviceAuth, isPolling, fetchTelemetry, interpretTeslaFetchError]);
 
     useEffect(() => {
       if (authState?.status !== 'connected' || !authState.expiresAt) return;
@@ -2059,7 +2081,7 @@
                   id="global-search"
                   value={headerSearch}
                   onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="Search for news, tickers, or Tesla tips"
+                  placeholder="Search for news or Tesla tips"
                   className={classNames(
                     'w-full rounded-full h-11 pl-11 pr-4 text-sm border focus:outline-none focus:ring-2 shadow-inner',
                     isDark

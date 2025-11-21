@@ -788,12 +788,14 @@
     onStartLogin,
     onReset,
     onRefresh,
+    className = '',
   }) {
     const isConnected = authState?.status === 'connected' && telemetrySource === 'tesla';
     return (
       <Card
         className={classNames(
-          'border p-4 md:p-5 mb-6',
+          'border p-4 md:p-5',
+          className,
           isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
         )}
       >
@@ -1629,6 +1631,7 @@
     const [navMenuOpen, setNavMenuOpen] = useState(false);
     const navMenuRef = useRef(null);
     const [showInstallModal, setShowInstallModal] = useState(false);
+    const [showTeslaModal, setShowTeslaModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
     const widgetFallback = {
       template: 'balanced',
@@ -1804,8 +1807,8 @@
       { href: '#library', label: 'Open Library' },
       {
         href: '#my-tesla',
-        label: 'Log into Tesla',
-        onClick: () => startDeviceLogin(),
+        label: 'Connect Tesla account',
+        onClick: () => setShowTeslaModal(true),
       },
       { href: '#my-tesla', label: 'My Tesla' },
       { href: '/start', label: 'Start' },
@@ -1958,13 +1961,13 @@
                 )}
               </div>
               <Button
-                onClick={startDeviceLogin}
+                onClick={() => setShowTeslaModal(true)}
                 variant="secondary"
                 size="md"
                 className="hidden md:inline-flex md:w-auto min-w-[132px]"
                 isDark={isDark}
               >
-                Log into Tesla
+                Connect Tesla
               </Button>
               <Button
                 as="a"
@@ -2055,20 +2058,6 @@
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
           </div>
         </section>
-        <TeslaConnectCard
-          accent={accent}
-          isDark={isDark}
-          telemetrySource={telemetrySource}
-          authState={authState}
-          authError={authError}
-          deviceAuth={deviceAuth}
-          lastSynced={lastSynced}
-          isLoadingTelemetry={isLoadingTelemetry}
-          isPolling={isPolling}
-          onStartLogin={startDeviceLogin}
-          onReset={resetToDemo}
-          onRefresh={refreshTelemetry}
-        />
         <TelemetryAnalyticsSection
           sectionId="my-tesla"
           title="My Tesla telemetry"
@@ -2177,6 +2166,45 @@
             </div>
           </div>
         </footer>
+        {showTeslaModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Connect your Tesla account"
+            onClick={() => setShowTeslaModal(false)}
+          >
+            <div className="absolute inset-0 bg-black/60" />
+            <div
+              className="relative z-10 w-full max-w-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-black/70 text-white text-2xl font-bold shadow-lg hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                aria-label="Close"
+                onClick={() => setShowTeslaModal(false)}
+              >
+                ×
+              </button>
+              <TeslaConnectCard
+                accent={accent}
+                isDark={isDark}
+                telemetrySource={telemetrySource}
+                authState={authState}
+                authError={authError}
+                deviceAuth={deviceAuth}
+                lastSynced={lastSynced}
+                isLoadingTelemetry={isLoadingTelemetry}
+                isPolling={isPolling}
+                onStartLogin={startDeviceLogin}
+                onReset={resetToDemo}
+                onRefresh={refreshTelemetry}
+                className="w-full"
+              />
+            </div>
+          </div>
+        )}
         {showInstallModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4"

@@ -14,7 +14,7 @@
   <meta name="color-scheme" content="dark light" />
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none';"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; img-src 'self' data:; connect-src 'self' https://auth.tesla.com https://fleet-api.prd.na.vn.cloud.tesla.com https://fleet-api.prd.eu.vn.cloud.tesla.com https://fleet-api.prd.cn.vn.cloud.tesla.com https://fleet-api.prd.au.vn.cloud.tesla.com https://fleet-api.prd.jp.vn.cloud.tesla.com; base-uri 'none'; object-src 'none'; frame-ancestors 'none';"
   />
 
   <!-- Open Graph -->
@@ -84,13 +84,44 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="config/runtime-env.js"></script>
   <script>
-    window.APP_ENV = {
+    const runtimeEnv = window.APP_ENV || {};
+    const defaultEnv = {
       plausibleDomain: 'teslahelper.app',
       metaPixelId: 'xxxxxxxxxxxxxxx',
       googleAdsId: 'AW-XXXXXXXXX',
-      beehiivEmbedId: 'bhv_XXXXXXXX'
+      beehiivEmbedId: 'bhv_XXXXXXXX',
     };
+    const defaultTeslaAuth = {
+      clientId: 'ownerapi',
+      clientSecret: '',
+      audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+      apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+      deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
+      tokenEndpoint: 'https://auth.tesla.com/oauth2/v3/token',
+    };
+
+    window.APP_ENV = { ...defaultEnv, ...runtimeEnv };
+    window.APP_ENV.teslaAuth = { ...defaultTeslaAuth, ...(runtimeEnv.teslaAuth || {}) };
+  </script>
+  <script>
+    // If Babel/React fails to hydrate the app (CSP or network issues), show a
+    // readable fallback after a short delay so the page never stays blank.
+    window.__TESLAHELPER_HYDRATED = false;
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (window.__TESLAHELPER_HYDRATED) return;
+        const root = document.getElementById('root') || document.body;
+        if (!root) return;
+        root.innerHTML = `
+          <div style="padding:24px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;max-width:640px;">
+            <h1 style="font-size:22px;font-weight:800;margin:0 0 8px;">Tesla Helper</h1>
+            <p style="margin:0 0 8px;">We couldn't load the interactive app because a required script was blocked.</p>
+            <p style="margin:0;">Please refresh on a trusted connection or disable strict content blockers.</p>
+          </div>`;
+      }, 3000);
+    });
   </script>
 </head>
 <body class="min-h-screen">

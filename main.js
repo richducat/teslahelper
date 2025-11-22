@@ -289,7 +289,7 @@
   }
 
   const TESLA_AUTH_NETWORK_BLOCKED_MESSAGE =
-    "Tesla sign-in couldn't reach auth.tesla.com. This isn't caused by pop-up blockers—check VPNs, firewalls, or strict network filters and try again.";
+    'Tesla sign-in was blocked or the network could not reach auth.tesla.com. Disable VPN/ad blockers and try again.';
 
   function isTeslaNetworkBlockedError(rawMessage) {
     const normalized = (rawMessage || '').toLowerCase();
@@ -1557,10 +1557,6 @@ function SectionTitle({ title, subtitle }) {
             <p className="text-sm opacity-80 max-w-2xl">
               Sign in with Tesla OAuth to load live vehicle data. We use Tesla’s device code flow so you never enter
               credentials directly into Tesla Helper.
-            </p>
-            <p className="text-xs opacity-70">
-              Tesla login here does not rely on pop-ups. If you see a pop-up blocker warning, a network filter is likely
-              stopping auth.tesla.com instead—try a different connection or pause VPN/firewall rules.
             </p>
             <div className="flex flex-wrap gap-2 text-xs opacity-80">
               <span

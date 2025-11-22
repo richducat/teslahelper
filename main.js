@@ -900,194 +900,176 @@
       <Card
         id="onboarding"
         className={classNames(
-          'relative overflow-hidden border p-5 sm:p-7 shadow-[0_28px_70px_-40px_rgba(79,70,229,0.55)]',
-          isDark ? 'bg-white text-neutral-900 border-neutral-200' : 'bg-white text-neutral-900 border-neutral-100'
+          'border p-4 sm:p-5 shadow-[0_20px_70px_-35px_rgba(0,0,0,0.7)]',
+          isDark ? 'bg-white text-neutral-900' : 'bg-white',
+          isDark ? 'border-neutral-200' : 'border-neutral-200'
         )}
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-50/80 via-white to-blue-50"
-          aria-hidden="true"
-        />
-        <form className="relative space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member onboarding</div>
-            <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Let’s set up your Tesla Helper</h3>
-            <p className="text-sm text-neutral-600">
-              Choose your car, pick the features you want to monitor, and decide if you want the free starter set or
-              unlimited access for $4.94/month.
-            </p>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Member onboarding</div>
+              <h3 className="text-lg font-semibold leading-tight">What type of Tesla do you own?</h3>
+              <p className="text-sm text-neutral-600">
+                We’ll tailor your setup to the trim, features, and data points you want to watch first.
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+              New ✦ Personalized
+            </span>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
-            <div className="space-y-5">
-              <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm shadow-neutral-200/40">
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Vehicle</div>
-                    <div className="text-sm text-neutral-700">We’ll personalize tips and data per model.</div>
-                  </div>
-                  <span className="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold text-violet-700">Required</span>
-                </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { label: 'Name', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
+              { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
+            ].map((input) => (
+              <label key={input.field} className="space-y-1 text-sm font-semibold text-neutral-800">
+                {input.label}
+                <input
+                  required
+                  type={input.type}
+                  value={formState[input.field]}
+                  onChange={(e) => updateField(input.field, e.target.value)}
+                  placeholder={input.placeholder}
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+              </label>
+            ))}
+          </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
-                    <span>Model</span>
-                    <div className="relative">
-                      <select
-                        value={formState.carType}
-                        onChange={(e) => updateField('carType', e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
-                      >
-                        {carOptions.map((car) => (
-                          <option key={car.id} value={car.id}>
-                            {car.label} — {car.note}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400" aria-hidden="true">
-                        ▼
-                      </div>
-                    </div>
-                    <span className="text-[11px] font-normal text-neutral-500">Simple dropdown—no image grid.</span>
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
-                    <span>Trim</span>
-                    <input
-                      value={formState.trim}
-                      onChange={(e) => updateField('trim', e.target.value)}
-                      placeholder="Long Range, Performance…"
-                      className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm font-medium text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
-                    />
-                    <span className="text-[11px] font-normal text-neutral-500">Optional but helpful for accuracy.</span>
-                  </label>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[{ field: 'name', label: 'Your name', placeholder: 'Alex Kim' }, { field: 'email', label: 'Email', placeholder: 'alex@example.com' }].map((input) => (
-                    <label key={input.field} className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
-                      <span>{input.label}</span>
-                      <input
-                        required
-                        value={formState[input.field]}
-                        onChange={(e) => updateField(input.field, e.target.value)}
-                        placeholder={input.placeholder}
-                        className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm font-medium text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm shadow-neutral-200/40">
-                <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Plan</div>
-                    <div className="text-sm text-neutral-700">Starter keeps 3 data points free; Unlimited opens everything.</div>
-                  </div>
-                  <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[{ id: 'starter', title: 'Starter', desc: 'Pick up to 3 data points free after signup.', price: '$0' }, { id: 'unlimited', title: 'Unlimited', desc: 'All data points unlocked after signup.', price: '$4.94/mo', badge: 'Most picked' }].map((plan) => {
-                    const active = formState.plan === plan.id;
+          <div className="grid gap-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-neutral-800">Car type</div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {carOptions.map((car) => {
+                    const active = formState.carType === car.id;
                     return (
                       <button
-                        key={plan.id}
+                        key={car.id}
                         type="button"
-                        onClick={() => updateField('plan', plan.id)}
+                        onClick={() => updateField('carType', car.id)}
                         aria-pressed={active}
                         className={classNames(
-                          'flex flex-col gap-1 rounded-xl border px-4 py-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                          active
-                            ? 'border-violet-400 bg-gradient-to-br from-violet-50 via-white to-white shadow-violet-200'
-                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          'group relative overflow-hidden rounded-xl border text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                          active ? 'border-violet-500 shadow-lg shadow-violet-500/15' : 'border-neutral-200 hover:border-neutral-300'
                         )}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
-                          {plan.badge ? (
-                            <span className="rounded-full bg-emerald-100 px-2 py-[6px] text-[10px] font-semibold text-emerald-700">{plan.badge}</span>
-                          ) : null}
+                        <div className="aspect-video w-full bg-neutral-100">
+                          {car.img ? (
+                            <img src={car.img} alt={car.alt} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-xs text-neutral-500">{car.label}</div>
+                          )}
                         </div>
-                        <div className="text-xs text-neutral-600">{plan.desc}</div>
-                        <div className="text-sm font-semibold text-neutral-800">{plan.price}</div>
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">{car.label}</div>
+                            <div className="text-xs text-neutral-500">{car.note}</div>
+                          </div>
+                          <span
+                            className={classNames(
+                              'rounded-full px-2 py-1 text-[11px] font-semibold',
+                              active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
+                            )}
+                          >
+                            {active ? 'Selected' : 'Tap to pick'}
+                          </span>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
+              <label className="space-y-1 text-sm font-semibold text-neutral-800">
+                Trim or package
+                <input
+                  type="text"
+                  value={formState.trim}
+                  onChange={(e) => updateField('trim', e.target.value)}
+                  placeholder="Performance, Long Range, etc."
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+                <p className="text-xs font-normal text-neutral-500">Helps us surface the right charging, tire, and FSD notes.</p>
+              </label>
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-neutral-200 bg-white/85 p-4 shadow-sm shadow-neutral-200/40">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Features to monitor</div>
-                    <p className="text-sm text-neutral-700">Tap to add them to your starter set.</p>
-                  </div>
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold text-blue-700">Material-style chips</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-neutral-800">Features to monitor</div>
+                  <p className="text-xs text-neutral-500">Pick up to 3 for free right after signup.</p>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {featureOptions.map((feature) => {
-                    const active = formState.features.includes(feature.id);
-                    return (
-                      <button
-                        key={feature.id}
-                        type="button"
-                        onClick={() => toggleFeature(feature.id)}
-                        aria-pressed={active}
-                        className={classNames(
-                          'flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                          active
-                            ? 'border-violet-400 bg-violet-50 text-violet-700 shadow-violet-100'
-                            : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
-                        )}
-                      >
-                        <span className={classNames('h-2 w-2 rounded-full', active ? 'bg-violet-500' : 'bg-neutral-300')} aria-hidden="true" />
-                        {feature.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
               </div>
-
-              <div className="rounded-2xl border border-neutral-200 bg-white/85 p-4 shadow-sm shadow-neutral-200/40 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-semibold text-neutral-900">Starter preview</div>
-                  <span className="text-[11px] font-semibold text-neutral-500">{formState.features.length} selected</span>
-                </div>
-                <div className="text-sm text-neutral-700">
-                  You can monitor up to <span className="font-semibold">3 data points for free</span> after signup. Unlimited opens every data card for <span className="font-semibold">$4.94/month</span>.
-                </div>
-                <div className="space-y-2 rounded-xl bg-gradient-to-r from-violet-50 to-blue-50 p-3 text-sm text-neutral-800">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="text-xs uppercase tracking-[0.12em] text-neutral-500">Summary</div>
-                      <div className="font-semibold">{CAR_META[formState.carType]?.label || 'Tesla'} — {formState.trim || 'trim TBD'}</div>
-                      <div className="text-xs text-neutral-600">
-                        {formState.features.length ? `${Math.min(formState.features.length, featureLimit)} free data points reserved` : 'Pick features to reserve your free data points.'}
+              <div className="grid gap-2 sm:grid-cols-2">
+                {featureOptions.map((feature) => {
+                  const active = formState.features.includes(feature.id);
+                  return (
+                    <button
+                      key={feature.id}
+                      type="button"
+                      onClick={() => toggleFeature(feature.id)}
+                      aria-pressed={active}
+                      className={classNames(
+                        'flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                        active ? 'border-violet-500 bg-violet-50 text-violet-900 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                      )}
+                    >
+                      <div className="mt-1 h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+                      <div>
+                        <div className="text-sm font-semibold">{feature.label}</div>
+                        <div className="text-xs text-neutral-500">{active ? 'Included in your onboarding' : 'Tap to add to your starter set'}</div>
                       </div>
-                    </div>
-                    <div className="text-right text-xs text-neutral-600">
-                      {formState.plan === 'unlimited' ? '$4.94/mo after signup' : 'Free starter applied'}
-                    </div>
-                  </div>
-                  {submitted ? (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                      Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim || 'trim'} {CAR_META[formState.carType]?.label || ''} and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-neutral-200 bg-white/80 px-3 py-2 text-xs text-neutral-700">
-                      Tell us your name and email to lock in your starter perks. We’ll send a confirmation with your reserved data points.
-                    </div>
-                  )}
-                </div>
-
-                <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full">
-                  Start onboarding
-                </Button>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[{ id: 'starter', title: 'Starter', desc: 'Up to 3 data points free after signup' }, { id: 'unlimited', title: 'Unlimited', desc: 'Full access for $4.94/month' }].map((plan) => {
+                const active = formState.plan === plan.id;
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    onClick={() => updateField('plan', plan.id)}
+                    aria-pressed={active}
+                    className={classNames(
+                      'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                      active ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                    )}
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
+                      {plan.id === 'unlimited' ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">Most popular</span>
+                      ) : null}
+                    </div>
+                    <div className="text-xs text-neutral-500">{plan.desc}</div>
+                    {plan.id === 'unlimited' ? <div className="text-xs text-neutral-600">Unlimited data points + live alerts</div> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {submitted ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim} {CAR_META[formState.carType]?.label || ''}
+              and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs text-neutral-500">
+              You can switch plans anytime. Unlimited unlocks every telemetry card for $4.94/month.
+            </div>
+            <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full sm:w-auto">
+              Start onboarding
+            </Button>
           </div>
         </form>
       </Card>

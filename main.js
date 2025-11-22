@@ -848,6 +848,253 @@
   }
 
   /* ------------------------------------------------------------------
+   * Onboarding form
+   *
+   * Captures a new member's details and preferred monitoring focus.
+   * ------------------------------------------------------------------ */
+  function OnboardingForm({ accent, isDark, carImages }) {
+    const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({
+      id,
+      ...meta,
+      img: carImages?.[id],
+    }));
+    const featureOptions = [
+      { id: 'charging', label: 'Charging + supercharger stops' },
+      { id: 'battery', label: 'Battery health + range' },
+      { id: 'safety', label: 'Safety alerts + Sentry' },
+      { id: 'autopilot', label: 'Autopilot + FSD usage' },
+      { id: 'trips', label: 'Trip history + efficiency' },
+      { id: 'climate', label: 'Cabin temp + preconditioning' },
+    ];
+    const [formState, setFormState] = useState({
+      name: '',
+      email: '',
+      carType: carOptions[0]?.id || 'modely',
+      trim: 'Long Range',
+      features: ['charging', 'battery', 'safety'],
+      plan: 'starter',
+    });
+    const [submitted, setSubmitted] = useState(false);
+
+    function updateField(field, value) {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function toggleFeature(id) {
+      setFormState((prev) => {
+        const exists = prev.features.includes(id);
+        const nextFeatures = exists ? prev.features.filter((f) => f !== id) : [...prev.features, id];
+        return { ...prev, features: nextFeatures };
+      });
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      setSubmitted(true);
+    }
+
+    const featureLimit = 3;
+    const remainingFree = Math.max(0, featureLimit - formState.features.length);
+
+    return (
+      <Card
+        id="onboarding"
+        className={classNames(
+          'relative overflow-hidden border p-5 sm:p-7 shadow-[0_28px_70px_-40px_rgba(79,70,229,0.55)]',
+          isDark ? 'bg-white text-neutral-900 border-neutral-200' : 'bg-white text-neutral-900 border-neutral-100'
+        )}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-50/80 via-white to-blue-50"
+          aria-hidden="true"
+        />
+        <form className="relative space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member onboarding</div>
+            <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Let’s set up your Tesla Helper</h3>
+            <p className="text-sm text-neutral-600">
+              Choose your car, pick the features you want to monitor, and decide if you want the free starter set or
+              unlimited access for $4.94/month.
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr]">
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm shadow-neutral-200/40">
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Vehicle</div>
+                    <div className="text-sm text-neutral-700">We’ll personalize tips and data per model.</div>
+                  </div>
+                  <span className="rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold text-violet-700">Required</span>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
+                    <span>Model</span>
+                    <div className="relative">
+                      <select
+                        value={formState.carType}
+                        onChange={(e) => updateField('carType', e.target.value)}
+                        className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                      >
+                        {carOptions.map((car) => (
+                          <option key={car.id} value={car.id}>
+                            {car.label} — {car.note}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400" aria-hidden="true">
+                        ▼
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-normal text-neutral-500">Simple dropdown—no image grid.</span>
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
+                    <span>Trim</span>
+                    <input
+                      value={formState.trim}
+                      onChange={(e) => updateField('trim', e.target.value)}
+                      placeholder="Long Range, Performance…"
+                      className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm font-medium text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    />
+                    <span className="text-[11px] font-normal text-neutral-500">Optional but helpful for accuracy.</span>
+                  </label>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[{ field: 'name', label: 'Your name', placeholder: 'Alex Kim' }, { field: 'email', label: 'Email', placeholder: 'alex@example.com' }].map((input) => (
+                    <label key={input.field} className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
+                      <span>{input.label}</span>
+                      <input
+                        required
+                        value={formState[input.field]}
+                        onChange={(e) => updateField(input.field, e.target.value)}
+                        placeholder={input.placeholder}
+                        className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm font-medium text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm shadow-neutral-200/40">
+                <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Plan</div>
+                    <div className="text-sm text-neutral-700">Starter keeps 3 data points free; Unlimited opens everything.</div>
+                  </div>
+                  <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[{ id: 'starter', title: 'Starter', desc: 'Pick up to 3 data points free after signup.', price: '$0' }, { id: 'unlimited', title: 'Unlimited', desc: 'All data points unlocked after signup.', price: '$4.94/mo', badge: 'Most picked' }].map((plan) => {
+                    const active = formState.plan === plan.id;
+                    return (
+                      <button
+                        key={plan.id}
+                        type="button"
+                        onClick={() => updateField('plan', plan.id)}
+                        aria-pressed={active}
+                        className={classNames(
+                          'flex flex-col gap-1 rounded-xl border px-4 py-3 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                          active
+                            ? 'border-violet-400 bg-gradient-to-br from-violet-50 via-white to-white shadow-violet-200'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
+                          {plan.badge ? (
+                            <span className="rounded-full bg-emerald-100 px-2 py-[6px] text-[10px] font-semibold text-emerald-700">{plan.badge}</span>
+                          ) : null}
+                        </div>
+                        <div className="text-xs text-neutral-600">{plan.desc}</div>
+                        <div className="text-sm font-semibold text-neutral-800">{plan.price}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-neutral-200 bg-white/85 p-4 shadow-sm shadow-neutral-200/40">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Features to monitor</div>
+                    <p className="text-sm text-neutral-700">Tap to add them to your starter set.</p>
+                  </div>
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold text-blue-700">Material-style chips</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {featureOptions.map((feature) => {
+                    const active = formState.features.includes(feature.id);
+                    return (
+                      <button
+                        key={feature.id}
+                        type="button"
+                        onClick={() => toggleFeature(feature.id)}
+                        aria-pressed={active}
+                        className={classNames(
+                          'flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                          active
+                            ? 'border-violet-400 bg-violet-50 text-violet-700 shadow-violet-100'
+                            : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
+                        )}
+                      >
+                        <span className={classNames('h-2 w-2 rounded-full', active ? 'bg-violet-500' : 'bg-neutral-300')} aria-hidden="true" />
+                        {feature.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-neutral-200 bg-white/85 p-4 shadow-sm shadow-neutral-200/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-neutral-900">Starter preview</div>
+                  <span className="text-[11px] font-semibold text-neutral-500">{formState.features.length} selected</span>
+                </div>
+                <div className="text-sm text-neutral-700">
+                  You can monitor up to <span className="font-semibold">3 data points for free</span> after signup. Unlimited opens every data card for <span className="font-semibold">$4.94/month</span>.
+                </div>
+                <div className="space-y-2 rounded-xl bg-gradient-to-r from-violet-50 to-blue-50 p-3 text-sm text-neutral-800">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="text-xs uppercase tracking-[0.12em] text-neutral-500">Summary</div>
+                      <div className="font-semibold">{CAR_META[formState.carType]?.label || 'Tesla'} — {formState.trim || 'trim TBD'}</div>
+                      <div className="text-xs text-neutral-600">
+                        {formState.features.length ? `${Math.min(formState.features.length, featureLimit)} free data points reserved` : 'Pick features to reserve your free data points.'}
+                      </div>
+                    </div>
+                    <div className="text-right text-xs text-neutral-600">
+                      {formState.plan === 'unlimited' ? '$4.94/mo after signup' : 'Free starter applied'}
+                    </div>
+                  </div>
+                  {submitted ? (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                      Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim || 'trim'} {CAR_META[formState.carType]?.label || ''} and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-neutral-200 bg-white/80 px-3 py-2 text-xs text-neutral-700">
+                      Tell us your name and email to lock in your starter perks. We’ll send a confirmation with your reserved data points.
+                    </div>
+                  )}
+                </div>
+
+                <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full">
+                  Start onboarding
+                </Button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </Card>
+    );
+  }
+
+  /* ------------------------------------------------------------------
    * Section title component
    *
    * Displays a heading and optional subtitle.
@@ -1738,24 +1985,6 @@
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [showTeslaModal, setShowTeslaModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
-    const widgetFallback = {
-      template: 'balanced',
-      metricIds: WIDGET_METRICS.slice(0, 4).map((m) => m.id),
-    };
-    const [widgetConfig, setWidgetConfig] = useState(() => {
-      if (typeof window === 'undefined') return widgetFallback;
-      try {
-        const stored = window.localStorage?.getItem('teslahelper-widgets');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed?.template && Array.isArray(parsed.metricIds)) return parsed;
-        }
-      } catch (e) {
-        // ignore parse errors
-      }
-      return widgetFallback;
-    });
-    const [showWidgetEditor, setShowWidgetEditor] = useState(false);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
@@ -1807,11 +2036,6 @@
         window.localStorage?.setItem('teslahelper-theme', mode);
       }
     }, [mode]);
-    useEffect(() => {
-      if (typeof window !== 'undefined') {
-        window.localStorage?.setItem('teslahelper-widgets', JSON.stringify(widgetConfig));
-      }
-    }, [widgetConfig]);
     useEffect(() => {
       const onScroll = () => setHeaderCompact(window.scrollY > 12);
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -2158,62 +2382,57 @@
           </div>
         </header>
         {/* Hero / quick links */}
-        <section className="relative">
-          <div className="mx-auto max-w-6xl px-4 py-10 md:py-14 grid md:grid-cols-2 gap-6 items-start">
-            <div>
+        <section className="relative overflow-hidden">
+          <div
+            className={classNames(
+              'absolute inset-0 -z-10',
+              isDark
+                ? 'bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950'
+                : 'bg-gradient-to-br from-violet-50 via-white to-white'
+            )}
+            aria-hidden="true"
+          />
+          <div className="absolute right-10 top-6 -z-10 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true" />
+          <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 grid md:grid-cols-2 gap-8 items-start">
+            <div className="space-y-4">
               <p className="uppercase tracking-widest text-xs opacity-80">Your Tesla · Your Guide</p>
               <h1
-                className="font-extrabold leading-tight mt-2"
-                style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
+                className="font-extrabold leading-tight"
+                style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2.25rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
               >
                 The Tesla Helper App
               </h1>
-              <ul className="mt-4 space-y-1 text-sm opacity-90">
-                <li>• Find exactly what you need fast—charging, FSD, safety, and more.</li>
-                <li>• Organized by model and year so nothing is confusing or missing.</li>
-                <li>• Short, official videos with plain‑English summaries.</li>
+              <ul className="mt-2 space-y-2 text-sm opacity-90">
+                <li className="flex items-start gap-2">
+                  <span aria-hidden="true">•</span>
+                  <span>Find exactly what you need fast—charging, Autopilot/FSD, safety, and more.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span aria-hidden="true">•</span>
+                  <span>Organized by model and year so nothing is confusing or missing.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span aria-hidden="true">•</span>
+                  <span>Short, official videos with plain‑English summaries.</span>
+                </li>
               </ul>
               <div className="mt-6 flex gap-3 flex-wrap">
-                <Button as="a" href="#models" variant="primary" accent={accent} isDark={isDark}>
-                  Pick your model
+                <Button as="a" href="#onboarding" variant="primary" accent={accent} isDark={isDark}>
+                  Get Started
                 </Button>
-                <Button onClick={() => setShowInstallModal(true)} variant="secondary" isDark={isDark}>
+                <Button onClick={() => setShowTeslaModal(true)} variant="secondary" isDark={isDark}>
+                  Connect My Tesla
+                </Button>
+                <Button onClick={() => setShowInstallModal(true)} variant="ghost" isDark={isDark}>
                   Add to Home Screen
                 </Button>
               </div>
-              <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
+              <p className="mt-2 text-xs opacity-80">
+                Pick up to 3 data points for free after signup. Full access with unlimited monitoring is $4.94/month.
+              </p>
             </div>
-            <div className="relative w-full space-y-4">
-              <Card
-                className={classNames(
-                  'border p-3 md:p-4 space-y-3 shadow-[0_10px_50px_-30px_rgba(0,0,0,0.8)]',
-                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
-                )}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.25em] opacity-70">Home widgets</div>
-                    <div className="font-semibold">Telemetry, FSD, and safety at a glance</div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    isDark={isDark}
-                    onClick={() => setShowWidgetEditor((o) => !o)}
-                  >
-                    {showWidgetEditor ? 'Hide' : 'Customize'}
-                  </Button>
-                </div>
-                <HomeWidgetGrid data={telemetryData} config={widgetConfig} accent={accent} isDark={isDark} />
-              </Card>
-              {showWidgetEditor ? (
-                <WidgetCustomizer
-                  config={widgetConfig}
-                  setConfig={setWidgetConfig}
-                  isDark={isDark}
-                  sampleData={telemetryData}
-                />
-              ) : null}
+            <div className="relative w-full">
+              <OnboardingForm accent={accent} isDark={isDark} carImages={carImages} />
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">

@@ -852,6 +852,235 @@
    *
    * Captures a new member's details and preferred monitoring focus.
    * ------------------------------------------------------------------ */
+  function OnboardingForm({ accent, isDark, carImages }) {
+    const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({
+      id,
+      ...meta,
+      img: carImages?.[id],
+    }));
+    const featureOptions = [
+      { id: 'charging', label: 'Charging + supercharger stops' },
+      { id: 'battery', label: 'Battery health + range' },
+      { id: 'safety', label: 'Safety alerts + Sentry' },
+      { id: 'autopilot', label: 'Autopilot + FSD usage' },
+      { id: 'trips', label: 'Trip history + efficiency' },
+      { id: 'climate', label: 'Cabin temp + preconditioning' },
+    ];
+    const [formState, setFormState] = useState({
+      name: '',
+      email: '',
+      carType: carOptions[0]?.id || 'modely',
+      trim: 'Long Range',
+      features: ['charging', 'battery', 'safety'],
+      plan: 'starter',
+    });
+    const [submitted, setSubmitted] = useState(false);
+
+    function updateField(field, value) {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function toggleFeature(id) {
+      setFormState((prev) => {
+        const exists = prev.features.includes(id);
+        const nextFeatures = exists ? prev.features.filter((f) => f !== id) : [...prev.features, id];
+        return { ...prev, features: nextFeatures };
+      });
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      setSubmitted(true);
+    }
+
+    const featureLimit = 3;
+    const remainingFree = Math.max(0, featureLimit - formState.features.length);
+
+    return (
+      <Card
+        id="onboarding"
+        className={classNames(
+          'border p-4 sm:p-5 shadow-[0_20px_70px_-35px_rgba(0,0,0,0.7)]',
+          isDark ? 'bg-white text-neutral-900' : 'bg-white',
+          isDark ? 'border-neutral-200' : 'border-neutral-200'
+        )}
+      >
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Member onboarding</div>
+              <h3 className="text-lg font-semibold leading-tight">What type of Tesla do you own?</h3>
+              <p className="text-sm text-neutral-600">
+                We’ll tailor your setup to the trim, features, and data points you want to watch first.
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+              New ✦ Personalized
+            </span>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { label: 'Name', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
+              { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
+            ].map((input) => (
+              <label key={input.field} className="space-y-1 text-sm font-semibold text-neutral-800">
+                {input.label}
+                <input
+                  required
+                  type={input.type}
+                  value={formState[input.field]}
+                  onChange={(e) => updateField(input.field, e.target.value)}
+                  placeholder={input.placeholder}
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="grid gap-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-neutral-800">Car type</div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {carOptions.map((car) => {
+                    const active = formState.carType === car.id;
+                    return (
+                      <button
+                        key={car.id}
+                        type="button"
+                        onClick={() => updateField('carType', car.id)}
+                        aria-pressed={active}
+                        className={classNames(
+                          'group relative overflow-hidden rounded-xl border text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                          active ? 'border-violet-500 shadow-lg shadow-violet-500/15' : 'border-neutral-200 hover:border-neutral-300'
+                        )}
+                      >
+                        <div className="aspect-video w-full bg-neutral-100">
+                          {car.img ? (
+                            <img src={car.img} alt={car.alt} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-xs text-neutral-500">{car.label}</div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">{car.label}</div>
+                            <div className="text-xs text-neutral-500">{car.note}</div>
+                          </div>
+                          <span
+                            className={classNames(
+                              'rounded-full px-2 py-1 text-[11px] font-semibold',
+                              active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
+                            )}
+                          >
+                            {active ? 'Selected' : 'Tap to pick'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <label className="space-y-1 text-sm font-semibold text-neutral-800">
+                Trim or package
+                <input
+                  type="text"
+                  value={formState.trim}
+                  onChange={(e) => updateField('trim', e.target.value)}
+                  placeholder="Performance, Long Range, etc."
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+                <p className="text-xs font-normal text-neutral-500">Helps us surface the right charging, tire, and FSD notes.</p>
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-neutral-800">Features to monitor</div>
+                  <p className="text-xs text-neutral-500">Pick up to 3 for free right after signup.</p>
+                </div>
+                <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {featureOptions.map((feature) => {
+                  const active = formState.features.includes(feature.id);
+                  return (
+                    <button
+                      key={feature.id}
+                      type="button"
+                      onClick={() => toggleFeature(feature.id)}
+                      aria-pressed={active}
+                      className={classNames(
+                        'flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                        active ? 'border-violet-500 bg-violet-50 text-violet-900 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                      )}
+                    >
+                      <div className="mt-1 h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+                      <div>
+                        <div className="text-sm font-semibold">{feature.label}</div>
+                        <div className="text-xs text-neutral-500">{active ? 'Included in your onboarding' : 'Tap to add to your starter set'}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[{ id: 'starter', title: 'Starter', desc: 'Up to 3 data points free after signup' }, { id: 'unlimited', title: 'Unlimited', desc: 'Full access for $4.94/month' }].map((plan) => {
+                const active = formState.plan === plan.id;
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    onClick={() => updateField('plan', plan.id)}
+                    aria-pressed={active}
+                    className={classNames(
+                      'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                      active ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                    )}
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
+                      {plan.id === 'unlimited' ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">Most popular</span>
+                      ) : null}
+                    </div>
+                    <div className="text-xs text-neutral-500">{plan.desc}</div>
+                    {plan.id === 'unlimited' ? <div className="text-xs text-neutral-600">Unlimited data points + live alerts</div> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {submitted ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim} {CAR_META[formState.carType]?.label || ''}
+              and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs text-neutral-500">
+              You can switch plans anytime. Unlimited unlocks every telemetry card for $4.94/month.
+            </div>
+            <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full sm:w-auto">
+              Start onboarding
+            </Button>
+          </div>
+        </form>
+      </Card>
+    );
+  }
+
+  /* ------------------------------------------------------------------
+   * Section title component
+   *
+   * Captures a new member's details and preferred monitoring focus.
+   * ------------------------------------------------------------------ */
 
   function OnboardingForm({ accent, isDark, carImages }) {
     const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({

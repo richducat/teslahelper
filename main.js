@@ -36,7 +36,7 @@
   const BRAND_NAME = 'Tesla Helper';
   const BRAND = {
     name: BRAND_NAME,
-    tagline: 'Know your Tesla in minutes.',
+    tagline: 'Premium, secure, and owner-first.',
     defaultAccent: 'violet',
     wordmark: (
       <span className="inline-flex items-center gap-2 font-black tracking-tight text-lg" aria-hidden="true">
@@ -1411,10 +1411,10 @@ xf   *
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member quiz</div>
-              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Onboard Tesla owners quickly</h3>
+              <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Rental & sharing</div>
+              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Rental & Sharing Made Easy</h3>
               <p className="text-sm text-neutral-600">
-                Smooth, single-question steps to collect contact details, Tesla model info, and the first signals they want to monitor.
+                Share your Tesla without sharing your Tesla account. TeslaHelper gives you tools to support rentals and shared driving—like clear trip summaries, usage insights, and safer remote access—so lending or hosting your car is simpler and less stressful.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">
@@ -1553,10 +1553,10 @@ function SectionTitle({ title, subtitle }) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-[0.25em] opacity-70">Tesla account</div>
-            <div className="font-semibold text-lg">{isConnected ? 'Connected to Tesla' : 'Connect your Tesla account'}</div>
+            <div className="font-semibold text-lg">Premium, Secure & Owner-Centric</div>
             <p className="text-sm opacity-80 max-w-2xl">
-              Sign in with Tesla OAuth to load live vehicle data. We use Tesla’s device code flow so you never enter
-              credentials directly into Tesla Helper.
+              TeslaHelper is built with a security-first mindset and a focus on real Tesla owners. We use secure authentication,
+              respect your privacy, and design every feature to feel like a natural extension of your car—not another clunky tool.
             </p>
             <div className="flex flex-wrap gap-2 text-xs opacity-80">
               <span
@@ -2092,7 +2092,10 @@ function SectionTitle({ title, subtitle }) {
     const ids = ['model3', 'models', 'modelx', 'modely', 'cybertruck'];
     return (
       <section id="models" className="mx-auto max-w-6xl px-4 pb-16">
-        <SectionTitle title="Pick your Tesla" subtitle="Select a model to jump into its how‑to library." />
+        <SectionTitle
+          title="The Ultimate Companion for Tesla Owners"
+          subtitle="TeslaHelper is a premium all-in-one web app that empowers Tesla owners to get more from their vehicles. Designed by Tesla enthusiasts for Tesla enthusiasts, it combines all the essentials of the official Tesla app with powerful new features that make ownership easier and more fun. Enjoy a friendly, tech-savvy experience that puts you in full control of your Tesla—anytime, anywhere."
+        />
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {ids.map((id) => (
           <CarTile key={id} id={id} accent={accent} carImages={carImages} isDark={isDark} />
@@ -2282,8 +2285,8 @@ function SectionTitle({ title, subtitle }) {
     return (
       <section id="library" className="mx-auto max-w-6xl px-4 pb-24">
         <SectionTitle
-          title="How‑To Library"
-          subtitle={`Concise videos from Tesla’s official guides, organized by model and year. Last reviewed: ${LAST_REVIEWED.date} · SW ${LAST_REVIEWED.software}.`}
+          title="Personalize Your Tesla Experience"
+          subtitle="Your Tesla is unique—your app experience should be too. TeslaHelper lets you customize climate and charging schedules, tailor notifications, and pin your favorite controls so you always see what matters most at a glance."
         />
         <Card className={classNames('p-4 border', cardBg, borderSoft)}>
           <div className="grid md:grid-cols-4 gap-3">
@@ -2800,40 +2803,51 @@ function SectionTitle({ title, subtitle }) {
           <div className="absolute right-10 top-6 -z-10 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true" />
           <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 grid md:grid-cols-2 gap-8 items-start">
             <div className="space-y-4">
-              <p className="uppercase tracking-widest text-xs opacity-80">Your Tesla · Your Guide</p>
+              <p className="uppercase tracking-widest text-xs opacity-80">Tesla owners · Premium companion</p>
               <h1
                 className="font-extrabold leading-tight"
                 style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2.25rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
               >
-                The Tesla Helper App
+                TeslaHelper: Elevate Your Tesla Experience
               </h1>
               <ul className="mt-2 space-y-2 text-sm opacity-90">
                 <li className="flex items-start gap-2">
                   <span aria-hidden="true">•</span>
-                  <span>Find exactly what you need fast—charging, Autopilot/FSD, safety, and more.</span>
+                  <span>
+                    The premium companion app that gives you deeper insights, smarter controls, and more personalization for your
+                    Tesla—without replacing the official app.
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span aria-hidden="true">•</span>
-                  <span>Organized by model and year so nothing is confusing or missing.</span>
+                  <span>
+                    Designed by Tesla enthusiasts for Tesla enthusiasts, it combines essentials from the official app with powerful
+                    new features that make ownership easier and more fun.
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span aria-hidden="true">•</span>
-                  <span>Short, official videos with plain‑English summaries.</span>
+                  <span>
+                    Control your Tesla from anywhere with a clean, fast interface. Lock or unlock, precondition the cabin,
+                    check charge status, and manage multiple vehicles from one simple dashboard, so everyday tasks take just a
+                    tap.
+                  </span>
                 </li>
               </ul>
               <div className="mt-6 flex gap-3 flex-wrap">
                 <Button as="a" href="#onboarding" variant="primary" accent={accent} isDark={isDark}>
-                  Get Started
+                  Get Started with TeslaHelper
                 </Button>
                 <Button onClick={() => setShowTeslaModal(true)} variant="secondary" isDark={isDark}>
-                  Connect My Tesla
+                  See How It Works
                 </Button>
                 <Button onClick={() => setShowInstallModal(true)} variant="ghost" isDark={isDark}>
-                  Add to Home Screen
+                  Start with TeslaHelper
                 </Button>
               </div>
               <p className="mt-2 text-xs opacity-80">
-                Pick up to 3 data points for free after signup. Full access with unlimited monitoring is $4.94/month.
+                Ready to Upgrade Your Ride? Experience a smarter way to own your Tesla. Connect your vehicle, explore your drive
+                data, and unlock more control in just a few clicks.
               </p>
             </div>
             <div className="relative w-full">
@@ -2846,8 +2860,8 @@ function SectionTitle({ title, subtitle }) {
         </section>
         <TelemetryAnalyticsSection
           sectionId="my-tesla"
-          title="My Tesla telemetry"
-          subtitle="Trip history, Autopilot usage, and safety signals in one dashboard preview."
+          title="Drive Analytics & Insights"
+          subtitle="Understand your Tesla like never before with in-depth analytics on every drive. TeslaHelper turns your driving data into actionable insights to help you drive smarter and more efficiently. See detailed trip reports, energy use, and efficiency trends over time so you can get the most out of every charge."
           accent={accent}
           isDark={isDark}
           data={telemetryData}
@@ -2856,12 +2870,12 @@ function SectionTitle({ title, subtitle }) {
           isLoadingTelemetry={isLoadingTelemetry}
           onRefresh={refreshTelemetry}
         />
-        <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Quick links">
+        <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Remote Control & Convenience">
           <Card className={classNames('border px-3 py-3 md:px-4 md:py-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200')}>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="font-semibold flex items-center gap-2">
                 <span className="text-lg" aria-hidden="true">⭐</span>
-                Quick links
+                Remote Control & Convenience
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2 w-full md:w-auto">
                 {[
@@ -2895,8 +2909,8 @@ function SectionTitle({ title, subtitle }) {
         <LibraryPanel accent={accent} isDark={isDark} />
         <section className="mx-auto max-w-6xl px-4 pb-16">
           <SectionTitle
-            title="Stay aligned with official guidance"
-            subtitle="Every tip links back to Tesla resources so you can verify details by model, region, and software."
+            title="Beyond the Official Tesla App"
+            subtitle="Think of TeslaHelper as the perfect complement to the official Tesla app. You still keep everything Tesla provides, but add richer analytics, smarter shortcuts, and owner-focused tools that fill in the gaps—so you open TeslaHelper first."
           />
           <div className="grid md:grid-cols-2 gap-4">
             {OFFICIAL_LINKS.map((link) => (

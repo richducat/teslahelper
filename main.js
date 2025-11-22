@@ -900,172 +900,176 @@
       <Card
         id="onboarding"
         className={classNames(
-          'relative overflow-hidden border p-4 sm:p-6 shadow-[0_20px_60px_-35px_rgba(79,70,229,0.6)]',
-          isDark ? 'bg-white text-neutral-900 border-neutral-200' : 'bg-white text-neutral-900 border-neutral-200'
+          'border p-4 sm:p-5 shadow-[0_20px_70px_-35px_rgba(0,0,0,0.7)]',
+          isDark ? 'bg-white text-neutral-900' : 'bg-white',
+          isDark ? 'border-neutral-200' : 'border-neutral-200'
         )}
       >
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-violet-50/80 via-white to-white" aria-hidden="true" />
-        <form className="relative space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-1">
-            <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member onboarding</div>
-            <h3 className="text-xl font-semibold leading-tight sm:text-2xl">What type of Tesla do you own?</h3>
-            <p className="text-sm text-neutral-600">
-              We’ll tailor your setup to the trim, features, and data points you want to watch first.
-            </p>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Member onboarding</div>
+              <h3 className="text-lg font-semibold leading-tight">What type of Tesla do you own?</h3>
+              <p className="text-sm text-neutral-600">
+                We’ll tailor your setup to the trim, features, and data points you want to watch first.
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+              New ✦ Personalized
+            </span>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-900/90 text-white shadow-inner">
-            <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-white/70">
-              <span>Pick your Tesla</span>
-              <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-semibold text-white">Tap to pick</span>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { label: 'Name', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
+              { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
+            ].map((input) => (
+              <label key={input.field} className="space-y-1 text-sm font-semibold text-neutral-800">
+                {input.label}
+                <input
+                  required
+                  type={input.type}
+                  value={formState[input.field]}
+                  onChange={(e) => updateField(input.field, e.target.value)}
+                  placeholder={input.placeholder}
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="grid gap-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-neutral-800">Car type</div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {carOptions.map((car) => {
+                    const active = formState.carType === car.id;
+                    return (
+                      <button
+                        key={car.id}
+                        type="button"
+                        onClick={() => updateField('carType', car.id)}
+                        aria-pressed={active}
+                        className={classNames(
+                          'group relative overflow-hidden rounded-xl border text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                          active ? 'border-violet-500 shadow-lg shadow-violet-500/15' : 'border-neutral-200 hover:border-neutral-300'
+                        )}
+                      >
+                        <div className="aspect-video w-full bg-neutral-100">
+                          {car.img ? (
+                            <img src={car.img} alt={car.alt} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-xs text-neutral-500">{car.label}</div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">{car.label}</div>
+                            <div className="text-xs text-neutral-500">{car.note}</div>
+                          </div>
+                          <span
+                            className={classNames(
+                              'rounded-full px-2 py-1 text-[11px] font-semibold',
+                              active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
+                            )}
+                          >
+                            {active ? 'Selected' : 'Tap to pick'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <label className="space-y-1 text-sm font-semibold text-neutral-800">
+                Trim or package
+                <input
+                  type="text"
+                  value={formState.trim}
+                  onChange={(e) => updateField('trim', e.target.value)}
+                  placeholder="Performance, Long Range, etc."
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+                <p className="text-xs font-normal text-neutral-500">Helps us surface the right charging, tire, and FSD notes.</p>
+              </label>
             </div>
-            <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-5">
-              {carOptions.map((car) => {
-                const active = formState.carType === car.id;
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-neutral-800">Features to monitor</div>
+                  <p className="text-xs text-neutral-500">Pick up to 3 for free right after signup.</p>
+                </div>
+                <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {featureOptions.map((feature) => {
+                  const active = formState.features.includes(feature.id);
+                  return (
+                    <button
+                      key={feature.id}
+                      type="button"
+                      onClick={() => toggleFeature(feature.id)}
+                      aria-pressed={active}
+                      className={classNames(
+                        'flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                        active ? 'border-violet-500 bg-violet-50 text-violet-900 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                      )}
+                    >
+                      <div className="mt-1 h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+                      <div>
+                        <div className="text-sm font-semibold">{feature.label}</div>
+                        <div className="text-xs text-neutral-500">{active ? 'Included in your onboarding' : 'Tap to add to your starter set'}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[{ id: 'starter', title: 'Starter', desc: 'Up to 3 data points free after signup' }, { id: 'unlimited', title: 'Unlimited', desc: 'Full access for $4.94/month' }].map((plan) => {
+                const active = formState.plan === plan.id;
                 return (
                   <button
-                    key={car.id}
+                    key={plan.id}
                     type="button"
-                    onClick={() => updateField('carType', car.id)}
+                    onClick={() => updateField('plan', plan.id)}
                     aria-pressed={active}
                     className={classNames(
-                      'group flex h-full flex-col overflow-hidden rounded-xl border text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400',
-                      active
-                        ? 'border-violet-300/80 bg-gradient-to-b from-violet-500/20 via-violet-500/10 to-white/5 shadow-lg shadow-violet-500/20'
-                        : 'border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10'
+                      'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                      active ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
                     )}
                   >
-                    <div className="aspect-[4/3] w-full bg-white/5">
-                      {car.img ? (
-                        <img src={car.img} alt={car.alt} className="h-full w-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-xs text-white/70">{car.label}</div>
-                      )}
+                    <div className="flex w-full items-center justify-between">
+                      <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
+                      {plan.id === 'unlimited' ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">Most popular</span>
+                      ) : null}
                     </div>
-                    <div className="flex flex-col gap-1 px-3 py-2">
-                      <div className="text-sm font-semibold text-white">{car.label}</div>
-                      <div className="text-[11px] text-white/70">{car.note}</div>
-                    </div>
+                    <div className="text-xs text-neutral-500">{plan.desc}</div>
+                    {plan.id === 'unlimited' ? <div className="text-xs text-neutral-600">Unlimited data points + live alerts</div> : null}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-3">
-            <div className="space-y-4 lg:col-span-2">
-              <div className="grid gap-2 sm:grid-cols-2">
-                {[{ id: 'starter', title: 'Starter', desc: 'Pick up to 3 for free right after signup.' }, { id: 'unlimited', title: 'Unlimited', desc: 'Full access after $4.94/month' }].map((plan) => {
-                  const active = formState.plan === plan.id;
-                  return (
-                    <button
-                      key={plan.id}
-                      type="button"
-                      onClick={() => updateField('plan', plan.id)}
-                      aria-pressed={active}
-                      className={classNames(
-                        'flex flex-col rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                        active
-                          ? 'border-violet-400 bg-gradient-to-br from-violet-50 via-white to-white shadow-sm shadow-violet-200'
-                          : 'border-neutral-200 bg-white hover:border-neutral-300'
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
-                        {plan.id === 'unlimited' ? (
-                          <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">Most popular</span>
-                        ) : (
-                          <span className="text-[11px] font-semibold text-violet-600">3 free data points</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-neutral-600">{plan.desc}</div>
-                      {plan.id === 'unlimited' ? <div className="text-xs text-neutral-500">Unlimited data points after signup.</div> : null}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-900">Features to monitor</div>
-                    <p className="text-xs text-neutral-500">Tap to add to your starter set.</p>
-                  </div>
-                  <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {featureOptions.map((feature) => {
-                    const active = formState.features.includes(feature.id);
-                    return (
-                      <button
-                        key={feature.id}
-                        type="button"
-                        onClick={() => toggleFeature(feature.id)}
-                        aria-pressed={active}
-                        className={classNames(
-                          'group flex items-center justify-between gap-3 rounded-full border px-3 py-2 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                          active
-                            ? 'border-violet-400 bg-violet-50 text-violet-900 shadow-sm'
-                            : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
-                        )}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
-                          {feature.label}
-                        </span>
-                        <span className="text-[11px] font-semibold text-neutral-500 group-[aria-pressed=true]:text-violet-700">
-                          {active ? 'Added' : 'Tap to add'}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          {submitted ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim} {CAR_META[formState.carType]?.label || ''}
+              and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
             </div>
+          ) : null}
 
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Your details</div>
-                <div className="mt-3 grid gap-3">
-                  {[
-                    { label: 'Name', field: 'name', type: 'text', placeholder: 'Long Range Model Sand' },
-                    { label: 'Email', field: 'email', type: 'email', placeholder: 'you@teslahelper.app' },
-                    { label: 'Trim', field: 'trim', type: 'text', placeholder: 'Performance, Long Range…' },
-                  ].map((input) => (
-                    <label key={input.field} className="space-y-1 text-sm font-semibold text-neutral-800">
-                      {input.label}
-                      <input
-                        required={input.field !== 'trim' ? true : undefined}
-                        type={input.type}
-                        value={formState[input.field]}
-                        onChange={(e) => updateField(input.field, e.target.value)}
-                        placeholder={input.placeholder}
-                        className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {submitted ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                  Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim || 'trim'} {CAR_META[formState.carType]?.label || ''} and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
-                </div>
-              ) : (
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700">
-                  Thanks, {formState.name || 'oi!oi!oi!'}! We’ll confirm your {formState.trim || 'Long Range Model Sand'} and reserve 1 free data points. Your invite is on its way.
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2">
-                <div className="text-xs text-neutral-500">
-                  Starter includes 3 data points for free after signup. Unlimited unlocks every data card for $4.94/month.
-                </div>
-                <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full">
-                  Start onboarding
-                </Button>
-              </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs text-neutral-500">
+              You can switch plans anytime. Unlimited unlocks every telemetry card for $4.94/month.
             </div>
+            <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full sm:w-auto">
+              Start onboarding
+            </Button>
           </div>
         </form>
       </Card>

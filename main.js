@@ -848,6 +848,357 @@
   }
 
   /* ------------------------------------------------------------------
+   * Onboarding form
+   *
+   * Captures a new member's details and preferred monitoring focus.
+   * ------------------------------------------------------------------ */
+
+  function OnboardingForm({ accent, isDark, carImages }) {
+    const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({
+      id,
+      ...meta,
+      img: carImages?.[id],
+    }));
+    const featureOptions = [
+      { id: 'charging', label: 'Charging + supercharger stops' },
+      { id: 'battery', label: 'Battery health + range' },
+      { id: 'safety', label: 'Safety alerts + Sentry' },
+      { id: 'autopilot', label: 'Autopilot + FSD usage' },
+      { id: 'trips', label: 'Trip history + efficiency' },
+      { id: 'climate', label: 'Cabin temp + preconditioning' },
+    ];
+    const [formState, setFormState] = useState({
+      name: '',
+      email: '',
+      carType: carOptions[0]?.id || 'modely',
+      trim: 'Long Range',
+      features: ['charging', 'battery', 'safety'],
+      plan: 'starter',
+    });
+    const [submitted, setSubmitted] = useState(false);
+
+    function updateField(field, value) {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function toggleFeature(id) {
+      setFormState((prev) => {
+        const exists = prev.features.includes(id);
+        const nextFeatures = exists ? prev.features.filter((f) => f !== id) : [...prev.features, id];
+        return { ...prev, features: nextFeatures };
+      });
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      setSubmitted(true);
+    }
+
+    const featureLimit = 3;
+    const remainingFree = Math.max(0, featureLimit - formState.features.length);
+    const steps = [
+      { id: 'contact', label: 'Contact' },
+      { id: 'vehicle', label: 'Vehicle' },
+      { id: 'features', label: 'Features' },
+      { id: 'plan', label: 'Plan' },
+    ];
+    const completion = Math.round(
+      (['name', 'email', 'carType', 'trim', 'features', 'plan'].reduce((acc, key) => {
+        const value = formState[key];
+        if (Array.isArray(value)) {
+          return acc + (value.length > 0 ? 1 : 0);
+        }
+        return acc + (value ? 1 : 0);
+      }, 0) /
+        6) *
+        100
+    );
+
+    const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
+      <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
+        <span>{label}</span>
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+        />
+      </label>
+    );
+
+    const SelectField = ({ value, onChange, children }) => (
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+        >
+          {children}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400" aria-hidden="true">
+          ▼
+        </div>
+      </div>
+    );
+
+    const QuestionCard = ({ step, title, badge, description, children }) => (
+      <Card className="relative overflow-hidden border border-neutral-200 bg-white/85 p-4 shadow-sm shadow-neutral-200/50">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-[11px] font-bold text-violet-700">
+              {step}
+            </span>
+            {title}
+          </div>
+          {badge ? (
+            <span className="rounded-full bg-neutral-900 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">{badge}</span>
+          ) : null}
+        </div>
+        {description ? <p className="mb-2 text-xs text-neutral-500">{description}</p> : null}
+        <div className="space-y-3 text-sm text-neutral-800">{children}</div>
+      </Card>
+    );
+
+    return (
+      <Card
+        id="onboarding"
+        className={classNames(
+          'relative overflow-hidden border p-5 sm:p-7 shadow-[0_28px_70px_-40px_rgba(79,70,229,0.55)]',
+          isDark ? 'bg-white text-neutral-900 border-neutral-200' : 'bg-white text-neutral-900 border-neutral-100'
+        )}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(139,92,246,0.08),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.08),transparent_35%)]"
+          aria-hidden="true"
+        />
+        <form className="relative space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member onboarding</div>
+                <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Tell us about your Tesla in 4 quick steps</h3>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                <span className="inline-flex h-8 items-center rounded-full bg-neutral-100 px-3">{completion}% complete</span>
+                <div className="relative h-1.5 w-32 overflow-hidden rounded-full bg-neutral-200">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 to-blue-500"
+                    style={{ width: `${completion}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-neutral-600">
+              Styled like the bestmobilevpn quiz: clean steps, pill choices, and instant feedback. Pick your car, choose up
+              to 3 free data points, then unlock unlimited for $4.94/month whenever you’re ready.
+            </p>
+            <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+              {steps.map((step, idx) => (
+                <div
+                  key={step.id}
+                  className={classNames(
+                    'flex items-center gap-2 rounded-full border px-3 py-1 shadow-sm',
+                    idx <= 3 ? 'border-violet-200 bg-white/80' : 'border-neutral-200 bg-white'
+                  )}
+                >
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">
+                    {idx + 1}
+                  </span>
+                  {step.label}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1.05fr,1fr]">
+            <div className="space-y-4">
+              <QuestionCard step="01" title="Who should we send the invite to?">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <InputField
+                    label="Full name"
+                    placeholder="Avery Tesla"
+                    value={formState.name}
+                    onChange={(v) => updateField('name', v)}
+                  />
+                  <InputField
+                    label="Email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formState.email}
+                    onChange={(v) => updateField('email', v)}
+                  />
+                </div>
+                <p className="text-xs text-neutral-500">Used only for your onboarding link and setup tips.</p>
+              </QuestionCard>
+
+              <QuestionCard step="02" title="Which Tesla are you setting up?" badge="Quick dropdown">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
+                    <span>Model</span>
+                    <SelectField value={formState.carType} onChange={(value) => updateField('carType', value)}>
+                      {carOptions.map((car) => (
+                        <option key={car.id} value={car.id}>
+                          {car.label} — {car.note}
+                        </option>
+                      ))}
+                    </SelectField>
+                    <span className="text-[11px] font-normal text-neutral-500">Simple dropdown, no image grid.</span>
+                  </div>
+                  <InputField
+                    label="Trim"
+                    placeholder="Long Range, Performance…"
+                    value={formState.trim}
+                    onChange={(v) => updateField('trim', v)}
+                  />
+                </div>
+              </QuestionCard>
+
+              <QuestionCard
+                step="03"
+                title="What do you want to monitor first?"
+                badge={`Pick up to ${featureLimit} free`}
+                description="Tap a pill to add/remove, just like the quiz chips."
+              >
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {featureOptions.map((feature) => {
+                    const active = formState.features.includes(feature.id);
+                    return (
+                      <button
+                        key={feature.id}
+                        type="button"
+                        onClick={() => toggleFeature(feature.id)}
+                        className={classNames(
+                          'group flex items-center justify-between rounded-full border px-4 py-2.5 text-left text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-violet-100',
+                          active
+                            ? 'border-violet-500 bg-gradient-to-r from-violet-50 to-blue-50 text-violet-800'
+                            : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                        )}
+                      >
+                        <span>{feature.label}</span>
+                        <span
+                          className={classNames(
+                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition',
+                            active
+                              ? 'bg-violet-100 text-violet-800 group-hover:bg-violet-200'
+                              : 'bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200'
+                          )}
+                        >
+                          {active ? 'Added' : 'Add'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-neutral-500">
+                  {remainingFree > 0
+                    ? `Choose ${remainingFree} more to include in your free starter.`
+                    : 'You’re using your 3 free data points. Unlimited insights are $4.94/month.'}
+                </p>
+              </QuestionCard>
+            </div>
+
+            <div className="space-y-4">
+              <QuestionCard step="04" title="Pick a plan" badge="Upgrade anytime">
+                <div className="grid gap-3">
+                  {[
+                    {
+                      id: 'starter',
+                      title: 'Starter (free)',
+                      desc: '3 data points of your choice. Keep them forever.',
+                      price: '$0',
+                      note: 'Great for charging, battery, or safety alerts.',
+                    },
+                    {
+                      id: 'unlimited',
+                      title: 'Unlimited',
+                      desc: 'Unlock every metric, automation, and trip view.',
+                      price: '$4.94/mo',
+                      note: 'Best for full history, FSD usage, and live telemetry.',
+                    },
+                  ].map((plan) => {
+                    const active = formState.plan === plan.id;
+                    return (
+                      <label
+                        key={plan.id}
+                        className={classNames(
+                          'relative flex cursor-pointer flex-col gap-1 rounded-2xl border px-4 py-3 shadow-sm transition focus-within:ring-2 focus-within:ring-violet-100',
+                          active
+                            ? 'border-violet-500 bg-gradient-to-r from-violet-50 via-white to-blue-50'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="plan"
+                            value={plan.id}
+                            checked={active}
+                            onChange={(e) => updateField('plan', e.target.value)}
+                            className="h-4 w-4 text-violet-500 focus:ring-violet-400"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-neutral-900">{plan.title}</span>
+                            <span className="text-xs text-neutral-600">{plan.desc}</span>
+                          </div>
+                          <div className="ml-auto text-sm font-semibold text-neutral-900">{plan.price}</div>
+                        </div>
+                        <p className="text-xs text-neutral-500">{plan.note}</p>
+                      </label>
+                    );
+                  })}
+                </div>
+              </QuestionCard>
+
+              <Card className="border-neutral-200 bg-white/90 p-4 shadow-sm shadow-neutral-200/40">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Next up</div>
+                    <div className="text-sm text-neutral-700">Review and request your invite.</div>
+                  </div>
+                  <span className="rounded-full bg-neutral-900 px-3 py-1 text-[11px] font-semibold text-white">1–2 min</span>
+                </div>
+                <ul className="mt-3 space-y-2 text-sm text-neutral-700">
+                  <li className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">01</span>
+                    Invite to <strong>{formState.email || 'your email'}</strong>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">02</span>
+                    {CAR_META[formState.carType]?.label} · {formState.trim || 'trim' }
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">03</span>
+                    Focus: {formState.features.map((f) => featureOptions.find((o) => o.id === f)?.label).filter(Boolean).join(', ') || 'choose your top areas'}
+                  </li>
+                </ul>
+                <div className="mt-4 flex flex-col gap-2 text-xs text-neutral-500">
+                  <p>Starter gives 3 data points free after signup. Unlimited metrics are $4.94/month anytime.</p>
+                  <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-700">
+                    <span className="h-px flex-1 bg-violet-200" aria-hidden="true" />
+                    No Tesla login required to request access
+                    <span className="h-px flex-1 bg-violet-200" aria-hidden="true" />
+                  </p>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <Button type="submit" accent={accent} isDark={isDark} className="w-full">
+                    {submitted ? 'Invite queued' : 'Get my invite'}
+                  </Button>
+                  <Button type="button" variant="secondary" isDark={isDark} className="w-full">
+                    Preview dashboard
+                  </Button>
+                </div>
+                <p className="mt-2 text-[11px] text-neutral-500">
+                  By continuing you agree to receive Tesla Helper tips. Opt out anytime.
+                </p>
+              </Card>
+            </div>
+          </div>
+        </form>
+      </Card>
+    );
+  }
+  /* ------------------------------------------------------------------
    * Section title component
    *
    * Displays a heading and optional subtitle.
@@ -1738,24 +2089,6 @@
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [showTeslaModal, setShowTeslaModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
-    const widgetFallback = {
-      template: 'balanced',
-      metricIds: WIDGET_METRICS.slice(0, 4).map((m) => m.id),
-    };
-    const [widgetConfig, setWidgetConfig] = useState(() => {
-      if (typeof window === 'undefined') return widgetFallback;
-      try {
-        const stored = window.localStorage?.getItem('teslahelper-widgets');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed?.template && Array.isArray(parsed.metricIds)) return parsed;
-        }
-      } catch (e) {
-        // ignore parse errors
-      }
-      return widgetFallback;
-    });
-    const [showWidgetEditor, setShowWidgetEditor] = useState(false);
     const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
@@ -1807,11 +2140,6 @@
         window.localStorage?.setItem('teslahelper-theme', mode);
       }
     }, [mode]);
-    useEffect(() => {
-      if (typeof window !== 'undefined') {
-        window.localStorage?.setItem('teslahelper-widgets', JSON.stringify(widgetConfig));
-      }
-    }, [widgetConfig]);
     useEffect(() => {
       const onScroll = () => setHeaderCompact(window.scrollY > 12);
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -2158,62 +2486,57 @@
           </div>
         </header>
         {/* Hero / quick links */}
-        <section className="relative">
-          <div className="mx-auto max-w-6xl px-4 py-10 md:py-14 grid md:grid-cols-2 gap-6 items-start">
-            <div>
+        <section className="relative overflow-hidden">
+          <div
+            className={classNames(
+              'absolute inset-0 -z-10',
+              isDark
+                ? 'bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950'
+                : 'bg-gradient-to-br from-violet-50 via-white to-white'
+            )}
+            aria-hidden="true"
+          />
+          <div className="absolute right-10 top-6 -z-10 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true" />
+          <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 grid md:grid-cols-2 gap-8 items-start">
+            <div className="space-y-4">
               <p className="uppercase tracking-widest text-xs opacity-80">Your Tesla · Your Guide</p>
               <h1
-                className="font-extrabold leading-tight mt-2"
-                style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
+                className="font-extrabold leading-tight"
+                style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2.25rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
               >
                 The Tesla Helper App
               </h1>
-              <ul className="mt-4 space-y-1 text-sm opacity-90">
-                <li>• Find exactly what you need fast—charging, FSD, safety, and more.</li>
-                <li>• Organized by model and year so nothing is confusing or missing.</li>
-                <li>• Short, official videos with plain‑English summaries.</li>
+              <ul className="mt-2 space-y-2 text-sm opacity-90">
+                <li className="flex items-start gap-2">
+                  <span aria-hidden="true">•</span>
+                  <span>Find exactly what you need fast—charging, Autopilot/FSD, safety, and more.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span aria-hidden="true">•</span>
+                  <span>Organized by model and year so nothing is confusing or missing.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span aria-hidden="true">•</span>
+                  <span>Short, official videos with plain‑English summaries.</span>
+                </li>
               </ul>
               <div className="mt-6 flex gap-3 flex-wrap">
-                <Button as="a" href="#models" variant="primary" accent={accent} isDark={isDark}>
-                  Pick your model
+                <Button as="a" href="#onboarding" variant="primary" accent={accent} isDark={isDark}>
+                  Get Started
                 </Button>
-                <Button onClick={() => setShowInstallModal(true)} variant="secondary" isDark={isDark}>
+                <Button onClick={() => setShowTeslaModal(true)} variant="secondary" isDark={isDark}>
+                  Connect My Tesla
+                </Button>
+                <Button onClick={() => setShowInstallModal(true)} variant="ghost" isDark={isDark}>
                   Add to Home Screen
                 </Button>
               </div>
-              <p className="mt-3 text-xs opacity-70">Designed for clarity · Fast on mobile</p>
+              <p className="mt-2 text-xs opacity-80">
+                Pick up to 3 data points for free after signup. Full access with unlimited monitoring is $4.94/month.
+              </p>
             </div>
-            <div className="relative w-full space-y-4">
-              <Card
-                className={classNames(
-                  'border p-3 md:p-4 space-y-3 shadow-[0_10px_50px_-30px_rgba(0,0,0,0.8)]',
-                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
-                )}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.25em] opacity-70">Home widgets</div>
-                    <div className="font-semibold">Telemetry, FSD, and safety at a glance</div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    isDark={isDark}
-                    onClick={() => setShowWidgetEditor((o) => !o)}
-                  >
-                    {showWidgetEditor ? 'Hide' : 'Customize'}
-                  </Button>
-                </div>
-                <HomeWidgetGrid data={telemetryData} config={widgetConfig} accent={accent} isDark={isDark} />
-              </Card>
-              {showWidgetEditor ? (
-                <WidgetCustomizer
-                  config={widgetConfig}
-                  setConfig={setWidgetConfig}
-                  isDark={isDark}
-                  sampleData={telemetryData}
-                />
-              ) : null}
+            <div className="relative w-full">
+              <OnboardingForm accent={accent} isDark={isDark} carImages={carImages} />
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">

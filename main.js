@@ -849,6 +849,235 @@
 
   /* ------------------------------------------------------------------
    * Onboarding form
+xf   *
+   * Captures a new member's details and preferred monitoring focus.
+   * ------------------------------------------------------------------ */
+  function OnboardingForm({ accent, isDark, carImages }) {
+    const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({
+      id,
+      ...meta,
+      img: carImages?.[id],
+    }));
+    const featureOptions = [
+      { id: 'charging', label: 'Charging + supercharger stops' },
+      { id: 'battery', label: 'Battery health + range' },
+      { id: 'safety', label: 'Safety alerts + Sentry' },
+      { id: 'autopilot', label: 'Autopilot + FSD usage' },
+      { id: 'trips', label: 'Trip history + efficiency' },
+      { id: 'climate', label: 'Cabin temp + preconditioning' },
+    ];
+    const [formState, setFormState] = useState({
+      name: '',
+      email: '',
+      carType: carOptions[0]?.id || 'modely',
+      trim: 'Long Range',
+      features: ['charging', 'battery', 'safety'],
+      plan: 'starter',
+    });
+    const [submitted, setSubmitted] = useState(false);
+
+    function updateField(field, value) {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function toggleFeature(id) {
+      setFormState((prev) => {
+        const exists = prev.features.includes(id);
+        const nextFeatures = exists ? prev.features.filter((f) => f !== id) : [...prev.features, id];
+        return { ...prev, features: nextFeatures };
+      });
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      setSubmitted(true);
+    }
+
+    const featureLimit = 3;
+    const remainingFree = Math.max(0, featureLimit - formState.features.length);
+
+    return (
+      <Card
+        id="onboarding"
+        className={classNames(
+          'border p-4 sm:p-5 shadow-[0_20px_70px_-35px_rgba(0,0,0,0.7)]',
+          isDark ? 'bg-white text-neutral-900' : 'bg-white',
+          isDark ? 'border-neutral-200' : 'border-neutral-200'
+        )}
+      >
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Member onboarding</div>
+              <h3 className="text-lg font-semibold leading-tight">What type of Tesla do you own?</h3>
+              <p className="text-sm text-neutral-600">
+                We’ll tailor your setup to the trim, features, and data points you want to watch first.
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+              New ✦ Personalized
+            </span>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { label: 'Name', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
+              { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
+            ].map((input) => (
+              <label key={input.field} className="space-y-1 text-sm font-semibold text-neutral-800">
+                {input.label}
+                <input
+                  required
+                  type={input.type}
+                  value={formState[input.field]}
+                  onChange={(e) => updateField(input.field, e.target.value)}
+                  placeholder={input.placeholder}
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+              </label>
+            ))}
+          </div>
+
+          <div className="grid gap-3">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-neutral-800">Car type</div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {carOptions.map((car) => {
+                    const active = formState.carType === car.id;
+                    return (
+                      <button
+                        key={car.id}
+                        type="button"
+                        onClick={() => updateField('carType', car.id)}
+                        aria-pressed={active}
+                        className={classNames(
+                          'group relative overflow-hidden rounded-xl border text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                          active ? 'border-violet-500 shadow-lg shadow-violet-500/15' : 'border-neutral-200 hover:border-neutral-300'
+                        )}
+                      >
+                        <div className="aspect-video w-full bg-neutral-100">
+                          {car.img ? (
+                            <img src={car.img} alt={car.alt} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-xs text-neutral-500">{car.label}</div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <div>
+                            <div className="text-sm font-semibold text-neutral-900">{car.label}</div>
+                            <div className="text-xs text-neutral-500">{car.note}</div>
+                          </div>
+                          <span
+                            className={classNames(
+                              'rounded-full px-2 py-1 text-[11px] font-semibold',
+                              active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
+                            )}
+                          >
+                            {active ? 'Selected' : 'Tap to pick'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <label className="space-y-1 text-sm font-semibold text-neutral-800">
+                Trim or package
+                <input
+                  type="text"
+                  value={formState.trim}
+                  onChange={(e) => updateField('trim', e.target.value)}
+                  placeholder="Performance, Long Range, etc."
+                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+                <p className="text-xs font-normal text-neutral-500">Helps us surface the right charging, tire, and FSD notes.</p>
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-neutral-800">Features to monitor</div>
+                  <p className="text-xs text-neutral-500">Pick up to 3 for free right after signup.</p>
+                </div>
+                <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {featureOptions.map((feature) => {
+                  const active = formState.features.includes(feature.id);
+                  return (
+                    <button
+                      key={feature.id}
+                      type="button"
+                      onClick={() => toggleFeature(feature.id)}
+                      aria-pressed={active}
+                      className={classNames(
+                        'flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                        active ? 'border-violet-500 bg-violet-50 text-violet-900 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                      )}
+                    >
+                      <div className="mt-1 h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+                      <div>
+                        <div className="text-sm font-semibold">{feature.label}</div>
+                        <div className="text-xs text-neutral-500">{active ? 'Included in your onboarding' : 'Tap to add to your starter set'}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[{ id: 'starter', title: 'Starter', desc: 'Up to 3 data points free after signup' }, { id: 'unlimited', title: 'Unlimited', desc: 'Full access for $4.94/month' }].map((plan) => {
+                const active = formState.plan === plan.id;
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    onClick={() => updateField('plan', plan.id)}
+                    aria-pressed={active}
+                    className={classNames(
+                      'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
+                      active ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
+                    )}
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
+                      {plan.id === 'unlimited' ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">Most popular</span>
+                      ) : null}
+                    </div>
+                    <div className="text-xs text-neutral-500">{plan.desc}</div>
+                    {plan.id === 'unlimited' ? <div className="text-xs text-neutral-600">Unlimited data points + live alerts</div> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {submitted ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim} {CAR_META[formState.carType]?.label || ''}
+              and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-xs text-neutral-500">
+              You can switch plans anytime. Unlimited unlocks every telemetry card for $4.94/month.
+            </div>
+            <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full sm:w-auto">
+              Start onboarding
+            </Button>
+          </div>
+        </form>
+      </Card>
+    );
+  }
+
+  /* ------------------------------------------------------------------
+   * Section title component
    *
    * Captures a new member's details and preferred monitoring focus.
    * ------------------------------------------------------------------ */
@@ -898,10 +1127,10 @@
     const featureLimit = 3;
     const remainingFree = Math.max(0, featureLimit - formState.features.length);
     const steps = [
-      { id: 'contact', label: 'Contact', blurb: 'Tell us who we should invite to Tesla Helper.' },
-      { id: 'vehicle', label: 'Vehicle', blurb: 'Select the Tesla model and trim you drive.' },
-      { id: 'features', label: 'Monitoring', blurb: 'Pick up to 3 data points to watch for free.' },
-      { id: 'plan', label: 'Plan', blurb: 'Stay on the free starter or upgrade to unlimited for $4.94.' },
+      { id: 'contact', label: 'Contact', blurb: 'Who should we email your Tesla Helper link to?' },
+      { id: 'vehicle', label: 'Vehicle', blurb: 'Pick your Tesla model and trim from the dropdown quiz style.' },
+      { id: 'features', label: 'Focus', blurb: 'Choose up to 3 starter data points for free.' },
+      { id: 'plan', label: 'Plan', blurb: 'Keep the free starter or unlock unlimited for $4.94.' },
     ];
     const completion = Math.round(((currentStep + 1) / steps.length) * 100);
 
@@ -1007,8 +1236,8 @@
         <QuizQuestion
           key="contact"
           stepNumber="01"
-          title="Who are we inviting?"
-          hint="We’ll email them a personal Tesla Helper link with their setup steps."
+          title="Who should we send the invite to?"
+          hint="Bestmobilevpn-style quiz vibe: light, minimal, and focused on one question at a time."
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <InputField
@@ -1032,9 +1261,9 @@
         <QuizQuestion
           key="vehicle"
           stepNumber="02"
-          title="Which Tesla do you drive?"
-          hint="Pick your model and trim so we can tailor the starter dashboard."
-          badge="Quick select"
+          title="Which Tesla are you setting up?"
+          hint="Dropdown instead of large photos for a clean quiz feel."
+          badge="Quick dropdown"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
@@ -1046,7 +1275,7 @@
                   </option>
                 ))}
               </SelectField>
-              <span className="text-[11px] font-normal text-neutral-500">Quick dropdown so setup stays lightweight.</span>
+              <span className="text-[11px] font-normal text-neutral-500">No gallery, just the dropdown quiz style.</span>
             </div>
             <InputField
               label="Trim"
@@ -1061,8 +1290,8 @@
         <QuizQuestion
           key="features"
           stepNumber="03"
-          title="What should we monitor first?"
-          hint="Choose up to 3 signals to include in your free starter."
+          title="What do you want to monitor first?"
+          hint="Tap pills like the bestmobilevpn quiz. Pick up to 3 free data points."
           badge={`Pick ${featureLimit} free`}
         >
           <div className="grid gap-2 sm:grid-cols-2">
@@ -1097,8 +1326,8 @@
           </div>
           <p className="text-xs text-neutral-500">
             {remainingFree > 0
-              ? `You can add ${remainingFree} more free data point${remainingFree === 1 ? '' : 's'}.`
-              : 'Your starter covers 3 free data points. Unlimited metrics are $4.94/month.'}
+              ? `Choose ${remainingFree} more for your free starter.`
+              : 'Starter uses 3 signals free. Unlimited metrics are $4.94/month.'}
           </p>
         </QuizQuestion>
       ),
@@ -1106,8 +1335,8 @@
         <QuizQuestion
           key="plan"
           stepNumber="04"
-          title="Starter or unlimited?"
-          hint="Keep the 3 free data points you picked or unlock everything for $4.94/mo."
+          title="Keep starter or unlock unlimited?"
+          hint="Match the quiz confirmation state: simple, stacked cards with pricing and next steps."
         >
           <div className="grid gap-3">
             {[
@@ -1163,9 +1392,9 @@
               How it works
             </div>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>Start with any 3 data points for free and keep them, even if you don’t upgrade.</li>
-              <li>Upgrade to unlimited for $4.94/month to unlock every signal and automation.</li>
-              <li>You can switch plans anytime—your monitoring choices stay saved.</li>
+              <li>Start free with 3 data points. Keep them even if you don’t upgrade.</li>
+              <li>Upgrade to unlimited for $4.94/month to unlock every metric.</li>
+              <li>You can switch plans anytime—your preferences are saved.</li>
             </ul>
           </div>
           {submitted ? (
@@ -1182,10 +1411,10 @@
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member onboarding</div>
-              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Start a new Tesla Helper invite</h3>
+              <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member quiz</div>
+              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Onboard like the bestmobilevpn flow</h3>
               <p className="text-sm text-neutral-600">
-                Collect the basics—contact, Tesla model, up to 3 starter signals, and plan preference—to send a clean onboarding link.
+                Smooth, single-question steps with pill chips, dropdowns, and a quick plan confirmation—no heavy car images.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">
@@ -1255,7 +1484,7 @@
               <div className="rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">🧭</span>
-                  Onboarding steps
+                  Quiz steps
                 </div>
                 <ul className="mt-3 space-y-2 text-xs text-neutral-600">
                   {steps.map((step, idx) => (

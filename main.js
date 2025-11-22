@@ -1237,7 +1237,7 @@ xf   *
           key="contact"
           stepNumber="01"
           title="Who should we send the invite to?"
-          hint="Bestmobilevpn-style quiz vibe: light, minimal, and focused on one question at a time."
+          hint="Collect your driver's contact so we can send their Tesla Helper setup link."
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <InputField
@@ -1291,7 +1291,7 @@ xf   *
           key="features"
           stepNumber="03"
           title="What do you want to monitor first?"
-          hint="Tap pills like the bestmobilevpn quiz. Pick up to 3 free data points."
+          hint="Tap up to 3 starter signals you want to track in Tesla Helper."
           badge={`Pick ${featureLimit} free`}
         >
           <div className="grid gap-2 sm:grid-cols-2">
@@ -1412,9 +1412,9 @@ xf   *
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Member quiz</div>
-              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Onboard like the bestmobilevpn flow</h3>
+              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Onboard Tesla owners quickly</h3>
               <p className="text-sm text-neutral-600">
-                Smooth, single-question steps with pill chips, dropdowns, and a quick plan confirmation—no heavy car images.
+                Smooth, single-question steps to collect contact details, Tesla model info, and the first signals they want to monitor.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">

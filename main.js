@@ -2238,7 +2238,9 @@
     const [modelFilter, setModelFilter] = useState('');
     const [yearFilter, setYearFilter] = useState('');
     const [q, setQ] = useState('');
+    const [isExpanded, setIsExpanded] = useState(false);
     const [searchIndex, setSearchIndex] = useState(null);
+    const disclosureId = useId();
 
     const applyHashFilters = React.useCallback(() => {
       try {
@@ -2350,89 +2352,111 @@
 
     return (
       <section id="library" className="mx-auto max-w-6xl px-4 pb-24">
-        <SectionTitle
-          title="Personalize Your Tesla Experience"
-          subtitle="Your Tesla is unique—your app experience should be too. TeslaHelper lets you customize climate and charging schedules, tailor notifications, and pin your favorite controls so you always see what matters most at a glance."
-        />
-        <Card className={classNames('p-4 border', cardBg, borderSoft)}>
-          <div className="grid md:grid-cols-4 gap-3">
-            <input
-              placeholder="Search videos (e.g., charging, sentry, FSD)"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className={classNames(
-                'w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2',
-                isDark ? 'bg-neutral-950 border-neutral-800 focus:ring-violet-500' : 'bg-white border-neutral-300 focus:ring-violet-500'
-              )}
-            />
-            <select
-              value={modelFilter}
-              onChange={(e) => setModelFilter(e.target.value)}
-              className={classNames(
-                'w-full rounded-lg px-3 py-2 text-sm border',
-                isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
-              )}
-            >
-              <option value="">All models</option>
-              {Array.from(new Set(models.map((m) => m.model))).map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className={classNames(
-                'w-full rounded-lg px-3 py-2 text-sm border',
-                isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
-              )}
-            >
-              <option value="">All years</option>
-              {Array.from(new Set(models.map((m) => m.year_range).filter(Boolean))).map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <SectionTitle
+            title="Personalize Your Tesla Experience"
+            subtitle="Your Tesla is unique—your app experience should be too. TeslaHelper lets you customize climate and charging schedules, tailor notifications, and pin your favorite controls so you always see what matters most at a glance."
+          />
+          <div className="flex sm:flex-col items-start gap-2 sm:items-end" aria-label="Library controls">
             <Button
-              as="a"
-              href="#models"
-              variant="primary"
-              size="md"
-              accent={ACCENTS.violet}
+              variant="secondary"
+              size="sm"
               isDark={isDark}
-              className="text-center"
+              onClick={() => setIsExpanded((open) => !open)}
+              aria-expanded={isExpanded}
+              aria-controls={`${disclosureId}-content`}
             >
-              Back to Models
+              {isExpanded ? 'Hide library' : 'Show library'}
             </Button>
+            <div className="flex flex-wrap gap-2 text-xs opacity-80">
+              {!isExpanded && <span>Collapsed by default</span>}
+            </div>
           </div>
-        </Card>
-        <div className="mt-4 space-y-6">
-          {filteredModels.length === 0 && (
-            <div className="text-sm opacity-80">No results. Try clearing filters.</div>
-          )}
-          {filteredModels.map((m, idx) => {
-            const cats = (m.categories || []).filter(catMatches);
-            if (cats.length === 0) return null;
-            return (
-              <div key={m.model + (m.year_range || '') + idx}>
-                <div className="mb-2">
-                  <div className="text-sm opacity-70 uppercase tracking-widest">
-                    {m.model}
-                    {m.year_range ? ' · ' + m.year_range : ''}
-                  </div>
-                  <div className={classNames('h-1 rounded-full w-20 mt-2', accent.underline)} />
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {cats.map((c, i) => (
-                    <CategoryAccordion key={c.name + i} cat={c} isDark={isDark} />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
         </div>
+
+        {isExpanded && (
+          <div id={`${disclosureId}-content`} className="mt-6 space-y-6">
+            <Card className={classNames('p-4 border', cardBg, borderSoft)}>
+              <div className="grid md:grid-cols-4 gap-3">
+                <input
+                  placeholder="Search videos (e.g., charging, sentry, FSD)"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className={classNames(
+                    'w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2',
+                    isDark ? 'bg-neutral-950 border-neutral-800 focus:ring-violet-500' : 'bg-white border-neutral-300 focus:ring-violet-500'
+                  )}
+                />
+                <select
+                  value={modelFilter}
+                  onChange={(e) => setModelFilter(e.target.value)}
+                  className={classNames(
+                    'w-full rounded-lg px-3 py-2 text-sm border',
+                    isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
+                  )}
+                >
+                  <option value="">All models</option>
+                  {Array.from(new Set(models.map((m) => m.model))).map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={yearFilter}
+                  onChange={(e) => setYearFilter(e.target.value)}
+                  className={classNames(
+                    'w-full rounded-lg px-3 py-2 text-sm border',
+                    isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
+                  )}
+                >
+                  <option value="">All years</option>
+                  {Array.from(new Set(models.map((m) => m.year_range).filter(Boolean))).map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  as="a"
+                  href="#models"
+                  variant="primary"
+                  size="md"
+                  accent={ACCENTS.violet}
+                  isDark={isDark}
+                  className="text-center"
+                >
+                  Back to Models
+                </Button>
+              </div>
+            </Card>
+            <div className="space-y-6">
+              {filteredModels.length === 0 && (
+                <div className="text-sm opacity-80">No results. Try clearing filters.</div>
+              )}
+              {filteredModels.map((m, idx) => {
+                const cats = (m.categories || []).filter(catMatches);
+                if (cats.length === 0) return null;
+                return (
+                  <div key={m.model + (m.year_range || '') + idx}>
+                    <div className="mb-2">
+                      <div className="text-sm opacity-70 uppercase tracking-widest">
+                        {m.model}
+                        {m.year_range ? ' · ' + m.year_range : ''}
+                      </div>
+                      <div className={classNames('h-1 rounded-full w-20 mt-2', accent.underline)} />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {cats.map((c, i) => (
+                        <CategoryAccordion key={c.name + i} cat={c} isDark={isDark} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </section>
     );
   }
@@ -2934,6 +2958,9 @@
             <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
           </div>
         </section>
+        {/* Models and library */}
+        <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
+        <LibraryPanel accent={accent} isDark={isDark} />
         <TelemetryAnalyticsSection
           sectionId="my-tesla"
           title="Drive Analytics & Insights"
@@ -2980,9 +3007,6 @@
             </div>
           </Card>
         </section>
-        {/* Models and library */}
-        <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
-        <LibraryPanel accent={accent} isDark={isDark} />
         <section className="mx-auto max-w-6xl px-4 pb-16">
           <SectionTitle
             title="Beyond the Official Tesla App"

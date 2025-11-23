@@ -847,276 +847,114 @@
     );
   }
 
-  /* ------------------------------------------------------------------
-   * Onboarding form
-xf   *
-   * Captures a new member's details and preferred monitoring focus.
-   * ------------------------------------------------------------------ */
-  function OnboardingForm({ accent, isDark, carImages }) {
-    const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({
-      id,
-      ...meta,
-      img: carImages?.[id],
-    }));
-    const featureOptions = [
-      { id: 'charging', label: 'Charging + supercharger stops' },
-      { id: 'battery', label: 'Battery health + range' },
-      { id: 'safety', label: 'Safety alerts + Sentry' },
-      { id: 'autopilot', label: 'Autopilot + FSD usage' },
-      { id: 'trips', label: 'Trip history + efficiency' },
-      { id: 'climate', label: 'Cabin temp + preconditioning' },
-    ];
-    const [formState, setFormState] = useState({
-      name: '',
-      email: '',
-      carType: carOptions[0]?.id || 'modely',
-      trim: 'Long Range',
-      features: ['charging', 'battery', 'safety'],
-      plan: 'starter',
-    });
-    const [submitted, setSubmitted] = useState(false);
-
-    function updateField(field, value) {
-      setFormState((prev) => ({ ...prev, [field]: value }));
-    }
-
-    function toggleFeature(id) {
-      setFormState((prev) => {
-        const exists = prev.features.includes(id);
-        const nextFeatures = exists ? prev.features.filter((f) => f !== id) : [...prev.features, id];
-        return { ...prev, features: nextFeatures };
-      });
-    }
-
-    function handleSubmit(e) {
-      e.preventDefault();
-      setSubmitted(true);
-    }
-
-    const featureLimit = 3;
-    const remainingFree = Math.max(0, featureLimit - formState.features.length);
-
-    return (
-      <Card
-        id="onboarding"
-        className={classNames(
-          'border p-4 sm:p-5 shadow-[0_20px_70px_-35px_rgba(0,0,0,0.7)]',
-          isDark ? 'bg-white text-neutral-900' : 'bg-white',
-          isDark ? 'border-neutral-200' : 'border-neutral-200'
-        )}
-      >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-xs uppercase tracking-[0.25em] text-neutral-500">Member onboarding</div>
-              <h3 className="text-lg font-semibold leading-tight">What type of Tesla do you own?</h3>
-              <p className="text-sm text-neutral-600">
-                We’ll tailor your setup to the trim, features, and data points you want to watch first.
-              </p>
-            </div>
-            <span className="inline-flex items-center rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
-              New ✦ Personalized
-            </span>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            {[
-              { label: 'Name', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
-              { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
-            ].map((input) => (
-              <label key={input.field} className="space-y-1 text-sm font-semibold text-neutral-800">
-                {input.label}
-                <input
-                  required
-                  type={input.type}
-                  value={formState[input.field]}
-                  onChange={(e) => updateField(input.field, e.target.value)}
-                  placeholder={input.placeholder}
-                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
-                />
-              </label>
-            ))}
-          </div>
-
-          <div className="grid gap-3">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-neutral-800">Car type</div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {carOptions.map((car) => {
-                    const active = formState.carType === car.id;
-                    return (
-                      <button
-                        key={car.id}
-                        type="button"
-                        onClick={() => updateField('carType', car.id)}
-                        aria-pressed={active}
-                        className={classNames(
-                          'group relative overflow-hidden rounded-xl border text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                          active ? 'border-violet-500 shadow-lg shadow-violet-500/15' : 'border-neutral-200 hover:border-neutral-300'
-                        )}
-                      >
-                        <div className="aspect-video w-full bg-neutral-100">
-                          {car.img ? (
-                            <img src={car.img} alt={car.alt} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-xs text-neutral-500">{car.label}</div>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between px-3 py-2">
-                          <div>
-                            <div className="text-sm font-semibold text-neutral-900">{car.label}</div>
-                            <div className="text-xs text-neutral-500">{car.note}</div>
-                          </div>
-                          <span
-                            className={classNames(
-                              'rounded-full px-2 py-1 text-[11px] font-semibold',
-                              active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
-                            )}
-                          >
-                            {active ? 'Selected' : 'Tap to pick'}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <label className="space-y-1 text-sm font-semibold text-neutral-800">
-                Trim or package
-                <input
-                  type="text"
-                  value={formState.trim}
-                  onChange={(e) => updateField('trim', e.target.value)}
-                  placeholder="Performance, Long Range, etc."
-                  className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-normal text-neutral-900 shadow-inner focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
-                />
-                <p className="text-xs font-normal text-neutral-500">Helps us surface the right charging, tire, and FSD notes.</p>
-              </label>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <div className="text-sm font-semibold text-neutral-800">Features to monitor</div>
-                  <p className="text-xs text-neutral-500">Pick up to 3 for free right after signup.</p>
-                </div>
-                <span className="text-xs font-semibold text-violet-600">{remainingFree} free data points left</span>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {featureOptions.map((feature) => {
-                  const active = formState.features.includes(feature.id);
-                  return (
-                    <button
-                      key={feature.id}
-                      type="button"
-                      onClick={() => toggleFeature(feature.id)}
-                      aria-pressed={active}
-                      className={classNames(
-                        'flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                        active ? 'border-violet-500 bg-violet-50 text-violet-900 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
-                      )}
-                    >
-                      <div className="mt-1 h-2 w-2 rounded-full bg-current" aria-hidden="true" />
-                      <div>
-                        <div className="text-sm font-semibold">{feature.label}</div>
-                        <div className="text-xs text-neutral-500">{active ? 'Included in your onboarding' : 'Tap to add to your starter set'}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              {[{ id: 'starter', title: 'Starter', desc: 'Up to 3 data points free after signup' }, { id: 'unlimited', title: 'Unlimited', desc: 'Full access for $4.94/month' }].map((plan) => {
-                const active = formState.plan === plan.id;
-                return (
-                  <button
-                    key={plan.id}
-                    type="button"
-                    onClick={() => updateField('plan', plan.id)}
-                    aria-pressed={active}
-                    className={classNames(
-                      'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500',
-                      active ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white shadow-sm' : 'border-neutral-200 hover:border-neutral-300'
-                    )}
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <div className="text-sm font-semibold text-neutral-900">{plan.title}</div>
-                      {plan.id === 'unlimited' ? (
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">Most popular</span>
-                      ) : null}
-                    </div>
-                    <div className="text-xs text-neutral-500">{plan.desc}</div>
-                    {plan.id === 'unlimited' ? <div className="text-xs text-neutral-600">Unlimited data points + live alerts</div> : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {submitted ? (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-              Thanks{formState.name ? `, ${formState.name}` : ''}! We’ll confirm your {formState.trim} {CAR_META[formState.carType]?.label || ''}
-              and reserve {Math.min(formState.features.length, featureLimit)} free data points. Your invite is on its way.
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs text-neutral-500">
-              You can switch plans anytime. Unlimited unlocks every telemetry card for $4.94/month.
-            </div>
-            <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full sm:w-auto">
-              Start onboarding
-            </Button>
-          </div>
-        </form>
-      </Card>
-    );
-  }
-
-  /* ------------------------------------------------------------------
-   * Section title component
+    /* ------------------------------------------------------------------
+   * Onboarding wizard
    *
-   * Captures a new member's details and preferred monitoring focus.
+   * Interactive, step-by-step onboarding for Tesla owners.
    * ------------------------------------------------------------------ */
-
-  function OnboardingForm({ accent, isDark, carImages }) {
-    const carOptions = Object.entries(CAR_META).map(([id, meta]) => ({
-      id,
-      ...meta,
-      img: carImages?.[id],
-    }));
-    const featureOptions = [
-      { id: 'charging', label: 'Charging + supercharger stops' },
-      { id: 'battery', label: 'Battery health + range' },
-      { id: 'safety', label: 'Safety alerts + Sentry' },
-      { id: 'autopilot', label: 'Autopilot + FSD usage' },
-      { id: 'trips', label: 'Trip history + efficiency' },
-      { id: 'climate', label: 'Cabin temp + preconditioning' },
-    ];
-    const [formState, setFormState] = useState({
+  function OnboardingWizard({ accent, isDark }) {
+    const [formData, setFormData] = useState({
+      ownershipStatus: undefined,
+      primaryModel: '',
+      modelYear: null,
+      usage: [],
+      primaryGoals: [],
+      goalOther: '',
+      hasSharingUse: false,
+      platforms: [],
+      platformOther: '',
+      sharingVehicleCount: undefined,
+      sharingTripsPerWeek: undefined,
+      sharingPainPoint: '',
+      frustrationPrimary: '',
+      frustrationDetail: '',
+      dataComfortLevel: undefined,
       name: '',
       email: '',
-      carType: carOptions[0]?.id || 'modely',
-      trim: 'Long Range',
-      features: ['charging', 'battery', 'safety'],
-      plan: 'starter',
+      region: '',
+      notes: '',
     });
+    const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [submitted, setSubmitted] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
 
-    function updateField(field, value) {
-      setFormState((prev) => ({ ...prev, [field]: value }));
+    const steps = useMemo(
+      () => [
+        { id: 'ownership', title: 'Ownership' },
+        { id: 'model', title: 'Model' },
+        { id: 'usage', title: 'Usage' },
+        { id: 'goals', title: 'Goals' },
+        { id: 'rideshare-details', title: 'Rideshare details', shouldShow: (data) => !!data.hasSharingUse },
+        { id: 'rideshare-pain', title: 'Rideshare pain', shouldShow: (data) => !!data.hasSharingUse },
+        { id: 'app-frustration', title: 'Tesla app frustrations', shouldShow: (data) => !data.hasSharingUse },
+        { id: 'data-comfort', title: 'Data comfort' },
+        { id: 'contact', title: 'Contact' },
+      ],
+      []
+    );
+
+    const visibleSteps = steps.filter((step) => (step.shouldShow ? step.shouldShow(formData) : true));
+    const currentStep = visibleSteps[currentStepIndex];
+    const completion = Math.round(((currentStepIndex + 1) / visibleSteps.length) * 100);
+
+    const toggleValue = (list, value) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
+
+    useEffect(() => {
+      const nextSteps = steps.filter((step) => (step.shouldShow ? step.shouldShow(formData) : true));
+      if (currentStepIndex >= nextSteps.length) {
+        setCurrentStepIndex(Math.max(0, nextSteps.length - 1));
+      }
+    }, [formData.hasSharingUse, currentStepIndex, steps]);
+
+    function updateData(patch) {
+      setFormData((prev) => ({ ...prev, ...patch }));
     }
 
-    function toggleFeature(id) {
-      setFormState((prev) => {
-        const exists = prev.features.includes(id);
-        const nextFeatures = exists ? prev.features.filter((f) => f !== id) : [...prev.features, id];
-        return { ...prev, features: nextFeatures };
+    function handleUsageToggle(value) {
+      setFormData((prev) => {
+        const nextUsage = toggleValue(prev.usage, value);
+        const hasSharingUse = nextUsage.includes('rideshare') || nextUsage.includes('turo');
+        return { ...prev, usage: nextUsage, hasSharingUse };
       });
+    }
+
+    function handleGoalsToggle(value) {
+      setFormData((prev) => ({ ...prev, primaryGoals: toggleValue(prev.primaryGoals, value) }));
+    }
+
+    function handlePlatformsToggle(value) {
+      setFormData((prev) => ({ ...prev, platforms: toggleValue(prev.platforms, value) }));
+    }
+
+    function isStepValid(stepId) {
+      switch (stepId) {
+        case 'ownership':
+          return !!formData.ownershipStatus;
+        case 'model':
+          return !!formData.primaryModel;
+        case 'usage':
+          return formData.usage.length > 0;
+        case 'goals':
+          if (formData.primaryGoals.includes('other')) {
+            return !!formData.goalOther?.trim();
+          }
+          return formData.primaryGoals.length > 0;
+        case 'rideshare-details':
+          if (formData.platforms.includes('other') && !formData.platformOther.trim()) return false;
+          return formData.platforms.length > 0 && !!formData.sharingVehicleCount && !!formData.sharingTripsPerWeek;
+        case 'rideshare-pain':
+          return !!formData.sharingPainPoint?.trim();
+        case 'app-frustration':
+          if (formData.frustrationPrimary === 'other') {
+            return !!formData.frustrationDetail?.trim();
+          }
+          return !!formData.frustrationPrimary;
+        case 'data-comfort':
+          return !!formData.dataComfortLevel;
+        case 'contact':
+          return !!formData.email?.trim();
+        default:
+          return true;
+      }
     }
 
     function handleSubmit(e) {
@@ -1124,41 +962,41 @@ xf   *
       setSubmitted(true);
     }
 
-    const featureLimit = 3;
-    const remainingFree = Math.max(0, featureLimit - formState.features.length);
-    const steps = [
-      { id: 'contact', label: 'Contact', blurb: 'Who should we email your Tesla Helper link to?' },
-      { id: 'vehicle', label: 'Vehicle', blurb: 'Pick your Tesla model and trim from the dropdown quiz style.' },
-      { id: 'features', label: 'Focus', blurb: 'Choose up to 3 starter data points for free.' },
-      { id: 'plan', label: 'Plan', blurb: 'Keep the free starter or unlock unlimited for $4.94.' },
-    ];
-    const completion = Math.round(((currentStep + 1) / steps.length) * 100);
+    function goNext() {
+      if (!currentStep || !isStepValid(currentStep.id)) return;
+      if (currentStepIndex < visibleSteps.length - 1) {
+        setCurrentStepIndex((prev) => prev + 1);
+      }
+    }
 
-    const InputField = ({ label, value, onChange, placeholder, type = 'text' }) => (
-      <label className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
-        <span>{label}</span>
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
-        />
-      </label>
+    function goBack() {
+      setCurrentStepIndex((prev) => Math.max(0, prev - 1));
+    }
+
+    const cardBase =
+      'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500';
+
+    const StepShell = ({ children }) => (
+      <div className="space-y-3 rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-sm transition-all duration-200">
+        {children}
+      </div>
     );
 
-    const SelectField = ({ value, onChange, children }) => (
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
-        >
-          {children}
-        </select>
-        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400" aria-hidden="true">
-          ▼
-        </div>
+    const MultiCardGrid = ({ children }) => <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
+
+    const StepHeader = ({ title, subtitle }) => (
+      <div className="space-y-1">
+        <h4 className="text-lg font-semibold text-neutral-900">{title}</h4>
+        {subtitle ? <p className="text-sm text-neutral-600">{subtitle}</p> : null}
+      </div>
+    );
+
+    const ProgressPill = () => (
+      <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow-sm">
+        <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+          Step {currentStepIndex + 1} of {visibleSteps.length}
+        </span>
+        <span className="text-neutral-900">{completion}%</span>
       </div>
     );
 
@@ -1177,338 +1015,591 @@ xf   *
       </Card>
     );
 
-    const QuizQuestion = ({ stepNumber, title, hint, children, badge }) => (
-      <div className="space-y-4 rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-lg shadow-neutral-200/50">
-        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-blue-100 text-[11px] font-bold text-violet-700">
-            {stepNumber}
-          </span>
-          <span>{title}</span>
-          {badge ? (
-            <span className="ml-auto rounded-full bg-neutral-900 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-              {badge}
-            </span>
-          ) : null}
-        </div>
-        <p className="text-sm text-neutral-600">{hint}</p>
-        <div className="space-y-3 text-sm text-neutral-800">{children}</div>
-      </div>
-    );
-
-    const CTAStack = () => (
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
-          disabled={currentStep === 0}
-          className={classNames(
-            'inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition',
-            currentStep === 0
-              ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
-              : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
-          )}
-        >
-          ← Back
-        </button>
-        {currentStep < steps.length - 1 ? (
-          <button
-            type="button"
-            onClick={() => setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1))}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200"
-          >
-            Next step
-            <span aria-hidden="true">→</span>
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200"
-          >
-            {submitted ? 'Invite sent' : 'Send my onboarding link'}
-            <span aria-hidden="true">→</span>
-          </button>
-        )}
-      </div>
-    );
-
-    const stepContent = [
-      (
-        <QuizQuestion
-          key="contact"
-          stepNumber="01"
-          title="Who should we send the invite to?"
-          hint="Collect your driver's contact so we can send their Tesla Helper setup link."
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <InputField
-              label="Full name"
-              placeholder="Alex Jordan"
-              value={formState.name}
-              onChange={(v) => updateField('name', v)}
-            />
-            <InputField
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              value={formState.email}
-              onChange={(v) => updateField('email', v)}
-            />
-          </div>
-          <p className="text-xs text-neutral-500">We only use this to deliver your personal onboarding link.</p>
-        </QuizQuestion>
-      ),
-      (
-        <QuizQuestion
-          key="vehicle"
-          stepNumber="02"
-          title="Which Tesla are you setting up?"
-          hint="Dropdown instead of large photos for a clean quiz feel."
-          badge="Quick dropdown"
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1 text-xs font-semibold text-neutral-700">
-              <span>Model</span>
-              <SelectField value={formState.carType} onChange={(value) => updateField('carType', value)}>
-                {carOptions.map((car) => (
-                  <option key={car.id} value={car.id}>
-                    {car.label} — {car.note}
-                  </option>
-                ))}
-              </SelectField>
-              <span className="text-[11px] font-normal text-neutral-500">No gallery, just the dropdown quiz style.</span>
-            </div>
-            <InputField
-              label="Trim"
-              placeholder="Long Range, Performance…"
-              value={formState.trim}
-              onChange={(v) => updateField('trim', v)}
-            />
-          </div>
-        </QuizQuestion>
-      ),
-      (
-        <QuizQuestion
-          key="features"
-          stepNumber="03"
-          title="What do you want to monitor first?"
-          hint="Tap up to 3 starter signals you want to track in Tesla Helper."
-          badge={`Pick ${featureLimit} free`}
-        >
-          <div className="grid gap-2 sm:grid-cols-2">
-            {featureOptions.map((feature) => {
-              const active = formState.features.includes(feature.id);
-              return (
-                <button
-                  key={feature.id}
-                  type="button"
-                  onClick={() => toggleFeature(feature.id)}
-                  className={classNames(
-                    'group flex items-center justify-between rounded-full border px-4 py-2.5 text-left text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-violet-100',
-                    active
-                      ? 'border-violet-500 bg-gradient-to-r from-violet-50 to-blue-50 text-violet-800'
-                      : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
-                  )}
-                >
-                  <span>{feature.label}</span>
-                  <span
-                    className={classNames(
-                      'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition',
-                      active
-                        ? 'bg-violet-100 text-violet-800 group-hover:bg-violet-200'
-                        : 'bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200'
-                    )}
-                  >
-                    {active ? 'Added' : 'Add'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-neutral-500">
-            {remainingFree > 0
-              ? `Choose ${remainingFree} more for your free starter.`
-              : 'Starter uses 3 signals free. Unlimited metrics are $4.94/month.'}
-          </p>
-        </QuizQuestion>
-      ),
-      (
-        <QuizQuestion
-          key="plan"
-          stepNumber="04"
-          title="Keep starter or unlock unlimited?"
-          hint="Match the quiz confirmation state: simple, stacked cards with pricing and next steps."
-        >
-          <div className="grid gap-3">
-            {[
-              {
-                id: 'starter',
-                title: 'Starter (free)',
-                desc: '3 data points of your choice. Keep them forever.',
-                price: '$0',
-                note: 'Great for charging, battery, or safety alerts.',
-              },
-              {
-                id: 'unlimited',
-                title: 'Unlimited',
-                desc: 'Unlock every metric, automation, and trip view.',
-                price: '$4.94/mo',
-                note: 'Best for full history, FSD usage, and live telemetry.',
-              },
-            ].map((plan) => {
-              const active = formState.plan === plan.id;
-              return (
-                <label
-                  key={plan.id}
-                  className={classNames(
-                    'relative flex cursor-pointer flex-col gap-1 rounded-2xl border px-4 py-3 shadow-sm transition focus-within:ring-2 focus-within:ring-violet-100',
-                    active
-                      ? 'border-violet-500 bg-gradient-to-r from-violet-50 via-white to-blue-50'
-                      : 'border-neutral-200 bg-white hover:border-neutral-300'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
+    const renderStepContent = () => {
+      switch (currentStep?.id) {
+        case 'ownership':
+          return (
+            <StepShell>
+              <StepHeader title="Do you already own a Tesla?" />
+              <MultiCardGrid>
+                {[
+                  { id: 'owner', label: 'Yes, I already own a Tesla' },
+                  { id: 'on_order', label: 'My Tesla is on order' },
+                  { id: 'exploring', label: 'I’m just exploring for now' },
+                ].map((option) => {
+                  const active = formData.ownershipStatus === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => updateData({ ownershipStatus: option.id })}
+                      className={classNames(
+                        cardBase,
+                        active
+                          ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                      )}
+                      aria-pressed={active}
+                    >
+                      <span className="text-xl" aria-hidden="true">
+                        {option.id === 'owner' ? '🚗' : option.id === 'on_order' ? '📦' : '🧭'}
+                      </span>
+                      <div className="text-sm font-semibold leading-tight">{option.label}</div>
+                    </button>
+                  );
+                })}
+              </MultiCardGrid>
+            </StepShell>
+          );
+        case 'model':
+          return (
+            <StepShell>
+              <StepHeader title="Which Tesla do you drive most?" />
+              <div className="grid gap-3 md:grid-cols-[2fr,1fr]">
+                <MultiCardGrid>
+                  {['Model 3', 'Model Y', 'Model S', 'Model X', 'Cybertruck', 'More than one / fleet'].map((model) => {
+                    const active = formData.primaryModel === model;
+                    return (
+                      <button
+                        key={model}
+                        type="button"
+                        onClick={() => updateData({ primaryModel: model })}
+                        className={classNames(
+                          cardBase,
+                          'justify-between',
+                          active
+                            ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white text-violet-800 shadow-sm'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        )}
+                        aria-pressed={active}
+                      >
+                        <span className="text-sm font-semibold">{model}</span>
+                        {active ? (
+                          <span className="rounded-full bg-violet-100 px-2 py-1 text-[11px] font-semibold text-violet-700">Selected</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </MultiCardGrid>
+                <div className="space-y-2 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                  <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                    Model year (optional)
                     <input
-                      type="radio"
-                      name="plan"
-                      value={plan.id}
-                      checked={active}
-                      onChange={(e) => updateField('plan', e.target.value)}
-                      className="h-4 w-4 text-violet-500 focus:ring-violet-400"
+                      type="number"
+                      min="2012"
+                      max={new Date().getFullYear() + 1}
+                      value={formData.modelYear ?? ''}
+                      onChange={(e) => updateData({ modelYear: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
                     />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-neutral-900">{plan.title}</span>
-                      <span className="text-xs text-neutral-600">{plan.desc}</span>
-                    </div>
-                    <div className="ml-auto text-sm font-semibold text-neutral-900">{plan.price}</div>
+                  </label>
+                </div>
+              </div>
+            </StepShell>
+          );
+        case 'usage':
+          return (
+            <StepShell>
+              <StepHeader title="How do you mainly use your Tesla?" subtitle="Pick all that apply." />
+              <MultiCardGrid>
+                {[
+                  { id: 'commute', label: 'Daily commuting' },
+                  { id: 'roadtrips', label: 'Road trips' },
+                  { id: 'rideshare', label: 'Rideshare driving (Uber, Lyft, etc.)' },
+                  { id: 'turo', label: 'Renting on Turo or similar' },
+                  { id: 'business', label: 'Business / fleet use' },
+                  { id: 'fun', label: 'Just for fun' },
+                ].map((option) => {
+                  const active = formData.usage.includes(option.id);
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleUsageToggle(option.id)}
+                      className={classNames(
+                        cardBase,
+                        active
+                          ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                      )}
+                      aria-pressed={active}
+                    >
+                      <div className="text-sm font-semibold leading-tight">{option.label}</div>
+                      <span
+                        className={classNames(
+                          'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold',
+                          active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
+                        )}
+                      >
+                        {active ? 'Selected' : 'Tap to select'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </MultiCardGrid>
+            </StepShell>
+          );
+        case 'goals':
+          return (
+            <StepShell>
+              <StepHeader title="What would you like TeslaHelper to help with first?" />
+              <div className="space-y-3">
+                <MultiCardGrid>
+                  {[
+                    { id: 'analytics', label: 'Deep drive analytics & efficiency insights' },
+                    { id: 'widgets', label: 'Better remote control & widgets' },
+                    { id: 'rental', label: 'Rental & sharing automation' },
+                    { id: 'costs', label: 'Tracking costs & charging expenses' },
+                    { id: 'custom', label: 'Custom layouts, themes & icons' },
+                    { id: 'other', label: 'Something else' },
+                  ].map((option) => {
+                    const active = formData.primaryGoals.includes(option.id);
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => handleGoalsToggle(option.id)}
+                        className={classNames(
+                          cardBase,
+                          active
+                            ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white text-violet-800 shadow-sm'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        )}
+                        aria-pressed={active}
+                      >
+                        <span className="text-sm font-semibold leading-tight">{option.label}</span>
+                        {active ? <span className="text-xs font-semibold text-emerald-600">Added</span> : null}
+                      </button>
+                    );
+                  })}
+                </MultiCardGrid>
+                {formData.primaryGoals.includes('other') ? (
+                  <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                    <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                      Tell us more
+                      <input
+                        type="text"
+                        value={formData.goalOther}
+                        onChange={(e) => updateData({ goalOther: e.target.value })}
+                        className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                      />
+                    </label>
                   </div>
-                  <p className="text-xs text-neutral-500">{plan.note}</p>
+                ) : null}
+              </div>
+            </StepShell>
+          );
+        case 'rideshare-details':
+          return (
+            <StepShell>
+              <StepHeader title="Tell us about your rideshare / rental use." />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-neutral-800">Platforms</div>
+                  <MultiCardGrid>
+                    {[
+                      { id: 'uber', label: 'Uber' },
+                      { id: 'lyft', label: 'Lyft' },
+                      { id: 'turo', label: 'Turo' },
+                      { id: 'other', label: 'Other' },
+                    ].map((option) => {
+                      const active = formData.platforms.includes(option.id);
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => handlePlatformsToggle(option.id)}
+                          className={classNames(
+                            cardBase,
+                            active
+                              ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
+                              : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          )}
+                          aria-pressed={active}
+                        >
+                          <span className="text-sm font-semibold">{option.label}</span>
+                          {active ? <span className="text-xs font-semibold text-emerald-600">Added</span> : null}
+                        </button>
+                      );
+                    })}
+                  </MultiCardGrid>
+                  {formData.platforms.includes('other') ? (
+                    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                      <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                        Platform name
+                        <input
+                          type="text"
+                          value={formData.platformOther}
+                          onChange={(e) => updateData({ platformOther: e.target.value })}
+                          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                        />
+                      </label>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {[
+                    {
+                      id: 'sharingVehicleCount',
+                      label: 'Vehicle count',
+                      options: [
+                        { value: '1', label: '1' },
+                        { value: '2-3', label: '2–3' },
+                        { value: '4+', label: '4+' },
+                      ],
+                    },
+                    {
+                      id: 'sharingTripsPerWeek',
+                      label: 'Trips per week',
+                      options: [
+                        { value: '0-5', label: '0–5' },
+                        { value: '6-15', label: '6–15' },
+                        { value: '16+', label: '16+' },
+                      ],
+                    },
+                  ].map((group) => (
+                    <div key={group.id} className="space-y-2 rounded-2xl border border-neutral-200 bg-white p-4">
+                      <div className="text-sm font-semibold text-neutral-800">{group.label}</div>
+                      <div className="flex flex-wrap gap-2">
+                        {group.options.map((option) => {
+                          const active = formData[group.id] === option.value;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => updateData({ [group.id]: option.value })}
+                              className={classNames(
+                                'rounded-full border px-3 py-2 text-sm font-semibold transition',
+                                active
+                                  ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
+                                  : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                              )}
+                              aria-pressed={active}
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </StepShell>
+          );
+        case 'rideshare-pain':
+          return (
+            <StepShell>
+              <StepHeader title="What’s your biggest headache managing your Tesla for rideshare or rentals?" />
+              <textarea
+                rows={4}
+                value={formData.sharingPainPoint}
+                onChange={(e) => updateData({ sharingPainPoint: e.target.value })}
+                className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                placeholder="Scheduling, driver access, cleaning, pricing…"
+              />
+            </StepShell>
+          );
+        case 'app-frustration':
+          return (
+            <StepShell>
+              <StepHeader title="What frustrates you most about the Tesla app today?" />
+              <div className="space-y-2">
+                {[
+                  { id: 'data', label: 'Not enough data / analytics' },
+                  { id: 'widgets', label: 'Can’t customize layout or widgets' },
+                  { id: 'multi', label: 'Hard to manage multiple vehicles' },
+                  { id: 'sharing', label: 'No tools for sharing or rentals' },
+                  { id: 'other', label: 'Other (tell us more)' },
+                ].map((option) => {
+                  const active = formData.frustrationPrimary === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => updateData({ frustrationPrimary: option.id })}
+                      className={classNames(
+                        cardBase,
+                        active
+                          ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                      )}
+                      aria-pressed={active}
+                    >
+                      <span className="text-sm font-semibold leading-tight">{option.label}</span>
+                      {active ? <span className="text-xs font-semibold text-emerald-600">Selected</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+              {formData.frustrationPrimary === 'other' ? (
+                <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
+                  <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                    Tell us more
+                    <input
+                      type="text"
+                      value={formData.frustrationDetail}
+                      onChange={(e) => updateData({ frustrationDetail: e.target.value })}
+                      className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </StepShell>
+          );
+        case 'data-comfort':
+          return (
+            <StepShell>
+              <StepHeader title="How detailed do you like your data?" />
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  { id: 'simple', label: 'Keep it simple' },
+                  { id: 'balanced', label: 'Balanced – some detail, not too much' },
+                  { id: 'power', label: 'I’m a data nerd – show me everything' },
+                ].map((option) => {
+                  const active = formData.dataComfortLevel === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => updateData({ dataComfortLevel: option.id })}
+                      className={classNames(
+                        cardBase,
+                        'items-start',
+                        active
+                          ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white text-violet-800 shadow-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                      )}
+                      aria-pressed={active}
+                    >
+                      <div className="space-y-1 text-sm font-semibold leading-tight">
+                        <div>{option.label}</div>
+                        <div className="text-xs font-normal text-neutral-600">
+                          {option.id === 'simple'
+                            ? 'Quick summaries with just the essentials.'
+                            : option.id === 'balanced'
+                              ? 'A healthy mix of highlights and detail.'
+                              : 'Full analytics, alerts, and granular data.'}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </StepShell>
+          );
+        case 'contact':
+          return (
+            <StepShell>
+              <StepHeader title="Where should we send your setup link?" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: 'Name (optional)', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
+                  { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
+                ].map((input) => (
+                  <label key={input.field} className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                    {input.label}
+                    <input
+                      required={input.field === 'email'}
+                      type={input.type}
+                      value={formData[input.field]}
+                      onChange={(e) => updateData({ [input.field]: e.target.value })}
+                      placeholder={input.placeholder}
+                      className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                  State / Region
+                  <select
+                    value={formData.region}
+                    onChange={(e) => updateData({ region: e.target.value })}
+                    className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                  >
+                    <option value="">Select</option>
+                    {[
+                      'AL',
+                      'AZ',
+                      'CA',
+                      'CO',
+                      'FL',
+                      'GA',
+                      'IL',
+                      'MA',
+                      'MI',
+                      'NY',
+                      'NC',
+                      'OH',
+                      'PA',
+                      'TX',
+                      'WA',
+                      'Other',
+                    ].map((region) => (
+                      <option key={region} value={region}>
+                        {region}
+                      </option>
+                    ))}
+                  </select>
                 </label>
-              );
-            })}
-          </div>
-          <div className="rounded-xl bg-neutral-50 px-4 py-3 text-xs text-neutral-600">
-            <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-violet-700">ℹ️</span>
-              How it works
-            </div>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>Start free with 3 data points. Keep them even if you don’t upgrade.</li>
-              <li>Upgrade to unlimited for $4.94/month to unlock every metric.</li>
-              <li>You can switch plans anytime—your preferences are saved.</li>
-            </ul>
-          </div>
-          {submitted ? (
-            <p className="text-xs font-semibold text-emerald-600">
-              Invite sent! Check your inbox for setup steps and your starter dashboard link.
-            </p>
-          ) : null}
-        </QuizQuestion>
-      ),
-    ];
+                <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                  Notes (optional)
+                  <textarea
+                    rows={3}
+                    value={formData.notes}
+                    onChange={(e) => updateData({ notes: e.target.value })}
+                    className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    placeholder="Anything else you want us to know?"
+                  />
+                </label>
+              </div>
+            </StepShell>
+          );
+        default:
+          return null;
+      }
+    };
 
     return (
-      <CardShell>
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Rental & sharing</div>
-              <h3 className="text-xl font-semibold leading-tight sm:text-2xl">Rental & Sharing Made Easy</h3>
-              <p className="text-sm text-neutral-600">
-                Share your Tesla without sharing your Tesla account. TeslaHelper gives you tools to support rentals and shared driving—like clear trip summaries, usage insights, and safer remote access—so lending or hosting your car is simpler and less stressful.
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow-sm">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">Step {currentStep + 1} of {steps.length}</span>
-                <span className="text-neutral-900">{completion}%</span>
+      <div id="onboarding">
+        <CardShell>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Tesla owners</div>
+                <h3 className="text-xl font-semibold leading-tight sm:text-2xl">TeslaHelper Onboarding</h3>
+                <p className="text-sm text-neutral-600">
+                  A quick, step-by-step setup inspired by CaliforniaDebtRelief.org. One question per screen with big, tappable
+                  choices so you can breeze through on mobile.
+                </p>
               </div>
-              <div className="relative h-1.5 w-52 overflow-hidden rounded-full bg-neutral-200">
+              <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">
+                <ProgressPill />
+                <div className="relative h-1.5 w-52 overflow-hidden rounded-full bg-neutral-200">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 to-blue-500"
+                    style={{ width: `${completion}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+              {visibleSteps.map((step, idx) => (
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 to-blue-500"
-                  style={{ width: `${completion}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-            {steps.map((step, idx) => (
-              <div
-                key={step.id}
-                className={classNames(
-                  'flex items-center gap-2 rounded-full border px-3 py-1 shadow-sm transition',
-                  idx === currentStep
-                    ? 'border-violet-300 bg-white'
-                    : idx < currentStep
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                      : 'border-neutral-200 bg-white'
-                )}
-              >
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-700">
-                  {idx + 1}
-                </span>
-                {step.label}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[1.05fr,1fr]">
-            <div className="space-y-5">
-              {stepContent[currentStep]}
-              <CTAStack />
+                  key={step.id}
+                  className={classNames(
+                    'flex items-center gap-2 rounded-full border px-3 py-1 shadow-sm transition',
+                    idx === currentStepIndex
+                      ? 'border-violet-300 bg-white'
+                      : idx < currentStepIndex
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-neutral-200 bg-white'
+                  )}
+                >
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-700">
+                    {idx + 1}
+                  </span>
+                  {step.title}
+                </div>
+              ))}
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-blue-100 text-xl">💡</div>
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-900">Live preview</div>
-                    <div className="text-xs text-neutral-600">
-                      Free starter includes 3 signals. Unlimited unlocks everything for $4.94/month.
+            <div className="grid gap-6 lg:grid-cols-[1.05fr,1fr]">
+              <div className="space-y-4">
+                <div className="transition duration-300 ease-out">
+                  {renderStepContent()}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    disabled={currentStepIndex === 0}
+                    className={classNames(
+                      'inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition',
+                      currentStepIndex === 0
+                        ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
+                        : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                    )}
+                  >
+                    ← Back
+                  </button>
+                  {currentStepIndex < visibleSteps.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      disabled={!isStepValid(currentStep.id)}
+                      className={classNames(
+                        'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
+                        !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
+                      )}
+                    >
+                      Next step
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!isStepValid(currentStep.id)}
+                      className={classNames(
+                        'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
+                        !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
+                      )}
+                    >
+                      {submitted ? 'Invite sent' : 'Send my onboarding link'}
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5 shadow-sm">
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-blue-100 text-xl">💡</div>
+                    <div>
+                      <div className="text-sm font-semibold text-neutral-900">What to expect</div>
+                      <div className="text-xs text-neutral-600">
+                        Big, tappable cards on each screen. We’ll adjust steps if you do or don’t share your Tesla.
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {['Charge rate', 'Battery health', 'Sentry alerts'].map((item) => (
-                    <div key={item} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 rounded-2xl border border-dashed border-violet-200 bg-violet-50/80 px-4 py-3 text-xs text-violet-700">
-                  Lock in 3 free data points now. Upgrade to unlimited whenever you want.
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">🧭</span>
-                  Quiz steps
-                </div>
-                <ul className="mt-3 space-y-2 text-xs text-neutral-600">
-                  {steps.map((step, idx) => (
-                    <li key={step.id} className="flex items-start gap-2">
-                      <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-700">
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <div className="font-semibold text-neutral-900">{step.label}</div>
-                        <div>{step.blurb}</div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {['Quick 1:1 questions', 'Adaptive rideshare steps', 'Mobile-first layout', 'Keeps your existing submit'].map((item) => (
+                      <div key={item} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700">
+                        {item}
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-sm">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">🧭</span>
+                    Wizard steps
+                  </div>
+                  <ul className="mt-3 space-y-2 text-xs text-neutral-600">
+                    {visibleSteps.map((step, idx) => (
+                      <li key={step.id} className="flex items-start gap-2">
+                        <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-700">
+                          {idx + 1}
+                        </span>
+                        <div className="font-semibold text-neutral-900">{step.title}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
-      </CardShell>
+          </form>
+        </CardShell>
+      </div>
     );
   }
 
-
-function SectionTitle({ title, subtitle }) {
+  function SectionTitle({ title, subtitle }) {
     return (
       <div className="mb-5 max-w-3xl">
         <h2
@@ -2851,7 +2942,7 @@ function SectionTitle({ title, subtitle }) {
               </p>
             </div>
             <div className="relative w-full">
-              <OnboardingForm accent={accent} isDark={isDark} carImages={carImages} />
+              <OnboardingWizard accent={accent} isDark={isDark} />
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">

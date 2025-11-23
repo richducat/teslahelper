@@ -38,15 +38,18 @@
     name: BRAND_NAME,
     tagline: 'Premium, secure, and owner-first.',
     defaultAccent: 'violet',
-    wordmark: (
-      <span className="inline-flex items-center gap-2 font-black tracking-tight text-lg" aria-hidden="true">
-        <svg
-          className="h-6 w-6"
-          viewBox="0 0 32 32"
-          role="img"
-          aria-hidden="true"
-          focusable="false"
-        >
+  };
+
+  function BrandWordmark({ compact }) {
+    return (
+      <span
+        className={classNames(
+          'inline-flex items-center gap-2 font-black tracking-tight transition-all',
+          compact ? 'text-base' : 'text-lg'
+        )}
+        aria-hidden="true"
+      >
+        <svg className="h-6 w-6" viewBox="0 0 32 32" role="img" aria-hidden="true" focusable="false">
           <rect x="4" y="4" width="24" height="24" rx="6" className="fill-current opacity-90" />
           <path
             d="M10.5 21.5h4.25a3.75 3.75 0 0 0 3.75-3.75v-.5A3.25 3.25 0 0 0 15.25 14H10.5v-3h11v2h-4.25a3.25 3.25 0 0 1 0 6.5H10.5v2Z"
@@ -55,8 +58,8 @@
         </svg>
         <span>{BRAND_NAME}</span>
       </span>
-    ),
-  };
+    );
+  }
   const SUPPORT_LINK = 'https://ts.la/richard834858';
   const LAST_REVIEWED = { date: '2025-02-10', software: '2025.38' };
   const SEARCH_SYNONYMS = {
@@ -687,6 +690,8 @@
     const sizes = {
       md: 'h-10 px-4 text-sm',
       sm: 'h-8 px-3 text-sm',
+      xs: 'h-7 px-2.5 text-xs',
+      icon: 'h-9 w-9 text-base',
     };
     const variantClasses = {
       primary: classNames(
@@ -2108,37 +2113,6 @@
   }
 
   /* ------------------------------------------------------------------
-   * Accent picker component
-   *
-   * Renders small circular swatches that switch the active accent.
-   * ------------------------------------------------------------------ */
-  function AccentPicker({ accentName, setAccentName }) {
-    const options = [
-      { k: 'violet', hex: '#8b5cf6' },
-      { k: 'emerald', hex: '#10b981' },
-      { k: 'blue', hex: '#3b82f6' },
-      { k: 'amber', hex: '#f59e0b' },
-    ];
-    return (
-      <div className="flex flex-wrap items-center gap-2" aria-label="Accent color">
-        {options.map((c) => (
-          <button
-            key={c.k}
-            aria-label={'Accent ' + c.k}
-            type="button"
-            onClick={() => setAccentName(c.k)}
-            className={classNames(
-              'h-6 w-6 rounded-full ring-2 hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-              accentName === c.k ? 'ring-white' : 'ring-transparent'
-            )}
-            style={{ backgroundColor: c.hex }}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  /* ------------------------------------------------------------------
    * Car tile component
    *
    * Displays a car image with a button that scrolls to the library
@@ -2485,8 +2459,7 @@
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [showTeslaModal, setShowTeslaModal] = useState(false);
-    const [accentName, setAccentName] = useState(BRAND.defaultAccent);
-    const accent = useMemo(() => ACCENTS[accentName] || ACCENTS.violet, [accentName]);
+    const accent = useMemo(() => ACCENTS[BRAND.defaultAccent] || ACCENTS.violet, []);
     const isDark = mode === 'dark';
     const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
     const headerBg = isDark ? 'bg-neutral-900/95 border-neutral-800' : 'bg-white/95 border-neutral-200';
@@ -2748,33 +2721,42 @@
                   </div>
                 )}
               </div>
-              <a
-                href="https://teslahelper.app"
-                className="flex-1 inline-flex items-center justify-center md:justify-start"
-                aria-label={BRAND.name}
-              >
-                {BRAND.wordmark}
-                <span className="sr-only">{BRAND.name}</span>
-              </a>
+              <div className="flex flex-1 items-center gap-2 min-w-0">
+                <a
+                  href="https://teslahelper.app"
+                  className="inline-flex items-center justify-center md:justify-start"
+                  aria-label={BRAND.name}
+                >
+                  <BrandWordmark compact={headerCompact} />
+                  <span className="sr-only">{BRAND.name}</span>
+                </a>
+                <Button
+                  onClick={() => setShowTeslaModal(true)}
+                  variant="secondary"
+                  size={headerCompact ? 'xs' : 'sm'}
+                  className="rounded-full whitespace-nowrap"
+                  isDark={isDark}
+                >
+                  Connect
+                </Button>
+              </div>
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2">
-                  <AccentPicker accentName={accentName} setAccentName={setAccentName} />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-pressed={isDark}
-                    aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-                    onClick={() => setMode(isDark ? 'light' : 'dark')}
-                    isDark={isDark}
-                  >
-                    {isDark ? '🌞' : '🌙'}
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-pressed={isDark}
+                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                  onClick={() => setMode(isDark ? 'light' : 'dark')}
+                  isDark={isDark}
+                  className={classNames('rounded-full', headerCompact ? 'h-8 w-8 text-sm' : '')}
+                >
+                  {isDark ? '🌞' : '🌙'}
+                </Button>
                 <Button
                   as="a"
                   href="#library"
                   variant="primary"
-                  size="sm"
+                  size={headerCompact ? 'xs' : 'sm'}
                   accent={accent}
                   isDark={isDark}
                   className="hidden md:inline-flex rounded-full"
@@ -2782,21 +2764,12 @@
                   Open Library
                 </Button>
                 <Button
-                  onClick={() => setShowTeslaModal(true)}
-                  variant="secondary"
-                  size="sm"
-                  className="hidden md:inline-flex rounded-full"
-                  isDark={isDark}
-                >
-                  Connect
-                </Button>
-                <Button
                   as="a"
                   href={SUPPORT_LINK}
                   target="_blank"
                   rel="noreferrer"
                   variant="ghost"
-                  size="sm"
+                  size={headerCompact ? 'xs' : 'sm'}
                   isDark={isDark}
                   className="rounded-full"
                 >
@@ -2804,7 +2777,11 @@
                 </Button>
               </div>
             </div>
-            <form className="flex w-full items-center gap-3" role="search" onSubmit={handleSearchSubmit}>
+            <form
+              className={classNames('flex w-full items-center', headerCompact ? 'gap-2' : 'gap-3')}
+              role="search"
+              onSubmit={handleSearchSubmit}
+            >
               <label className="sr-only" htmlFor="global-search">
                 Search the Tesla Helper library
               </label>
@@ -2818,7 +2795,8 @@
                   onChange={(e) => setHeaderSearch(e.target.value)}
                   placeholder="Search for news or Tesla tips"
                   className={classNames(
-                    'w-full rounded-full h-11 pl-11 pr-4 text-sm border focus:outline-none focus:ring-2 shadow-inner',
+                    'w-full rounded-full pl-11 pr-4 text-sm border focus:outline-none focus:ring-2 shadow-inner',
+                    headerCompact ? 'h-10' : 'h-11',
                     isDark
                       ? 'bg-neutral-900/90 border-white/10 text-white focus:ring-emerald-400/80 focus:border-emerald-400/80'
                       : 'bg-white border-neutral-300 text-neutral-900 focus:ring-emerald-500/70 focus:border-emerald-500/70'
@@ -2827,7 +2805,7 @@
               </div>
               <Button
                 variant="primary"
-                size="sm"
+                size={headerCompact ? 'xs' : 'sm'}
                 type="submit"
                 accent={accent}
                 isDark={isDark}
@@ -2836,29 +2814,6 @@
                 Search
               </Button>
             </form>
-            <div className="flex items-center gap-2 sm:hidden">
-              <AccentPicker accentName={accentName} setAccentName={setAccentName} />
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-pressed={isDark}
-                aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-                onClick={() => setMode(isDark ? 'light' : 'dark')}
-                isDark={isDark}
-                className="rounded-full"
-              >
-                {isDark ? '🌞' : '🌙'}
-              </Button>
-              <Button
-                onClick={() => setShowTeslaModal(true)}
-                variant="secondary"
-                size="sm"
-                className="rounded-full"
-                isDark={isDark}
-              >
-                Connect
-              </Button>
-            </div>
             <nav className="flex items-center overflow-x-auto pt-1" aria-label="Primary">
               <ul className="flex items-center gap-3 text-sm font-semibold">
                 {navTabs.map((item) => (
@@ -2866,7 +2821,8 @@
                     <a
                       href={item.href}
                       className={classNames(
-                        'inline-flex items-center gap-1 rounded-full px-3 py-2 transition',
+                        'inline-flex items-center gap-1 rounded-full transition',
+                        headerCompact ? 'px-2.5 py-1.5 text-[13px]' : 'px-3 py-2',
                         isDark
                           ? 'text-white/80 hover:text-white hover:bg-white/10'
                           : 'text-neutral-800 hover:text-black hover:bg-neutral-100',

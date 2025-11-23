@@ -1285,7 +1285,8 @@
                     </div>
                   ))}
                 </div>
-              </StepShell>
+              </div>
+            </StepShell>
           );
         case 'rideshare-pain':
           return (

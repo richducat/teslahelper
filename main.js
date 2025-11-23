@@ -2482,6 +2482,7 @@
     const [headerSearch, setHeaderSearch] = useState('');
     const [navMenuOpen, setNavMenuOpen] = useState(false);
     const navMenuRef = useRef(null);
+    const [showOnboarding, setShowOnboarding] = useState(false);
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [showTeslaModal, setShowTeslaModal] = useState(false);
     const [accentName, setAccentName] = useState(BRAND.defaultAccent);
@@ -2943,7 +2944,34 @@
               </p>
             </div>
             <div className="relative w-full">
-              <OnboardingWizard accent={accent} isDark={isDark} />
+              {showOnboarding ? (
+                <div className="space-y-3">
+                  <div className="flex justify-end">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      isDark={isDark}
+                      onClick={() => setShowOnboarding(false)}
+                      className="rounded-full"
+                    >
+                      Hide account sign up
+                    </Button>
+                  </div>
+                  <OnboardingWizard accent={accent} isDark={isDark} />
+                </div>
+              ) : (
+                <div className="flex justify-center">
+                  <Button
+                    variant="primary"
+                    accent={accent}
+                    isDark={isDark}
+                    className="w-full rounded-2xl md:w-auto"
+                    onClick={() => setShowOnboarding(true)}
+                  >
+                    Account sign up
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           <div className="mx-auto max-w-6xl px-4">

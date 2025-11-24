@@ -2412,7 +2412,7 @@
     const [headerSearch, setHeaderSearch] = useState('');
     const [navMenuOpen, setNavMenuOpen] = useState(false);
     const navMenuRef = useRef(null);
-    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(true);
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [showTeslaModal, setShowTeslaModal] = useState(false);
     const accent = useMemo(() => ACCENTS[BRAND.defaultAccent] || ACCENTS.violet, []);

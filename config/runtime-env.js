@@ -4,11 +4,11 @@
 window.APP_ENV = {
   ...(window.APP_ENV || {}),
   teslaAuth: {
-    clientId: '6b4c3799-fcf9-4ecf-af69-cfe999d774ca',
-    clientSecret: 'ta-secret.VDhjDF^V5yi-baP!',
+    clientId: '6b4c3799-fcf9-4ecf-af69-cfe999df9727',
+    clientSecret: 'ta-secret.VDhjDf^V$yi-baP!',
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
-    deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
-    tokenEndpoint: 'https://auth.tesla.com/oauth2/v3/token',
+    deviceCodeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/device/code',
+    tokenEndpoint: 'https://auth-global.tesla.com/oauth2/v3/token',
   },
 };

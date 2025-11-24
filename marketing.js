@@ -337,7 +337,7 @@
     );
   }
 
-  function Hero({ title, subtitle, ctaText, formEmbedId }) {
+  function Hero({ title, subtitle }) {
     return (
       <section className="bg-neutral-950 text-white">
         <div className="mx-auto max-w-5xl px-4 py-12 grid md:grid-cols-2 gap-8 items-center">
@@ -351,8 +351,14 @@
               <li>Email flow → kit → checkout → upsell.</li>
             </ul>
           </div>
-          <div className="bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl p-6">
-            <BeehiivForm formEmbedId={formEmbedId} />
+          <div className="relative">
+            <div
+              className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500/10 via-violet-500/10 to-blue-500/10 blur-2xl"
+              aria-hidden="true"
+            />
+            <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] shadow-2xl shadow-emerald-500/10 p-6 backdrop-blur">
+              <OnboardingForm />
+            </div>
           </div>
         </div>
       </section>
@@ -670,6 +676,250 @@
     );
   }
 
+  function OnboardingForm() {
+    const stepsTotal = 4;
+    const [step, setStep] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [formState, setFormState] = useState({
+      model: '',
+      delivery: '',
+      focus: [],
+      email: '',
+      zip: '',
+    });
+    const storedUtm = getStoredUtm();
+    const progress = Math.round(((step + 1) / stepsTotal) * 100);
+
+    const toggleFocus = (value) => {
+      setFormState((prev) => {
+        const exists = prev.focus.includes(value);
+        const focus = exists ? prev.focus.filter((f) => f !== value) : [...prev.focus, value];
+        return { ...prev, focus };
+      });
+    };
+
+    const handleSelect = (field, value) => setFormState((prev) => ({ ...prev, [field]: value }));
+    const handleInput = (e) => {
+      const { name, value } = e.target;
+      setFormState((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const isEmailValid = /.+@.+\..+/.test(formState.email);
+    const canContinue = () => {
+      if (step === 0) return Boolean(formState.model);
+      if (step === 1) return Boolean(formState.delivery);
+      if (step === 2) return formState.focus.length > 0;
+      return isEmailValid;
+    };
+
+    const handleSubmit = () => {
+      setSubmitting(true);
+      trackEvent('lead', {
+        variant: resolveVariant('landingHeadline'),
+        model: formState.model,
+        delivery: formState.delivery,
+        focus: formState.focus.join(', '),
+        zip: formState.zip,
+        utm_source: storedUtm.utm_source || 'direct',
+      });
+      if (window.fbq) window.fbq('track', 'Lead');
+      if (window.gtag) window.gtag('event', 'conversion', { send_to: APP_ENV.googleAdsId });
+      setSubmitted(true);
+      setTimeout(() => {
+        window.location.href = '/kit';
+      }, 450);
+    };
+
+    const handleNext = (e) => {
+      e.preventDefault();
+      if (!canContinue()) return;
+      if (step >= stepsTotal - 1) {
+        handleSubmit();
+      } else {
+        setStep((s) => Math.min(s + 1, stepsTotal - 1));
+      }
+    };
+
+    return (
+      <form onSubmit={handleNext} className="space-y-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Step {step + 1} of {stepsTotal}</p>
+            <h3 className="mt-1 text-xl font-bold">
+              {step === 0
+                ? 'Which Tesla are you setting up?'
+                : step === 1
+                ? 'When did you receive it?'
+                : step === 2
+                ? 'What do you need help with?'
+                : 'Where should we send the quick-start?'}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-xs text-white/70">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+            Secure & spam-free
+          </div>
+        </div>
+        <div className="h-2 rounded-full bg-white/5">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-blue-400 to-violet-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="space-y-4">
+          {step === 0 && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {['Model Y', 'Model 3', 'Model X', 'Model S', 'Cybertruck'].map((model) => (
+                <button
+                  key={model}
+                  type="button"
+                  onClick={() => handleSelect('model', model)}
+                  className={classNames(
+                    'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                    formState.model === model
+                      ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
+                      : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                  )}
+                >
+                  <span className="font-semibold">{model}</span>
+                  {formState.model === model ? <span aria-hidden="true">✓</span> : <span aria-hidden="true">→</span>}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === 1 && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {['Ordered / Waiting', 'Delivered in the last 30 days', 'Delivered 1-6 months ago', 'Delivered 6+ months ago'].map((windowLabel) => (
+                <button
+                  key={windowLabel}
+                  type="button"
+                  onClick={() => handleSelect('delivery', windowLabel)}
+                  className={classNames(
+                    'rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                    formState.delivery === windowLabel
+                      ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
+                      : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                  )}
+                >
+                  <div className="font-semibold">{windowLabel}</div>
+                  <p className="text-xs text-white/70">We tailor checklists to your delivery stage.</p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-3">
+              <p className="text-sm text-white/70">Pick all that apply.</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { label: 'Charging setup + rebates', value: 'charging' },
+                  { label: 'FSD (Supervised) basics', value: 'fsd' },
+                  { label: 'Day-one safety + settings', value: 'safety' },
+                  { label: 'Accessories + coupons', value: 'accessories' },
+                ].map((item) => {
+                  const active = formState.focus.includes(item.value);
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => toggleFocus(item.value)}
+                      className={classNames(
+                        'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                        active
+                          ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
+                          : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                      )}
+                    >
+                      <span className="text-lg">{active ? '✔' : '+'}</span>
+                      <span className="font-semibold">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4">
+              <div className="grid gap-3">
+                <label className="text-sm font-semibold" htmlFor="email">
+                  Email for your quick-start + Starter Kit offer
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formState.email}
+                  onChange={handleInput}
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                />
+              </div>
+              <div className="grid gap-3">
+                <label className="text-sm font-semibold" htmlFor="zip">
+                  ZIP (optional for utility rebate guidance)
+                </label>
+                <input
+                  id="zip"
+                  name="zip"
+                  inputMode="numeric"
+                  value={formState.zip}
+                  onChange={handleInput}
+                  placeholder="94103"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                />
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+                <div className="font-semibold text-white">What you get next</div>
+                <ul className="mt-2 space-y-1 list-disc list-inside">
+                  <li>Email quick-start tailored to {formState.model || 'your Tesla'}.</li>
+                  <li>One-time Starter Kit offer with 30-day guarantee.</li>
+                  <li>Optional charging mini-course upsell.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <NavButton
+            type="button"
+            variant="secondary"
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            disabled={step === 0 || submitting}
+            className="h-11 px-4"
+          >
+            Back
+          </NavButton>
+          <div className="flex-1" />
+          <NavButton
+            type="submit"
+            variant="primary"
+            accent={ACCENTS.violet}
+            disabled={!canContinue() || submitting}
+            className="h-11 px-5"
+          >
+            {submitting ? 'Sending...' : step >= stepsTotal - 1 ? 'Get my quick-start' : 'Continue'}
+          </NavButton>
+        </div>
+
+        {submitted && (
+          <div className="rounded-2xl border border-emerald-300/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+            Thanks! Redirecting you to the Starter Kit...
+          </div>
+        )}
+
+        <div className="text-xs text-white/60">
+          Protected by TeslaHelper · No spam. UTM captured: {Object.keys(storedUtm).length ? 'yes' : 'none'}.
+        </div>
+      </form>
+    );
+  }
+
   function StartPage({ affiliates }) {
     const headlineVariant = resolveVariant('landingHeadline');
     const titleCopy = headlineVariant === 'v2' ? 'Your Tesla, decoded in minutes.' : 'New Tesla? Get answers by your model & year—fast.';
@@ -685,8 +935,6 @@
         <Hero
           title={titleCopy}
           subtitle="Charging, FSD (Supervised), safety, day-1 settings—curated and easy."
-          ctaText="Get my free quick-start"
-          formEmbedId={APP_ENV.beehiivEmbedId}
         />
         <section className="mx-auto max-w-6xl px-4 py-10 space-y-8">
           <div className="grid md:grid-cols-3 gap-4">
@@ -719,7 +967,9 @@
             </div>
             <div className="space-y-3">
               <h3 className="font-semibold">Ready to start?</h3>
-              <BeehiivForm formEmbedId={APP_ENV.beehiivEmbedId} />
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <OnboardingForm />
+              </div>
               <div className="text-xs text-neutral-300">Footer includes Tesla disclaimer + FTC affiliate disclosure.</div>
             </div>
           </div>

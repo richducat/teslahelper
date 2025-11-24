@@ -1475,10 +1475,6 @@
               <div>
                 <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Tesla owners</div>
                 <h3 className="text-xl font-semibold leading-tight sm:text-2xl">TeslaHelper Onboarding</h3>
-                <p className="text-sm text-neutral-600">
-                  A quick, step-by-step setup inspired by CaliforniaDebtRelief.org. One question per screen with big, tappable
-                  choices so you can breeze through on mobile.
-                </p>
               </div>
               <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">
                 <ProgressPill />
@@ -1512,91 +1508,51 @@
               ))}
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1.05fr,1fr]">
-              <div className="space-y-4">
-                <div className="transition duration-300 ease-out">
-                  {renderStepContent()}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={goBack}
-                    disabled={currentStepIndex === 0}
-                    className={classNames(
-                      'inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition',
-                      currentStepIndex === 0
-                        ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
-                        : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
-                    )}
-                  >
-                    ← Back
-                  </button>
-                  {currentStepIndex < visibleSteps.length - 1 ? (
-                    <button
-                      type="button"
-                      onClick={goNext}
-                      disabled={!isStepValid(currentStep.id)}
-                      className={classNames(
-                        'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
-                        !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
-                      )}
-                    >
-                      Next step
-                      <span aria-hidden="true">→</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={!isStepValid(currentStep.id)}
-                      className={classNames(
-                        'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
-                        !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
-                      )}
-                    >
-                      {submitted ? 'Invite sent' : 'Send my onboarding link'}
-                      <span aria-hidden="true">→</span>
-                    </button>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <div className="transition duration-300 ease-out">
+                {renderStepContent()}
               </div>
 
-              <div className="space-y-4">
-                <div className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5 shadow-sm">
-                  <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-blue-100 text-xl">💡</div>
-                    <div>
-                      <div className="text-sm font-semibold text-neutral-900">What to expect</div>
-                      <div className="text-xs text-neutral-600">
-                        Big, tappable cards on each screen. We’ll adjust steps if you do or don’t share your Tesla.
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {['Quick 1:1 questions', 'Adaptive rideshare steps', 'Mobile-first layout', 'Keeps your existing submit'].map((item) => (
-                      <div key={item} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-sm">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">🧭</span>
-                    Wizard steps
-                  </div>
-                  <ul className="mt-3 space-y-2 text-xs text-neutral-600">
-                    {visibleSteps.map((step, idx) => (
-                      <li key={step.id} className="flex items-start gap-2">
-                        <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-semibold text-neutral-700">
-                          {idx + 1}
-                        </span>
-                        <div className="font-semibold text-neutral-900">{step.title}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={goBack}
+                  disabled={currentStepIndex === 0}
+                  className={classNames(
+                    'inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition',
+                    currentStepIndex === 0
+                      ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
+                      : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                  )}
+                >
+                  ← Back
+                </button>
+                {currentStepIndex < visibleSteps.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    disabled={!isStepValid(currentStep.id)}
+                    className={classNames(
+                      'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
+                      !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
+                    )}
+                  >
+                    Next step
+                    <span aria-hidden="true">→</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!isStepValid(currentStep.id)}
+                    className={classNames(
+                      'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
+                      !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
+                    )}
+                  >
+                    {submitted ? 'Invite sent' : 'Send my onboarding link'}
+                    <span aria-hidden="true">→</span>
+                  </button>
+                )}
               </div>
             </div>
           </form>

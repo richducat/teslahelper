@@ -1503,31 +1503,6 @@
                       : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
                   )}
                 >
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-700">
-                    {idx + 1}
-                  </span>
-                  {step.title}
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <div className="transition duration-300 ease-out">
-                {renderStepContent()}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={goBack}
-                  disabled={currentStepIndex === 0}
-                  className={classNames(
-                    'inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition',
-                    currentStepIndex === 0
-                      ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
-                      : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
-                  )}
-                >
                   ← Back
                 </button>
                 {currentStepIndex < visibleSteps.length - 1 ? (

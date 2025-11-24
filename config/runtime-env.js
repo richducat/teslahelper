@@ -9,6 +9,6 @@ window.APP_ENV = {
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     deviceCodeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/device/code',
-    tokenEndpoint: 'https://auth-global.tesla.com/oauth2/v3/token',
+    tokenEndpoint: 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token',
   },
 };

@@ -831,7 +831,7 @@
                       : 'border-emerald-500 bg-emerald-50'
                     : isDark
                       ? 'border-neutral-800 hover:border-neutral-700'
-                      : 'border-neutral-200 hover:border-neutral-300'
+                      : 'border-neutral-300 hover:border-neutral-400'
                 )}
               >
                 <div className="text-xl" aria-hidden="true">
@@ -979,10 +979,10 @@
     }
 
     const cardBase =
-      'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500';
+      'flex items-center gap-3 rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left transition duration-200 hover:border-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/10 focus-visible:border-neutral-900';
 
     const StepShell = ({ children }) => (
-      <div className="space-y-3 rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-sm transition-all duration-200">
+      <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white px-4 py-5 shadow-[0_18px_50px_-40px_rgba(0,0,0,0.55)] transition-all duration-200 sm:px-6">
         {children}
       </div>
     );
@@ -991,32 +991,30 @@
 
     const StepHeader = ({ title, subtitle }) => (
       <div className="space-y-1">
-        <h4 className="text-lg font-semibold text-neutral-900">{title}</h4>
-        {subtitle ? <p className="text-sm text-neutral-600">{subtitle}</p> : null}
+        <h4 className="text-lg font-semibold text-neutral-900 tracking-tight">{title}</h4>
+        {subtitle ? <p className="text-sm text-neutral-600 leading-relaxed">{subtitle}</p> : null}
       </div>
     );
 
     const ProgressPill = () => (
-      <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow-sm">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+      <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+        <span className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">
           Step {currentStepIndex + 1} of {visibleSteps.length}
         </span>
-        <span className="text-neutral-900">{completion}%</span>
+        <span className="text-neutral-900 font-semibold">{completion}%</span>
       </div>
     );
 
     const CardShell = ({ children }) => (
       <Card
         className={classNames(
-          'relative overflow-hidden border px-5 py-6 shadow-[0_28px_70px_-40px_rgba(79,70,229,0.55)]',
-          isDark ? 'bg-white text-neutral-900 border-neutral-200' : 'bg-white text-neutral-900 border-neutral-100'
+          'relative overflow-hidden rounded-2xl border border-neutral-200 bg-white px-6 py-7 shadow-[0_28px_70px_-40px_rgba(0,0,0,0.6)]',
+          isDark ? 'text-neutral-900' : 'text-neutral-900'
         )}
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(139,92,246,0.08),transparent_38%),radial-gradient(circle_at_78%_16%,rgba(59,130,246,0.08),transparent_32%),linear-gradient(120deg,rgba(255,255,255,0.92),rgba(255,255,255,0.98))]"
-          aria-hidden="true"
-        />
-        <div className="relative">{children}</div>
+        <div className="relative" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>
+          {children}
+        </div>
       </Card>
     );
 
@@ -1041,8 +1039,8 @@
                       className={classNames(
                         cardBase,
                         active
-                          ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
-                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                          : 'border-neutral-300 bg-white hover:border-neutral-400'
                       )}
                       aria-pressed={active}
                     >
@@ -1073,14 +1071,14 @@
                           cardBase,
                           'justify-between',
                           active
-                            ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white text-violet-800 shadow-sm'
-                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                            ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                            : 'border-neutral-300 bg-white hover:border-neutral-400'
                         )}
                         aria-pressed={active}
                       >
                         <span className="text-sm font-semibold">{model}</span>
                         {active ? (
-                          <span className="rounded-full bg-violet-100 px-2 py-1 text-[11px] font-semibold text-violet-700">Selected</span>
+                          <span className="rounded-full bg-neutral-900 px-2.5 py-1 text-[11px] font-semibold text-white">Selected</span>
                         ) : null}
                       </button>
                     );
@@ -1095,7 +1093,7 @@
                       max={new Date().getFullYear() + 1}
                       value={formData.modelYear ?? ''}
                       onChange={(e) => updateData({ modelYear: e.target.value ? Number(e.target.value) : null })}
-                      className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                      className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                     />
                   </label>
                 </div>
@@ -1124,20 +1122,20 @@
                       className={classNames(
                         cardBase,
                         active
-                          ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
-                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                          : 'border-neutral-300 bg-white hover:border-neutral-400'
                       )}
                       aria-pressed={active}
                     >
                       <div className="text-sm font-semibold leading-tight">{option.label}</div>
-                      <span
-                        className={classNames(
-                          'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold',
-                          active ? 'bg-violet-100 text-violet-700' : 'bg-neutral-100 text-neutral-600'
-                        )}
-                      >
-                        {active ? 'Selected' : 'Tap to select'}
-                      </span>
+                        <span
+                          className={classNames(
+                            'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold',
+                            active ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600'
+                          )}
+                        >
+                          {active ? 'Selected' : 'Tap to select'}
+                        </span>
                     </button>
                   );
                 })}
@@ -1167,13 +1165,13 @@
                         className={classNames(
                           cardBase,
                           active
-                            ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white text-violet-800 shadow-sm'
-                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                            ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                            : 'border-neutral-300 bg-white hover:border-neutral-400'
                         )}
                         aria-pressed={active}
                       >
                         <span className="text-sm font-semibold leading-tight">{option.label}</span>
-                        {active ? <span className="text-xs font-semibold text-emerald-600">Added</span> : null}
+                        {active ? <span className="rounded-full bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white">Added</span> : null}
                       </button>
                     );
                   })}
@@ -1186,7 +1184,7 @@
                         type="text"
                         value={formData.goalOther}
                         onChange={(e) => updateData({ goalOther: e.target.value })}
-                        className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                        className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                       />
                     </label>
                   </div>
@@ -1217,13 +1215,13 @@
                           className={classNames(
                             cardBase,
                             active
-                              ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
-                              : 'border-neutral-200 bg-white hover:border-neutral-300'
+                              ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                              : 'border-neutral-300 bg-white hover:border-neutral-400'
                           )}
                           aria-pressed={active}
                         >
                           <span className="text-sm font-semibold">{option.label}</span>
-                          {active ? <span className="text-xs font-semibold text-emerald-600">Added</span> : null}
+                            {active ? <span className="rounded-full bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white">Added</span> : null}
                         </button>
                       );
                     })}
@@ -1236,7 +1234,7 @@
                           type="text"
                           value={formData.platformOther}
                           onChange={(e) => updateData({ platformOther: e.target.value })}
-                          className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                          className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                         />
                       </label>
                     </div>
@@ -1275,10 +1273,10 @@
                               type="button"
                               onClick={() => updateData({ [group.id]: option.value })}
                               className={classNames(
-                                'rounded-full border px-3 py-2 text-sm font-semibold transition',
+                                'rounded-lg border px-3.5 py-2.5 text-sm font-semibold transition',
                                 active
-                                  ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
-                                  : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                                  ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                                  : 'border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400'
                               )}
                               aria-pressed={active}
                             >
@@ -1301,7 +1299,7 @@
                 rows={4}
                 value={formData.sharingPainPoint}
                 onChange={(e) => updateData({ sharingPainPoint: e.target.value })}
-                className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                 placeholder="Scheduling, driver access, cleaning, pricing…"
               />
             </StepShell>
@@ -1327,13 +1325,13 @@
                       className={classNames(
                         cardBase,
                         active
-                          ? 'border-violet-500 bg-violet-50 text-violet-800 shadow-sm'
-                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                          : 'border-neutral-300 bg-white hover:border-neutral-400'
                       )}
                       aria-pressed={active}
                     >
                       <span className="text-sm font-semibold leading-tight">{option.label}</span>
-                      {active ? <span className="text-xs font-semibold text-emerald-600">Selected</span> : null}
+                        {active ? <span className="rounded-full bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white">Selected</span> : null}
                     </button>
                   );
                 })}
@@ -1346,7 +1344,7 @@
                       type="text"
                       value={formData.frustrationDetail}
                       onChange={(e) => updateData({ frustrationDetail: e.target.value })}
-                      className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                      className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                     />
                   </label>
                 </div>
@@ -1373,8 +1371,8 @@
                         cardBase,
                         'items-start',
                         active
-                          ? 'border-violet-500 bg-gradient-to-br from-violet-50 to-white text-violet-800 shadow-sm'
-                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
+                          : 'border-neutral-300 bg-white hover:border-neutral-400'
                       )}
                       aria-pressed={active}
                     >
@@ -1411,7 +1409,7 @@
                       value={formData[input.field]}
                       onChange={(e) => updateData({ [input.field]: e.target.value })}
                       placeholder={input.placeholder}
-                      className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                      className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                     />
                   </label>
                 ))}
@@ -1422,7 +1420,7 @@
                   <select
                     value={formData.region}
                     onChange={(e) => updateData({ region: e.target.value })}
-                    className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                   >
                     <option value="">Select</option>
                     {[
@@ -1455,7 +1453,7 @@
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => updateData({ notes: e.target.value })}
-                    className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                     placeholder="Anything else you want us to know?"
                   />
                 </label>
@@ -1473,14 +1471,14 @@
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <div className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Tesla owners</div>
-                <h3 className="text-xl font-semibold leading-tight sm:text-2xl">TeslaHelper Onboarding</h3>
+                <div className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">Tesla owners</div>
+                <h3 className="text-xl font-semibold leading-tight tracking-tight text-neutral-900 sm:text-2xl">TeslaHelper Onboarding</h3>
               </div>
-              <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-600">
+              <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-700">
                 <ProgressPill />
                 <div className="relative h-1.5 w-52 overflow-hidden rounded-full bg-neutral-200">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 to-blue-500"
+                    className="absolute inset-y-0 left-0 rounded-full bg-neutral-900"
                     style={{ width: `${completion}%` }}
                   />
                 </div>
@@ -1497,10 +1495,10 @@
                   onClick={goBack}
                   disabled={currentStepIndex === 0}
                   className={classNames(
-                    'inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition',
+                    'inline-flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition',
                     currentStepIndex === 0
                       ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
-                      : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300'
+                      : 'border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400'
                   )}
                 >
                   ← Back
@@ -1511,7 +1509,7 @@
                     onClick={goNext}
                     disabled={!isStepValid(currentStep.id)}
                     className={classNames(
-                      'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
+                      'inline-flex items-center gap-2 rounded-lg bg-neutral-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900/15',
                       !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
                     )}
                   >
@@ -1523,7 +1521,7 @@
                     type="submit"
                     disabled={!isStepValid(currentStep.id)}
                     className={classNames(
-                      'inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-violet-200',
+                      'inline-flex items-center gap-2 rounded-lg bg-neutral-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900/15',
                       !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
                     )}
                   >

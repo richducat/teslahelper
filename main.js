@@ -2331,6 +2331,7 @@
       { href: '/start', label: 'Start' },
       { href: '/kit', label: 'Kit' },
       { href: '/upsell', label: 'Upsell' },
+      { href: '/musk-highway-runner', label: 'Runner' },
       { href: '/accessories/model-y', label: 'Accessories' },
       { href: '/chargers', label: 'Chargers' },
       { href: '/insurance', label: 'Insurance' },
@@ -2343,6 +2344,7 @@
       { href: '#models', label: 'Models' },
       { href: '#my-tesla', label: 'My Tesla' },
       { href: '/start', label: 'Start' },
+      { href: '/musk-highway-runner', label: 'Runner' },
       { href: '/accessories/model-y', label: 'Accessories' },
     ];
 

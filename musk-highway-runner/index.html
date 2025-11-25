@@ -124,7 +124,6 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
-      z-index: 3;
     }
     .overlay.visible { opacity: 1; pointer-events: all; }
     .overlay .panel {
@@ -143,7 +142,6 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       opacity: 0;
-      z-index: 1;
     }
     .touch-bar div { background: transparent; }
     @media (max-width: 720px) {
@@ -273,7 +271,7 @@
       const h = w / ratio;
       canvas.width = w;
       canvas.height = h;
-      laneWidth = roadWidthAt(canvas.height) / lanes;
+      laneWidth = canvas.width / lanes;
       player.y = canvas.height - 140;
     }
     resize();
@@ -281,25 +279,6 @@
 
     function horizonY() {
       return canvas.height * roadProfile.horizon;
-    }
-
-    function roadWidthAt(y) {
-      const h = horizonY();
-      const t = Math.min(1, Math.max(0, (y - h) / (canvas.height - h)));
-      const widthTop = canvas.width * roadProfile.widthTop;
-      const widthBottom = canvas.width * roadProfile.widthBottom;
-      return widthTop + (widthBottom - widthTop) * t;
-    }
-
-    function roadLeftAt(y) {
-      const width = roadWidthAt(y);
-      return (canvas.width - width) / 2;
-    }
-
-    function laneX(lane, y = canvas.height) {
-      const left = roadLeftAt(y);
-      const width = roadWidthAt(y);
-      return left + width * (lane + 0.5) / lanes;
     }
 
     function drawBackdrop(time) {
@@ -332,9 +311,9 @@
     }
 
     function drawRoad(time) {
-      const roadWidthTop = canvas.width * roadProfile.widthTop;
-      const roadWidthBottom = canvas.width * roadProfile.widthBottom;
-      const horizon = horizonY();
+      const roadWidthTop = canvas.width * 0.25;
+      const roadWidthBottom = canvas.width * 0.86;
+      const horizon = canvas.height * 0.45;
       ctx.save();
       ctx.beginPath();
       ctx.moveTo((canvas.width - roadWidthTop) / 2, horizon);
@@ -397,13 +376,13 @@
       ctx.strokeStyle = player.tint;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      roundedRect(ctx, -48, -28, 96, 56, 18);
+      ctx.roundRect(-48, -28, 96, 56, 18);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = '#0f1220';
       ctx.beginPath();
-      roundedRect(ctx, -34, -20, 68, 40, 12);
+      ctx.roundRect(-34, -20, 68, 40, 12);
       ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.12)';
       ctx.stroke();
@@ -435,7 +414,7 @@
       const type = Math.random() > 0.5 ? 'block' : 'swerve';
       obstacles.push({
         lane,
-        y: horizonY() - 40,
+        y: -80,
         speed: 240 + Math.random() * 120 * state.difficulty,
         label: pick.label,
         hue: pick.hue,
@@ -458,7 +437,7 @@
       const pick = types[Math.floor(Math.random() * types.length)];
       pickups.push({
         lane,
-        y: horizonY() - 30,
+        y: -60,
         speed: 210 + Math.random() * 80,
         ...pick,
         size: 56,
@@ -467,22 +446,19 @@
     }
 
     function drawOpponent(o, time) {
-      const depth = Math.max(0, Math.min(1, (o.y - horizonY()) / (canvas.height - horizonY())));
-      const size = o.size * (0.7 + depth * 0.45);
-      const wiggle = Math.sin(time * 0.001 + o.drift) * (o.type === 'swerve' ? 0.2 : 0);
-      const x = laneX(o.lane + wiggle, o.y);
+      const x = laneX(o.lane + Math.sin(time * 0.001 + o.drift) * (o.type === 'swerve' ? 0.2 : 0));
       ctx.save();
       ctx.translate(x, o.y);
       ctx.fillStyle = 'rgba(255,255,255,0.05)';
       ctx.beginPath();
-      ctx.arc(0, 0, size / 2 + 12, 0, Math.PI * 2);
+      ctx.arc(0, 0, o.size / 2 + 12, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#1a0f17';
       ctx.strokeStyle = o.hue;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      roundedRect(ctx, -size / 2, -size / 2, size, size, 18);
+      ctx.roundRect(-size / 2, -size / 2, size, size, 18);
       ctx.fill();
       ctx.stroke();
 
@@ -495,7 +471,7 @@
 
     function drawPickup(p, time) {
       const sway = Math.sin(time * 0.004 + p.wobble) * 8;
-      const x = laneX(p.lane, p.y) + sway;
+      const x = laneX(p.lane) + sway;
       ctx.save();
       ctx.translate(x, p.y);
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
@@ -568,11 +544,8 @@
     document.getElementById('touchLeft').addEventListener('touchstart', () => moveLane(-1));
     document.getElementById('touchRight').addEventListener('touchstart', () => moveLane(1));
 
-    const triggerStart = (e) => { e?.preventDefault?.(); startGame(); };
-    startBtn.addEventListener('click', triggerStart);
-    startBtn.addEventListener('touchend', triggerStart);
-    restartBtn.addEventListener('click', triggerStart);
-    restartBtn.addEventListener('touchend', triggerStart);
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
     pauseBtn.addEventListener('click', togglePause);
 
     function reset() {
@@ -616,11 +589,7 @@
     }
 
     function collide(a, b, hitbox = 48) {
-      const ay = a.y ?? a.yPos ?? player.y;
-      const by = b.y ?? b.yPos ?? player.y;
-      const ax = laneX(a.lane, ay);
-      const bx = laneX(b.lane, by);
-      return Math.abs(ax - bx) < laneWidth * 0.44 && Math.abs(ay - by) < hitbox;
+      return Math.abs(laneX(a.lane) - laneX(b.lane)) < laneWidth * 0.44 && Math.abs((a.y || a.yPos) - (b.y || b.yPos)) < hitbox;
     }
 
     function updateHud() {
@@ -694,7 +663,7 @@
       for (const o of obstacles) o.y += o.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1);
       for (const p of pickups) {
         p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1);
-        if (magnetStrength && Math.abs(laneX(p.lane, p.y) - laneX(player.targetLane, p.y)) < magnetStrength) {
+        if (magnetStrength && Math.abs(laneX(p.lane) - player.x) < magnetStrength) {
           p.lane += (player.targetLane - p.lane) * 0.08;
         }
       }

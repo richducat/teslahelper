@@ -266,11 +266,17 @@
     const uiMessages = [];
 
     function resize() {
-      const ratio = 16 / 9;
-      const w = Math.min(1180, window.innerWidth - 32);
-      const h = w / ratio;
-      canvas.width = w;
-      canvas.height = h;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const ratio = isPortrait ? 9 / 16 : 16 / 9;
+      const maxHeight = isPortrait ? window.innerHeight * 0.9 : window.innerHeight * 0.82;
+      const maxWidth = window.innerWidth - (isPortrait ? 12 : 32);
+
+      const widthFromHeight = maxHeight * ratio;
+      const targetWidth = Math.min(1180, maxWidth, widthFromHeight);
+      const targetHeight = targetWidth / ratio;
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
       laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;
       player.y = canvas.height - 140;
     }

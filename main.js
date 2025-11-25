@@ -852,12 +852,27 @@
     );
   }
 
-    /* ------------------------------------------------------------------
+  const ACCOUNT_STORAGE_KEY = 'teslahelper_account';
+
+  function loadAccountFromStorage() {
+    if (typeof window === 'undefined') return { account: null, loggedIn: false };
+    try {
+      const raw = window.localStorage?.getItem(ACCOUNT_STORAGE_KEY);
+      if (!raw) return { account: null, loggedIn: false };
+      const parsed = JSON.parse(raw);
+      return { account: parsed || null, loggedIn: !!parsed?.loggedIn };
+    } catch (error) {
+      console.error('TeslaHelper: unable to load account data', error);
+      return { account: null, loggedIn: false };
+    }
+  }
+
+  /* ------------------------------------------------------------------
    * Onboarding wizard
    *
    * Interactive, step-by-step onboarding for Tesla owners.
    * ------------------------------------------------------------------ */
-  function OnboardingWizard({ accent, isDark }) {
+  function OnboardingWizard({ accent, isDark, onComplete, initialData }) {
     const [formData, setFormData] = useState({
       ownershipStatus: undefined,
       primaryModel: '',
@@ -876,11 +891,28 @@
       dataComfortLevel: undefined,
       name: '',
       email: '',
+      password: '',
       region: '',
       notes: '',
+      ...initialData,
+      usage: initialData?.usage || [],
+      primaryGoals: initialData?.primaryGoals || [],
+      platforms: initialData?.platforms || [],
     });
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [submitted, setSubmitted] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+
+    useEffect(() => {
+      if (!initialData) return;
+      setFormData((prev) => ({
+        ...prev,
+        ...initialData,
+        usage: initialData?.usage || prev.usage,
+        primaryGoals: initialData?.primaryGoals || prev.primaryGoals,
+        platforms: initialData?.platforms || prev.platforms,
+      }));
+    }, [initialData]);
 
     const steps = useMemo(
       () => [
@@ -956,7 +988,7 @@
         case 'data-comfort':
           return !!formData.dataComfortLevel;
         case 'contact':
-          return !!formData.email?.trim();
+          return !!formData.email?.trim() && !!formData.password?.trim();
         default:
           return true;
       }
@@ -964,7 +996,25 @@
 
     function handleSubmit(e) {
       e.preventDefault();
-      setSubmitted(true);
+      setSubmitError('');
+      if (!isStepValid(currentStep?.id)) {
+        setSubmitError('Please complete the current step before submitting.');
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        onboardedAt: formData.onboardedAt || new Date().toISOString(),
+        loggedIn: true,
+        lastLoginAt: new Date().toISOString(),
+      };
+
+      try {
+        onComplete?.(payload);
+        setSubmitted(true);
+      } catch (error) {
+        setSubmitError(error?.message || 'Unable to save your signup right now.');
+      }
     }
 
     function goNext() {
@@ -1414,6 +1464,18 @@
                   </label>
                 ))}
               </div>
+              <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+                Create a password
+                <input
+                  required
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => updateData({ password: e.target.value })}
+                  placeholder="Keep it memorable—used for login on this device"
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+                />
+                <span className="text-xs font-normal text-neutral-600">Stored securely in your TeslaHelper account record.</span>
+              </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
                   State / Region
@@ -1484,6 +1546,14 @@
                 </div>
               </div>
             </div>
+            {submitted ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                Signup saved. Your login is ready on this device.
+              </div>
+            ) : null}
+            {submitError ? (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">{submitError}</div>
+            ) : null}
             <div className="space-y-4">
               <div className="transition duration-300 ease-out">
                 {renderStepContent()}
@@ -1534,6 +1604,130 @@
           </form>
         </CardShell>
       </div>
+    );
+  }
+
+  function AccountAccessPanel({
+    account,
+    isLoggedIn,
+    onLogin,
+    onLogout,
+    onEdit,
+    accent,
+    isDark,
+  }) {
+    const [email, setEmail] = useState(account?.email || '');
+    const [password, setPassword] = useState('');
+    const [message, setMessage] = useState('');
+
+    useEffect(() => {
+      setEmail(account?.email || '');
+    }, [account?.email]);
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      setMessage('');
+      const result = onLogin?.({ email, password });
+      if (result?.ok) {
+        setPassword('');
+        setMessage('Logged in. Onboarding is complete on this device.');
+      } else if (result?.message) {
+        setMessage(result.message);
+      } else {
+        setMessage('Login failed. Check your details and try again.');
+      }
+    }
+
+    return (
+      <Card
+        className={classNames(
+          'border p-4 md:p-5',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+        )}
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <div className="text-xs uppercase tracking-[0.2em] opacity-70">Account access</div>
+            <div className="text-lg font-semibold">
+              {isLoggedIn ? 'Logged in on this device' : account ? 'Welcome back' : 'Create your TeslaHelper login'}
+            </div>
+            <p className="text-sm opacity-80 max-w-2xl">
+              Save your onboarding details and reuse them. We keep your login data in this browser so you can sign in quickly.
+            </p>
+            {message ? (
+              <div
+                className={classNames(
+                  'mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm',
+                  message.toLowerCase().includes('fail') || message.toLowerCase().includes('error')
+                    ? isDark
+                      ? 'border-amber-500/50 text-amber-200 bg-amber-500/10'
+                      : 'border-amber-400 text-amber-800 bg-amber-50'
+                    : isDark
+                      ? 'border-emerald-500/40 text-emerald-100 bg-emerald-500/10'
+                      : 'border-emerald-300 text-emerald-800 bg-emerald-50'
+                )}
+              >
+                {message}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {isLoggedIn ? (
+              <Button variant="secondary" size="sm" isDark={isDark} onClick={onLogout}>
+                Log out
+              </Button>
+            ) : null}
+            <Button variant="ghost" size="sm" isDark={isDark} onClick={onEdit}>
+              {isLoggedIn ? 'Update onboarding' : account ? 'Edit onboarding' : 'Start onboarding'}
+            </Button>
+          </div>
+        </div>
+
+        {isLoggedIn ? (
+          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <div className="rounded-lg border border-neutral-200 bg-white/60 p-3 text-neutral-800">
+              <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Email</div>
+              <div className="font-semibold">{account?.email || 'Not set'}</div>
+            </div>
+            <div className="rounded-lg border border-neutral-200 bg-white/60 p-3 text-neutral-800">
+              <div className="text-xs uppercase tracking-[0.2em] text-neutral-500">Onboarding</div>
+              <div className="font-semibold">
+                {account?.onboardedAt ? `Completed ${new Date(account.onboardedAt).toLocaleString()}` : 'Not finished yet'}
+              </div>
+            </div>
+          </div>
+        ) : account ? (
+          <form className="mt-4 grid gap-3 sm:grid-cols-[1.4fr,1.4fr,auto]" onSubmit={handleSubmit}>
+            <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+              Email
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
+              Password
+              <input
+                required
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              />
+            </label>
+            <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="self-end">
+              Log in
+            </Button>
+          </form>
+        ) : (
+          <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+            Complete the onboarding steps below to create your TeslaHelper account and enable login.
+          </div>
+        )}
+      </Card>
     );
   }
 
@@ -2400,6 +2594,7 @@
    * the header, hero, car grid, and library panel.
    * ------------------------------------------------------------------ */
   function TeslaHelperApp() {
+    const initialAccountState = useMemo(() => loadAccountFromStorage(), []);
     const [mode, setMode] = useState(() => {
       if (typeof window === 'undefined') return 'dark';
       const stored = window.localStorage?.getItem('teslahelper-theme');
@@ -2412,7 +2607,12 @@
     const [headerSearch, setHeaderSearch] = useState('');
     const [navMenuOpen, setNavMenuOpen] = useState(false);
     const navMenuRef = useRef(null);
-    const [showOnboarding, setShowOnboarding] = useState(true);
+    const [accountRecord, setAccountRecord] = useState(initialAccountState.account);
+    const [isLoggedIn, setIsLoggedIn] = useState(initialAccountState.loggedIn);
+    const hasCompletedOnboarding = !!accountRecord?.onboardedAt;
+    const [showOnboarding, setShowOnboarding] = useState(
+      () => !(initialAccountState.loggedIn && initialAccountState.account?.onboardedAt)
+    );
     const [showInstallModal, setShowInstallModal] = useState(false);
     const [showTeslaModal, setShowTeslaModal] = useState(false);
     const accent = useMemo(() => ACCENTS[BRAND.defaultAccent] || ACCENTS.violet, []);
@@ -2466,6 +2666,21 @@
         window.localStorage?.setItem('teslahelper-theme', mode);
       }
     }, [mode]);
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+      if (accountRecord) {
+        window.localStorage?.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accountRecord));
+      } else {
+        window.localStorage?.removeItem(ACCOUNT_STORAGE_KEY);
+      }
+    }, [accountRecord]);
+    useEffect(() => {
+      if (isLoggedIn && hasCompletedOnboarding) {
+        setShowOnboarding(false);
+      } else if (!isLoggedIn && !hasCompletedOnboarding) {
+        setShowOnboarding(true);
+      }
+    }, [isLoggedIn, hasCompletedOnboarding]);
     useEffect(() => {
       const onScroll = () => setHeaderCompact(window.scrollY > 12);
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -2552,6 +2767,41 @@
       window.addEventListener('hashchange', handleHashChange);
       return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
+
+    const handleOnboardingComplete = (payload) => {
+      const normalized = {
+        ...payload,
+        email: payload.email?.trim(),
+        loggedIn: true,
+        onboardedAt: payload.onboardedAt || new Date().toISOString(),
+        lastLoginAt: payload.lastLoginAt || new Date().toISOString(),
+      };
+      setAccountRecord(normalized);
+      setIsLoggedIn(true);
+      setShowOnboarding(false);
+    };
+
+    const handleLogin = ({ email, password }) => {
+      const stored = accountRecord || loadAccountFromStorage().account;
+      if (!stored) {
+        return { ok: false, message: 'No signup found yet. Complete onboarding first.' };
+      }
+      const matchesEmail = stored.email?.trim().toLowerCase() === (email || '').trim().toLowerCase();
+      const matchesPassword = stored.password === password;
+      if (matchesEmail && matchesPassword) {
+        const next = { ...stored, loggedIn: true, lastLoginAt: new Date().toISOString() };
+        setAccountRecord(next);
+        setIsLoggedIn(true);
+        setShowOnboarding(false);
+        return { ok: true, account: next };
+      }
+      return { ok: false, message: 'Email or password did not match.' };
+    };
+
+    const handleLogout = () => {
+      setIsLoggedIn(false);
+      setAccountRecord((prev) => (prev ? { ...prev, loggedIn: false } : null));
+    };
 
     const headerStyle = reduceMotion ? {} : { transition: 'background-color 120ms ease' };
     const handleSearchSubmit = (e) => {
@@ -2855,7 +3105,16 @@
                 data, and unlock more control in just a few clicks.
               </p>
             </div>
-            <div className="relative w-full">
+            <div className="relative w-full space-y-4">
+              <AccountAccessPanel
+                account={accountRecord}
+                isLoggedIn={isLoggedIn}
+                onLogin={handleLogin}
+                onLogout={handleLogout}
+                onEdit={() => setShowOnboarding(true)}
+                accent={accent}
+                isDark={isDark}
+              />
               {showOnboarding ? (
                 <div className="space-y-3">
                   <div className="flex justify-end">
@@ -2869,7 +3128,12 @@
                       Hide account sign up
                     </Button>
                   </div>
-                  <OnboardingWizard accent={accent} isDark={isDark} />
+                  <OnboardingWizard
+                    accent={accent}
+                    isDark={isDark}
+                    onComplete={handleOnboardingComplete}
+                    initialData={accountRecord}
+                  />
                 </div>
               ) : (
                 <div className="flex justify-center">

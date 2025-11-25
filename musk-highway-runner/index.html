@@ -199,6 +199,22 @@
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
+    function roundedRect(ctx, x, y, w, h, r) {
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, w, h, r);
+        return;
+      }
+      const rr = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+    }
     const hud = {
       score: document.getElementById('score'),
       distance: document.getElementById('distance'),
@@ -467,7 +483,7 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.45)';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.roundRect(-p.size / 2, -p.size / 2, p.size, p.size, 14);
+      roundedRect(ctx, -p.size / 2, -p.size / 2, p.size, p.size, 14);
       ctx.fill();
       ctx.stroke();
 

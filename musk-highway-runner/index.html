@@ -36,7 +36,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 48px;
+      padding: 18px 16px 56px;
       gap: 16px;
     }
     header { text-align: center; max-width: 960px; }
@@ -73,36 +73,47 @@
       border-radius: 14px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
-    .metric .label { opacity: 0.72; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
-    .metric .value { font-size: 20px; font-weight: 800; margin-top: 4px; letter-spacing: -0.01em; }
-    canvas { width: 100%; display: block; background: var(--road); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+    .metric .label { opacity: 0.72; font-size: clamp(11px, 1.5vw, 13px); letter-spacing: 0.12em; text-transform: uppercase; }
+    .metric .value { font-size: clamp(19px, 3vw, 24px); font-weight: 800; margin-top: 4px; letter-spacing: -0.01em; }
+    canvas {
+      width: 100%;
+      display: block;
+      background: var(--road);
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      touch-action: none;
+    }
     .controls {
       padding: 14px 16px 16px;
       background: rgba(255, 255, 255, 0.02);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       justify-content: center;
-      font-size: 14px;
+      font-size: 15px;
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
     }
     .pill {
       border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 8px 12px;
+      padding: 10px 12px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.03);
       display: inline-flex;
       align-items: center;
       gap: 8px;
       color: var(--text);
+      font-weight: 600;
     }
     button.play, button.pause {
       background: linear-gradient(135deg, var(--accent), var(--accent-soft));
       color: white;
       border: none;
-      padding: 12px 18px;
-      border-radius: 12px;
-      font-size: 15px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 16px;
       font-weight: 700;
       cursor: pointer;
       letter-spacing: 0.02em;
@@ -157,13 +168,26 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       opacity: 0;
+      touch-action: none;
     }
     .touch-bar div { background: transparent; }
-    @media (max-width: 720px) {
-      body { padding: 16px; }
-      .hud { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-      .controls { flex-direction: column; align-items: center; }
-    }
+      @media (max-width: 720px) {
+        body { padding: 14px 12px 60px; }
+        header { text-align: left; }
+        .hud { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+        .controls {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+        }
+        .controls .pill { justify-content: center; }
+        button.play, button.pause { width: 100%; }
+      }
+      @media (max-width: 520px) {
+        .hud { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+        .metric { padding: 12px 10px; }
+        .controls { font-size: 14px; }
+      }
   </style>
 </head>
 <body>
@@ -280,23 +304,29 @@
     const powerTimers = { shield: 0, magnet: 0, turbo: 0 };
     const uiMessages = [];
 
-    function resize() {
-      const isPortrait = window.innerHeight > window.innerWidth;
-      const ratio = isPortrait ? 1 : 16 / 9;
-      let w = Math.min(1180, window.innerWidth - (isPortrait ? 16 : 32));
-      let h = w / ratio;
+      function resize() {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const ratio = isPortrait ? 1 : 16 / 9;
+        let w = Math.min(1180, window.innerWidth - (isPortrait ? 16 : 32));
+        let h = w / ratio;
 
-      const maxHeight = isPortrait ? window.innerHeight * 0.6 : Infinity;
-      if (h > maxHeight) {
-        h = maxHeight;
-        w = h * ratio;
+        const maxHeight = isPortrait ? window.innerHeight * 0.7 : Infinity;
+        if (h > maxHeight) {
+          h = maxHeight;
+          w = h * ratio;
+        }
+
+        const minHeight = isPortrait ? 360 : 400;
+        if (h < minHeight) {
+          h = minHeight;
+          w = h * ratio;
+        }
+
+        canvas.width = w;
+        canvas.height = h;
+        laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;
+        player.y = canvas.height - 140;
       }
-
-      canvas.width = w;
-      canvas.height = h;
-      laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;
-      player.y = canvas.height - 140;
-    }
     resize();
     window.addEventListener('resize', resize);
 
@@ -580,8 +610,18 @@
     });
 
     const touchBar = document.getElementById('touchBar');
-    document.getElementById('touchLeft').addEventListener('touchstart', () => moveLane(-1));
-    document.getElementById('touchRight').addEventListener('touchstart', () => moveLane(1));
+    function bindTouch(id, dir) {
+      document.getElementById(id).addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault();
+          moveLane(dir);
+        },
+        { passive: false }
+      );
+    }
+    bindTouch('touchLeft', -1);
+    bindTouch('touchRight', 1);
 
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);

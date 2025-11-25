@@ -233,7 +233,7 @@
 
     const lanes = 3;
     const roadProfile = { widthTop: 0.25, widthBottom: 0.86, horizon: 0.45 };
-    let laneWidth = canvas.width / lanes;
+    let laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;
 
     const player = {
       lane: 1,
@@ -271,7 +271,7 @@
       const h = w / ratio;
       canvas.width = w;
       canvas.height = h;
-      laneWidth = canvas.width / lanes;
+      laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;
       player.y = canvas.height - 140;
     }
     resize();
@@ -355,6 +355,16 @@
         y += dash + gap;
       }
       ctx.restore();
+    }
+
+    function laneX(lane, y = canvas.height) {
+      const horizon = horizonY();
+      const clampedY = Math.max(horizon, Math.min(y, canvas.height));
+      const t = (clampedY - horizon) / (canvas.height - horizon);
+      const roadWidth = canvas.width * (roadProfile.widthTop + (roadProfile.widthBottom - roadProfile.widthTop) * t);
+      const roadCenter = canvas.width / 2;
+      const laneW = roadWidth / lanes;
+      return roadCenter - roadWidth / 2 + laneW * lane + laneW / 2;
     }
 
     function drawPlayer(delta) {

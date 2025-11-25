@@ -94,6 +94,10 @@
       desc: 'Reference for trademark and brand usage.',
     },
   ];
+  const ADSENSE_CONFIG = {
+    client: 'ca-pub-9665484869013517',
+    homeSlot: (typeof window !== 'undefined' && window.APP_ENV?.adsenseSlotId) || '1234567890',
+  };
   /* ------------------------------------------------------------------
    * Accent color palette
    *
@@ -1174,7 +1178,7 @@
     );
   }
 
-function SectionTitle({ title, subtitle }) {
+  function SectionTitle({ title, subtitle }) {
     return (
       <div className="mb-5 max-w-3xl">
         <h2
@@ -1189,6 +1193,64 @@ function SectionTitle({ title, subtitle }) {
           </p>
         ) : null}
       </div>
+    );
+  }
+
+  function AdsenseSlot({ slotId, isDark }) {
+    useEffect(() => {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (error) {
+        console.warn('TeslaHelper: AdSense failed to initialize', error);
+      }
+    }, []);
+
+    return (
+      <Card
+        className={classNames(
+          'border p-4',
+          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+        )}
+      >
+        <div className="mb-3 flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.08em] opacity-70">
+          <span>Sponsored</span>
+          <span className="font-semibold">Ads keep TeslaHelper free</span>
+        </div>
+        <ins
+          className="adsbygoogle block w-full"
+          style={{ display: 'block', minHeight: '250px' }}
+          data-ad-client={ADSENSE_CONFIG.client}
+          data-ad-slot={slotId}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+        <p className="mt-3 text-xs leading-relaxed opacity-75">
+          Placements follow a familiar inline layout—similar to Yahoo’s feed—to keep the browsing experience comfortable while
+          highlighting relevant offers.
+        </p>
+      </Card>
+    );
+  }
+
+  function AdsenseShowcase({ accent, isDark }) {
+    const secondarySlot =
+      (typeof window !== 'undefined' && window.APP_ENV?.adsenseSidebarSlotId) || ADSENSE_CONFIG.homeSlot;
+
+    return (
+      <section id="sponsored" className="mx-auto max-w-6xl px-4 pb-16" aria-label="Sponsored offers">
+        <SectionTitle
+          title="Sponsored picks for Tesla owners"
+          subtitle="Google AdSense placements appear here, mirroring Yahoo-style inline ads so sponsored content feels native while supporting TeslaHelper."
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <AdsenseSlot slotId={ADSENSE_CONFIG.homeSlot} isDark={isDark} />
+          <AdsenseSlot slotId={secondarySlot} isDark={isDark} />
+        </div>
+        <div className="mt-4 text-xs opacity-70">
+          Ads are limited to this dedicated section so you can browse how-tos and telemetry without distractions.
+          <div className={classNames('mt-3 h-1 w-20 rounded-full', accent.underline)} aria-hidden="true" />
+        </div>
+      </section>
     );
   }
 
@@ -2530,6 +2592,7 @@ function SectionTitle({ title, subtitle }) {
         {/* Models and library */}
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <LibraryPanel accent={accent} isDark={isDark} />
+        <AdsenseShowcase accent={accent} isDark={isDark} />
         <TelemetryAnalyticsSection
           sectionId="my-tesla"
           title="Drive Analytics & Insights"

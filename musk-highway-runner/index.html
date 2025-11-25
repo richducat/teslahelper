@@ -397,7 +397,7 @@
     }
 
     function drawPlayer(delta) {
-      const targetX = laneX(player.targetLane);
+      const targetX = laneX(player.targetLane, player.y);
       player.x += (targetX - player.x) * 0.14;
       player.lane += (player.targetLane - player.lane) * 0.24;
       player.tilt += ((player.targetLane - 1) * 0.4 - player.tilt) * 0.18;
@@ -485,7 +485,7 @@
     }
 
     function drawOpponent(o, time) {
-      const x = laneX(o.lane + Math.sin(time * 0.001 + o.drift) * (o.type === 'swerve' ? 0.2 : 0));
+      const x = laneX(o.lane + Math.sin(time * 0.001 + o.drift) * (o.type === 'swerve' ? 0.2 : 0), o.y);
       ctx.save();
       ctx.translate(x, o.y);
       ctx.fillStyle = 'rgba(255,255,255,0.05)';
@@ -510,7 +510,7 @@
 
     function drawPickup(p, time) {
       const sway = Math.sin(time * 0.004 + p.wobble) * 8;
-      const x = laneX(p.lane) + sway;
+      const x = laneX(p.lane, p.y) + sway;
       ctx.save();
       ctx.translate(x, p.y);
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
@@ -601,7 +601,7 @@
       state.difficulty = 1;
       player.lane = 1;
       player.targetLane = 1;
-      player.x = laneX(1);
+      player.x = laneX(1, player.y);
       powerTimers.shield = powerTimers.magnet = powerTimers.turbo = 0;
       uiMessages.length = 0;
       updateHud();
@@ -628,7 +628,9 @@
     }
 
     function collide(a, b, hitbox = 48) {
-      return Math.abs(laneX(a.lane) - laneX(b.lane)) < laneWidth * 0.44 && Math.abs((a.y || a.yPos) - (b.y || b.yPos)) < hitbox;
+      const aY = a.y ?? a.yPos ?? player.y;
+      const bY = b.y ?? b.yPos ?? player.y;
+      return Math.abs(laneX(a.lane, aY) - laneX(b.lane, bY)) < laneWidth * 0.44 && Math.abs(aY - bY) < hitbox;
     }
 
     function updateHud() {
@@ -702,7 +704,7 @@
       for (const o of obstacles) o.y += o.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1);
       for (const p of pickups) {
         p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1);
-        if (magnetStrength && Math.abs(laneX(p.lane) - player.x) < magnetStrength) {
+        if (magnetStrength && Math.abs(laneX(p.lane, p.y) - player.x) < magnetStrength) {
           p.lane += (player.targetLane - p.lane) * 0.08;
         }
       }
@@ -713,13 +715,13 @@
           obstacles.splice(i, 1);
           if (powerTimers.shield > 0) {
             powerTimers.shield = Math.max(0, powerTimers.shield - 1);
-            emitBurst(laneX(player.targetLane), player.y, '#8ef0ff');
+            emitBurst(laneX(player.targetLane, player.y), player.y, '#8ef0ff');
             addMessage('Shield saved you!', '#8ef0ff');
           } else {
             state.streak = 1;
             state.lives -= 1;
             player.tint = '#ff5c8a';
-            emitBurst(laneX(player.targetLane), player.y, '#ff4fa4');
+            emitBurst(laneX(player.targetLane, player.y), player.y, '#ff4fa4');
             setTimeout(() => (player.tint = '#ff4fa4'), 150);
             if (state.lives <= 0) {
               endGame();
@@ -737,7 +739,7 @@
           if (p.kind === 'score') {
             state.score += p.points * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1);
             state.streak = Math.min(state.streak + 1, 15);
-            emitBurst(laneX(player.targetLane), p.y, p.color);
+            emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
           } else if (p.kind === 'shield') {
             powerTimers.shield = Math.min(6, powerTimers.shield + 3.5);
             addMessage('Shield online', '#8ef0ff');
@@ -785,7 +787,7 @@
 
     drawBackdrop(0);
     drawRoad(0);
-    player.x = laneX(player.lane);
+    player.x = laneX(player.lane, player.y);
     drawPlayer(0);
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.font = '20px Inter';

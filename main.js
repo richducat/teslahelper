@@ -1197,12 +1197,37 @@
   }
 
   function AdsenseSlot({ slotId, isDark }) {
+    const adRef = useRef(null);
+    const [adStatus, setAdStatus] = useState('loading');
+
     useEffect(() => {
+      const adEl = adRef.current;
+      if (!adEl) return undefined;
+
+      const observer = new MutationObserver(() => {
+        const hasIframe = adEl.querySelector('iframe');
+        if (hasIframe) {
+          setAdStatus('ready');
+        }
+      });
+
+      observer.observe(adEl, { childList: true, subtree: true });
+
+      const fallbackTimer = window.setTimeout(() => {
+        setAdStatus((current) => (current === 'ready' ? 'ready' : 'fallback'));
+      }, 2000);
+
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (error) {
         console.warn('TeslaHelper: AdSense failed to initialize', error);
+        setAdStatus('fallback');
       }
+
+      return () => {
+        observer.disconnect();
+        window.clearTimeout(fallbackTimer);
+      };
     }, []);
 
     return (
@@ -1216,14 +1241,48 @@
           <span>Sponsored</span>
           <span className="font-semibold">Ads keep TeslaHelper free</span>
         </div>
-        <ins
-          className="adsbygoogle block w-full"
-          style={{ display: 'block', minHeight: '250px' }}
-          data-ad-client={ADSENSE_CONFIG.client}
-          data-ad-slot={slotId}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
+        <div className="relative">
+          <ins
+            ref={adRef}
+            className="adsbygoogle block w-full overflow-hidden rounded-xl"
+            style={{
+              display: 'block',
+              minHeight: '280px',
+              background: isDark
+                ? 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05), rgba(255,255,255,0)), #0f1115'
+                : 'linear-gradient(180deg, #f9fafb, #f3f4f6)',
+            }}
+            data-ad-client={ADSENSE_CONFIG.client}
+            data-ad-slot={slotId}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+
+          {adStatus === 'fallback' ? (
+            <div
+              className={classNames(
+                'absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center text-xs sm:text-sm',
+                isDark
+                  ? 'bg-neutral-900/70 text-white'
+                  : 'bg-white/85 text-neutral-900'
+              )}
+            >
+              <span className="font-semibold">We couldn’t load this ad placement.</span>
+              <span className="opacity-80">
+                Ads keep TeslaHelper free. If you use an ad blocker, consider allowing our site or grabbing a coffee to support us.
+              </span>
+              <a
+                className={classNames(
+                  'inline-flex items-center gap-1 font-semibold underline underline-offset-4',
+                  isDark ? 'text-emerald-300' : 'text-emerald-600'
+                )}
+                href="https://www.buymeacoffee.com/richardpeng"
+              >
+                Tip the creator →
+              </a>
+            </div>
+          ) : null}
+        </div>
         <p className="mt-3 text-xs leading-relaxed opacity-75">
           Placements follow a familiar inline layout—similar to Yahoo’s feed—to keep the browsing experience comfortable while
           highlighting relevant offers.

@@ -529,11 +529,12 @@
     function spawnOpponent() {
       const lane = Math.floor(Math.random() * lanes);
       const tags = [
-        { label: 'Politician', hue: '#e82127' },
-        { label: 'Legacy OEM', hue: '#ff6b6f' },
-        { label: 'Short Seller', hue: '#67d7ff' },
-        { label: 'Old Media', hue: '#f6c65b' },
-        { label: 'Botnet', hue: '#b5a1ff' },
+        { label: 'Politician', hue: '#e82127', sprite: 'car' },
+        { label: 'Legacy OEM', hue: '#7ad966', sprite: 'dino' },
+        { label: 'Legislation', hue: '#a36b3c', sprite: 'poop' },
+        { label: 'Short Seller', hue: '#67d7ff', sprite: 'car' },
+        { label: 'Old Media', hue: '#f6c65b', sprite: 'car' },
+        { label: 'Botnet', hue: '#b5a1ff', sprite: 'car' },
       ];
       const pick = tags[Math.floor(Math.random() * tags.length)];
       const type = Math.random() > 0.5 ? 'block' : 'swerve';
@@ -546,6 +547,7 @@
         size: 72,
         type,
         drift: Math.random() * 0.6 - 0.3,
+        spriteKey: pick.sprite,
       });
     }
 

@@ -852,692 +852,329 @@
     );
   }
 
-    /* ------------------------------------------------------------------
+  
+
+
+  /* ------------------------------------------------------------------
    * Onboarding wizard
-   *
-   * Interactive, step-by-step onboarding for Tesla owners.
    * ------------------------------------------------------------------ */
-  function OnboardingWizard({ accent, isDark }) {
-    const [formData, setFormData] = useState({
-      ownershipStatus: undefined,
-      primaryModel: '',
-      modelYear: null,
-      usage: [],
-      primaryGoals: [],
-      goalOther: '',
-      hasSharingUse: false,
-      platforms: [],
-      platformOther: '',
-      sharingVehicleCount: undefined,
-      sharingTripsPerWeek: undefined,
-      sharingPainPoint: '',
-      frustrationPrimary: '',
-      frustrationDetail: '',
-      dataComfortLevel: undefined,
-      name: '',
-      email: '',
-      region: '',
-      notes: '',
+  const UTM_STORAGE_KEY = 'teslahelper_utm';
+
+  function captureOnboardingUtm() {
+    if (typeof window === 'undefined') return {};
+    const params = new URLSearchParams(window.location.search || '');
+    const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid'];
+    const captured = {};
+    keys.forEach((k) => {
+      const v = params.get(k);
+      if (v) captured[k] = v;
     });
-    const [currentStepIndex, setCurrentStepIndex] = useState(0);
+    if (Object.keys(captured).length) {
+      try {
+        sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(captured));
+      } catch (e) {
+        // ignore
+      }
+    }
+    return captured;
+  }
+
+  function getStoredOnboardingUtm() {
+    if (typeof window === 'undefined') return {};
+    try {
+      const raw = sessionStorage.getItem(UTM_STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      // ignore
+    }
+    return {};
+  }
+
+  function OnboardingWizard({ accent }) {
+    const stepsTotal = 4;
+    const [step, setStep] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-
-    const steps = useMemo(
-      () => [
-        { id: 'ownership', title: 'Ownership' },
-        { id: 'model', title: 'Model' },
-        { id: 'usage', title: 'Usage' },
-        { id: 'goals', title: 'Goals' },
-        { id: 'rideshare-details', title: 'Rideshare details', shouldShow: (data) => !!data.hasSharingUse },
-        { id: 'rideshare-pain', title: 'Rideshare pain', shouldShow: (data) => !!data.hasSharingUse },
-        { id: 'app-frustration', title: 'Tesla app frustrations', shouldShow: (data) => !data.hasSharingUse },
-        { id: 'data-comfort', title: 'Data comfort' },
-        { id: 'contact', title: 'Contact' },
-      ],
-      []
-    );
-
-    const visibleSteps = steps.filter((step) => (step.shouldShow ? step.shouldShow(formData) : true));
-    const currentStep = visibleSteps[currentStepIndex];
-    const completion = Math.round(((currentStepIndex + 1) / visibleSteps.length) * 100);
-
-    const toggleValue = (list, value) => (list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
+    const [storedUtm, setStoredUtm] = useState({});
+    const [formState, setFormState] = useState({
+      model: '',
+      delivery: '',
+      focus: [],
+      email: '',
+      zip: '',
+    });
+    const progress = Math.round(((step + 1) / stepsTotal) * 100);
 
     useEffect(() => {
-      const nextSteps = steps.filter((step) => (step.shouldShow ? step.shouldShow(formData) : true));
-      if (currentStepIndex >= nextSteps.length) {
-        setCurrentStepIndex(Math.max(0, nextSteps.length - 1));
-      }
-    }, [formData.hasSharingUse, currentStepIndex, steps]);
+      const captured = captureOnboardingUtm();
+      const existing = getStoredOnboardingUtm();
+      setStoredUtm(Object.keys(captured).length ? captured : existing);
+    }, []);
 
-    function updateData(patch) {
-      setFormData((prev) => ({ ...prev, ...patch }));
-    }
-
-    function handleUsageToggle(value) {
-      setFormData((prev) => {
-        const nextUsage = toggleValue(prev.usage, value);
-        const hasSharingUse = nextUsage.includes('rideshare') || nextUsage.includes('turo');
-        return { ...prev, usage: nextUsage, hasSharingUse };
+    const toggleFocus = (value) => {
+      setFormState((prev) => {
+        const exists = prev.focus.includes(value);
+        const focus = exists ? prev.focus.filter((f) => f !== value) : [...prev.focus, value];
+        return { ...prev, focus };
       });
-    }
+    };
 
-    function handleGoalsToggle(value) {
-      setFormData((prev) => ({ ...prev, primaryGoals: toggleValue(prev.primaryGoals, value) }));
-    }
+    const handleSelect = (field, value) => setFormState((prev) => ({ ...prev, [field]: value }));
+    const handleInput = (e) => {
+      const { name, value } = e.target;
+      setFormState((prev) => ({ ...prev, [name]: value }));
+    };
 
-    function handlePlatformsToggle(value) {
-      setFormData((prev) => ({ ...prev, platforms: toggleValue(prev.platforms, value) }));
-    }
+    const isEmailValid = /.+@.+\..+/.test(formState.email);
+    const canContinue = () => {
+      if (step === 0) return Boolean(formState.model);
+      if (step === 1) return Boolean(formState.delivery);
+      if (step === 2) return formState.focus.length > 0;
+      return isEmailValid;
+    };
 
-    function isStepValid(stepId) {
-      switch (stepId) {
-        case 'ownership':
-          return !!formData.ownershipStatus;
-        case 'model':
-          return !!formData.primaryModel;
-        case 'usage':
-          return formData.usage.length > 0;
-        case 'goals':
-          if (formData.primaryGoals.includes('other')) {
-            return !!formData.goalOther?.trim();
-          }
-          return formData.primaryGoals.length > 0;
-        case 'rideshare-details':
-          if (formData.platforms.includes('other') && !formData.platformOther.trim()) return false;
-          return formData.platforms.length > 0 && !!formData.sharingVehicleCount && !!formData.sharingTripsPerWeek;
-        case 'rideshare-pain':
-          return !!formData.sharingPainPoint?.trim();
-        case 'app-frustration':
-          if (formData.frustrationPrimary === 'other') {
-            return !!formData.frustrationDetail?.trim();
-          }
-          return !!formData.frustrationPrimary;
-        case 'data-comfort':
-          return !!formData.dataComfortLevel;
-        case 'contact':
-          return !!formData.email?.trim();
-        default:
-          return true;
+    const handleSubmit = () => {
+      setSubmitting(true);
+      const payload = {
+        model: formState.model,
+        delivery: formState.delivery,
+        focus: formState.focus.join(', '),
+        zip: formState.zip,
+        utm_source: storedUtm.utm_source || 'direct',
+        surface: 'app_onboarding',
+      };
+      if (window.plausible) window.plausible('lead', { props: payload });
+      if (window.fbq) window.fbq('track', 'Lead');
+      if (window.gtag && window.APP_ENV?.googleAdsId) {
+        window.gtag('event', 'conversion', { send_to: window.APP_ENV.googleAdsId });
       }
-    }
-
-    function handleSubmit(e) {
-      e.preventDefault();
       setSubmitted(true);
-    }
+      setTimeout(() => {
+        window.location.href = '/kit';
+      }, 450);
+    };
 
-    function goNext() {
-      if (!currentStep || !isStepValid(currentStep.id)) return;
-      if (currentStepIndex < visibleSteps.length - 1) {
-        setCurrentStepIndex((prev) => prev + 1);
-      }
-    }
-
-    function goBack() {
-      setCurrentStepIndex((prev) => Math.max(0, prev - 1));
-    }
-
-    const cardBase =
-      'flex items-center gap-3 rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left transition duration-200 hover:border-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/10 focus-visible:border-neutral-900';
-
-    const StepShell = ({ children }) => (
-      <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white px-4 py-5 shadow-[0_18px_50px_-40px_rgba(0,0,0,0.55)] transition-all duration-200 sm:px-6">
-        {children}
-      </div>
-    );
-
-    const MultiCardGrid = ({ children }) => <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{children}</div>;
-
-    const StepHeader = ({ title, subtitle }) => (
-      <div className="space-y-1">
-        <h4 className="text-lg font-semibold text-neutral-900 tracking-tight">{title}</h4>
-        {subtitle ? <p className="text-sm text-neutral-600 leading-relaxed">{subtitle}</p> : null}
-      </div>
-    );
-
-    const ProgressPill = () => (
-      <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-        <span className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">
-          Step {currentStepIndex + 1} of {visibleSteps.length}
-        </span>
-        <span className="text-neutral-900 font-semibold">{completion}%</span>
-      </div>
-    );
-
-    const CardShell = ({ children }) => (
-      <Card
-        className={classNames(
-          'relative overflow-hidden rounded-2xl border border-neutral-200 bg-white px-6 py-7 shadow-[0_28px_70px_-40px_rgba(0,0,0,0.6)]',
-          isDark ? 'text-neutral-900' : 'text-neutral-900'
-        )}
-      >
-        <div className="relative" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>
-          {children}
-        </div>
-      </Card>
-    );
-
-    const renderStepContent = () => {
-      switch (currentStep?.id) {
-        case 'ownership':
-          return (
-            <StepShell>
-              <StepHeader title="Do you already own a Tesla?" />
-              <MultiCardGrid>
-                {[
-                  { id: 'owner', label: 'Yes, I already own a Tesla' },
-                  { id: 'on_order', label: 'My Tesla is on order' },
-                  { id: 'exploring', label: 'I’m just exploring for now' },
-                ].map((option) => {
-                  const active = formData.ownershipStatus === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => updateData({ ownershipStatus: option.id })}
-                      className={classNames(
-                        cardBase,
-                        active
-                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                          : 'border-neutral-300 bg-white hover:border-neutral-400'
-                      )}
-                      aria-pressed={active}
-                    >
-                      <span className="text-xl" aria-hidden="true">
-                        {option.id === 'owner' ? '🚗' : option.id === 'on_order' ? '📦' : '🧭'}
-                      </span>
-                      <div className="text-sm font-semibold leading-tight">{option.label}</div>
-                    </button>
-                  );
-                })}
-              </MultiCardGrid>
-            </StepShell>
-          );
-        case 'model':
-          return (
-            <StepShell>
-              <StepHeader title="Which Tesla do you drive most?" />
-              <div className="grid gap-3 md:grid-cols-[2fr,1fr]">
-                <MultiCardGrid>
-                  {['Model 3', 'Model Y', 'Model S', 'Model X', 'Cybertruck', 'More than one / fleet'].map((model) => {
-                    const active = formData.primaryModel === model;
-                    return (
-                      <button
-                        key={model}
-                        type="button"
-                        onClick={() => updateData({ primaryModel: model })}
-                        className={classNames(
-                          cardBase,
-                          'justify-between',
-                          active
-                            ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                            : 'border-neutral-300 bg-white hover:border-neutral-400'
-                        )}
-                        aria-pressed={active}
-                      >
-                        <span className="text-sm font-semibold">{model}</span>
-                        {active ? (
-                          <span className="rounded-full bg-neutral-900 px-2.5 py-1 text-[11px] font-semibold text-white">Selected</span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </MultiCardGrid>
-                <div className="space-y-2 rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                  <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                    Model year (optional)
-                    <input
-                      type="number"
-                      min="2012"
-                      max={new Date().getFullYear() + 1}
-                      value={formData.modelYear ?? ''}
-                      onChange={(e) => updateData({ modelYear: e.target.value ? Number(e.target.value) : null })}
-                      className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                    />
-                  </label>
-                </div>
-              </div>
-            </StepShell>
-          );
-        case 'usage':
-          return (
-            <StepShell>
-              <StepHeader title="How do you mainly use your Tesla?" subtitle="Pick all that apply." />
-              <MultiCardGrid>
-                {[
-                  { id: 'commute', label: 'Daily commuting' },
-                  { id: 'roadtrips', label: 'Road trips' },
-                  { id: 'rideshare', label: 'Rideshare driving (Uber, Lyft, etc.)' },
-                  { id: 'turo', label: 'Renting on Turo or similar' },
-                  { id: 'business', label: 'Business / fleet use' },
-                  { id: 'fun', label: 'Just for fun' },
-                ].map((option) => {
-                  const active = formData.usage.includes(option.id);
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => handleUsageToggle(option.id)}
-                      className={classNames(
-                        cardBase,
-                        active
-                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                          : 'border-neutral-300 bg-white hover:border-neutral-400'
-                      )}
-                      aria-pressed={active}
-                    >
-                      <div className="text-sm font-semibold leading-tight">{option.label}</div>
-                        <span
-                          className={classNames(
-                            'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold',
-                            active ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600'
-                          )}
-                        >
-                          {active ? 'Selected' : 'Tap to select'}
-                        </span>
-                    </button>
-                  );
-                })}
-              </MultiCardGrid>
-            </StepShell>
-          );
-        case 'goals':
-          return (
-            <StepShell>
-              <StepHeader title="What would you like TeslaHelper to help with first?" />
-              <div className="space-y-3">
-                <MultiCardGrid>
-                  {[
-                    { id: 'analytics', label: 'Deep drive analytics & efficiency insights' },
-                    { id: 'widgets', label: 'Better remote control & widgets' },
-                    { id: 'rental', label: 'Rental & sharing automation' },
-                    { id: 'costs', label: 'Tracking costs & charging expenses' },
-                    { id: 'custom', label: 'Custom layouts, themes & icons' },
-                    { id: 'other', label: 'Something else' },
-                  ].map((option) => {
-                    const active = formData.primaryGoals.includes(option.id);
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => handleGoalsToggle(option.id)}
-                        className={classNames(
-                          cardBase,
-                          active
-                            ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                            : 'border-neutral-300 bg-white hover:border-neutral-400'
-                        )}
-                        aria-pressed={active}
-                      >
-                        <span className="text-sm font-semibold leading-tight">{option.label}</span>
-                        {active ? <span className="rounded-full bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white">Added</span> : null}
-                      </button>
-                    );
-                  })}
-                </MultiCardGrid>
-                {formData.primaryGoals.includes('other') ? (
-                  <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                    <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                      Tell us more
-                      <input
-                        type="text"
-                        value={formData.goalOther}
-                        onChange={(e) => updateData({ goalOther: e.target.value })}
-                        className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                      />
-                    </label>
-                  </div>
-                ) : null}
-              </div>
-            </StepShell>
-          );
-        case 'rideshare-details':
-          return (
-            <StepShell>
-              <StepHeader title="Tell us about your rideshare / rental use." />
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-semibold text-neutral-800">Platforms</div>
-                  <MultiCardGrid>
-                    {[
-                      { id: 'uber', label: 'Uber' },
-                      { id: 'lyft', label: 'Lyft' },
-                      { id: 'turo', label: 'Turo' },
-                      { id: 'other', label: 'Other' },
-                    ].map((option) => {
-                      const active = formData.platforms.includes(option.id);
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          onClick={() => handlePlatformsToggle(option.id)}
-                          className={classNames(
-                            cardBase,
-                            active
-                              ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                              : 'border-neutral-300 bg-white hover:border-neutral-400'
-                          )}
-                          aria-pressed={active}
-                        >
-                          <span className="text-sm font-semibold">{option.label}</span>
-                            {active ? <span className="rounded-full bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white">Added</span> : null}
-                        </button>
-                      );
-                    })}
-                  </MultiCardGrid>
-                  {formData.platforms.includes('other') ? (
-                    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                      <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                        Platform name
-                        <input
-                          type="text"
-                          value={formData.platformOther}
-                          onChange={(e) => updateData({ platformOther: e.target.value })}
-                          className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                        />
-                      </label>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  {[
-                    {
-                      id: 'sharingVehicleCount',
-                      label: 'Vehicle count',
-                      options: [
-                        { value: '1', label: '1' },
-                        { value: '2-3', label: '2–3' },
-                        { value: '4+', label: '4+' },
-                      ],
-                    },
-                    {
-                      id: 'sharingTripsPerWeek',
-                      label: 'Trips per week',
-                      options: [
-                        { value: '0-5', label: '0–5' },
-                        { value: '6-15', label: '6–15' },
-                        { value: '16+', label: '16+' },
-                      ],
-                    },
-                  ].map((group) => (
-                    <div key={group.id} className="space-y-2 rounded-2xl border border-neutral-200 bg-white p-4">
-                      <div className="text-sm font-semibold text-neutral-800">{group.label}</div>
-                      <div className="flex flex-wrap gap-2">
-                        {group.options.map((option) => {
-                          const active = formData[group.id] === option.value;
-                          return (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() => updateData({ [group.id]: option.value })}
-                              className={classNames(
-                                'rounded-lg border px-3.5 py-2.5 text-sm font-semibold transition',
-                                active
-                                  ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                                  : 'border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400'
-                              )}
-                              aria-pressed={active}
-                            >
-                              {option.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </StepShell>
-          );
-        case 'rideshare-pain':
-          return (
-            <StepShell>
-              <StepHeader title="What’s your biggest headache managing your Tesla for rideshare or rentals?" />
-              <textarea
-                rows={4}
-                value={formData.sharingPainPoint}
-                onChange={(e) => updateData({ sharingPainPoint: e.target.value })}
-                className="w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                placeholder="Scheduling, driver access, cleaning, pricing…"
-              />
-            </StepShell>
-          );
-        case 'app-frustration':
-          return (
-            <StepShell>
-              <StepHeader title="What frustrates you most about the Tesla app today?" />
-              <div className="space-y-2">
-                {[
-                  { id: 'data', label: 'Not enough data / analytics' },
-                  { id: 'widgets', label: 'Can’t customize layout or widgets' },
-                  { id: 'multi', label: 'Hard to manage multiple vehicles' },
-                  { id: 'sharing', label: 'No tools for sharing or rentals' },
-                  { id: 'other', label: 'Other (tell us more)' },
-                ].map((option) => {
-                  const active = formData.frustrationPrimary === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => updateData({ frustrationPrimary: option.id })}
-                      className={classNames(
-                        cardBase,
-                        active
-                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                          : 'border-neutral-300 bg-white hover:border-neutral-400'
-                      )}
-                      aria-pressed={active}
-                    >
-                      <span className="text-sm font-semibold leading-tight">{option.label}</span>
-                        {active ? <span className="rounded-full bg-neutral-900 px-2 py-1 text-[11px] font-semibold text-white">Selected</span> : null}
-                    </button>
-                  );
-                })}
-              </div>
-              {formData.frustrationPrimary === 'other' ? (
-                <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-                  <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                    Tell us more
-                    <input
-                      type="text"
-                      value={formData.frustrationDetail}
-                      onChange={(e) => updateData({ frustrationDetail: e.target.value })}
-                      className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                    />
-                  </label>
-                </div>
-              ) : null}
-            </StepShell>
-          );
-        case 'data-comfort':
-          return (
-            <StepShell>
-              <StepHeader title="How detailed do you like your data?" />
-              <div className="grid gap-3 sm:grid-cols-3">
-                {[
-                  { id: 'simple', label: 'Keep it simple' },
-                  { id: 'balanced', label: 'Balanced – some detail, not too much' },
-                  { id: 'power', label: 'I’m a data nerd – show me everything' },
-                ].map((option) => {
-                  const active = formData.dataComfortLevel === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => updateData({ dataComfortLevel: option.id })}
-                      className={classNames(
-                        cardBase,
-                        'items-start',
-                        active
-                          ? 'border-neutral-900 bg-neutral-50 text-neutral-900 shadow-sm'
-                          : 'border-neutral-300 bg-white hover:border-neutral-400'
-                      )}
-                      aria-pressed={active}
-                    >
-                      <div className="space-y-1 text-sm font-semibold leading-tight">
-                        <div>{option.label}</div>
-                        <div className="text-xs font-normal text-neutral-600">
-                          {option.id === 'simple'
-                            ? 'Quick summaries with just the essentials.'
-                            : option.id === 'balanced'
-                              ? 'A healthy mix of highlights and detail.'
-                              : 'Full analytics, alerts, and granular data.'}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </StepShell>
-          );
-        case 'contact':
-          return (
-            <StepShell>
-              <StepHeader title="Where should we send your setup link?" />
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[
-                  { label: 'Name (optional)', field: 'name', type: 'text', placeholder: 'Ada Lovelace' },
-                  { label: 'Email', field: 'email', type: 'email', placeholder: 'ada@teslahelper.app' },
-                ].map((input) => (
-                  <label key={input.field} className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                    {input.label}
-                    <input
-                      required={input.field === 'email'}
-                      type={input.type}
-                      value={formData[input.field]}
-                      onChange={(e) => updateData({ [input.field]: e.target.value })}
-                      placeholder={input.placeholder}
-                      className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                    />
-                  </label>
-                ))}
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                  State / Region
-                  <select
-                    value={formData.region}
-                    onChange={(e) => updateData({ region: e.target.value })}
-                    className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                  >
-                    <option value="">Select</option>
-                    {[
-                      'AL',
-                      'AZ',
-                      'CA',
-                      'CO',
-                      'FL',
-                      'GA',
-                      'IL',
-                      'MA',
-                      'MI',
-                      'NY',
-                      'NC',
-                      'OH',
-                      'PA',
-                      'TX',
-                      'WA',
-                      'Other',
-                    ].map((region) => (
-                      <option key={region} value={region}>
-                        {region}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1 text-sm font-semibold text-neutral-800">
-                  Notes (optional)
-                  <textarea
-                    rows={3}
-                    value={formData.notes}
-                    onChange={(e) => updateData({ notes: e.target.value })}
-                    className="w-full rounded-lg border border-neutral-300 bg-white px-3.5 py-2.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-                    placeholder="Anything else you want us to know?"
-                  />
-                </label>
-              </div>
-            </StepShell>
-          );
-        default:
-          return null;
+    const handleNext = (e) => {
+      e.preventDefault();
+      if (!canContinue()) return;
+      if (step >= stepsTotal - 1) {
+        handleSubmit();
+      } else {
+        setStep((s) => Math.min(s + 1, stepsTotal - 1));
       }
     };
 
+    const primaryButtonClasses = classNames(
+      'inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+      accent?.btn || 'bg-violet-500',
+      accent?.hover || 'hover:bg-violet-600'
+    );
+
+    const secondaryButtonClasses =
+      'inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+
     return (
-      <div id="onboarding">
-        <CardShell>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">Tesla owners</div>
-                <h3 className="text-xl font-semibold leading-tight tracking-tight text-neutral-900 sm:text-2xl">TeslaHelper Onboarding</h3>
+      <div
+        id="onboarding"
+        className="relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/95 text-white shadow-2xl backdrop-blur"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black opacity-90" aria-hidden="true" />
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true" />
+        <form onSubmit={handleNext} className="relative space-y-6 p-6 sm:p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">
+                Step {step + 1} of {stepsTotal}
+              </p>
+              <h3 className="mt-1 text-2xl font-bold leading-tight">
+                {step === 0
+                  ? 'Which Tesla are you setting up?'
+                  : step === 1
+                    ? 'When did you receive it?'
+                    : step === 2
+                      ? 'What do you need help with?'
+                      : 'Where should we send the quick-start?'}
+              </h3>
+            </div>
+            <div className="flex flex-col items-end gap-2 text-xs font-semibold text-white/70">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                Secure & spam-free
               </div>
-              <div className="flex flex-col items-end gap-2 text-xs font-semibold text-neutral-700">
-                <ProgressPill />
-                <div className="relative h-1.5 w-52 overflow-hidden rounded-full bg-neutral-200">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-neutral-900"
-                    style={{ width: `${completion}%` }}
-                  />
-                </div>
+              <div className="relative h-1.5 w-40 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 via-blue-400 to-violet-500"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
-            <div className="space-y-4">
-              <div className="transition duration-300 ease-out">
-                {renderStepContent()}
-              </div>
+          </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={goBack}
-                  disabled={currentStepIndex === 0}
-                  className={classNames(
-                    'inline-flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition',
-                    currentStepIndex === 0
-                      ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
-                      : 'border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400'
-                  )}
-                >
-                  ← Back
-                </button>
-                {currentStepIndex < visibleSteps.length - 1 ? (
+          <div className="h-2 rounded-full bg-white/5">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-blue-400 to-violet-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <div className="space-y-4">
+            {step === 0 && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Model Y', 'Model 3', 'Model X', 'Model S', 'Cybertruck'].map((model) => (
                   <button
+                    key={model}
                     type="button"
-                    onClick={goNext}
-                    disabled={!isStepValid(currentStep.id)}
+                    onClick={() => handleSelect('model', model)}
                     className={classNames(
-                      'inline-flex items-center gap-2 rounded-lg bg-neutral-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900/15',
-                      !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
+                      'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                      formState.model === model
+                        ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
+                        : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
                     )}
                   >
-                    Next step
-                    <span aria-hidden="true">→</span>
+                    <span className="font-semibold">{model}</span>
+                    {formState.model === model ? <span aria-hidden="true">✓</span> : <span aria-hidden="true">→</span>}
                   </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={!isStepValid(currentStep.id)}
-                    className={classNames(
-                      'inline-flex items-center gap-2 rounded-lg bg-neutral-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900/15',
-                      !isStepValid(currentStep.id) ? 'opacity-60 cursor-not-allowed' : ''
-                    )}
-                  >
-                    {submitted ? 'Invite sent' : 'Send my onboarding link'}
-                    <span aria-hidden="true">→</span>
-                  </button>
+                ))}
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Ordered / Waiting', 'Delivered in the last 30 days', 'Delivered 1-6 months ago', 'Delivered 6+ months ago'].map(
+                  (windowLabel) => (
+                    <button
+                      key={windowLabel}
+                      type="button"
+                      onClick={() => handleSelect('delivery', windowLabel)}
+                      className={classNames(
+                        'rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                        formState.delivery === windowLabel
+                          ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
+                          : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                      )}
+                    >
+                      <div className="font-semibold">{windowLabel}</div>
+                      <p className="text-xs text-white/70">We tailor checklists to your delivery stage.</p>
+                    </button>
+                  )
                 )}
               </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-3">
+                <p className="text-sm text-white/70">Pick all that apply.</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    { label: 'Charging setup + rebates', value: 'charging' },
+                    { label: 'FSD (Supervised) basics', value: 'fsd' },
+                    { label: 'Day-one safety + settings', value: 'safety' },
+                    { label: 'Accessories + coupons', value: 'accessories' },
+                  ].map((item) => {
+                    const active = formState.focus.includes(item.value);
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => toggleFocus(item.value)}
+                        className={classNames(
+                          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                          active
+                            ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
+                            : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                        )}
+                      >
+                        <span className="text-lg">{active ? '✔' : '+'}</span>
+                        <span className="font-semibold">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                <div className="grid gap-3">
+                  <label className="text-sm font-semibold" htmlFor="email">
+                    Email for your quick-start + Starter Kit offer
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    value={formState.email}
+                    onChange={handleInput}
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <label className="text-sm font-semibold" htmlFor="zip">
+                    ZIP (optional for utility rebate guidance)
+                  </label>
+                  <input
+                    id="zip"
+                    name="zip"
+                    inputMode="numeric"
+                    value={formState.zip}
+                    onChange={handleInput}
+                    placeholder="94103"
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                  />
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+                  <div className="font-semibold text-white">What you get next</div>
+                  <ul className="mt-2 list-inside list-disc space-y-1">
+                    <li>Email quick-start tailored to {formState.model || 'your Tesla'}.</li>
+                    <li>One-time Starter Kit offer with 30-day guarantee.</li>
+                    <li>Optional charging mini-course upsell.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              disabled={step === 0 || submitting}
+              className={classNames(
+                secondaryButtonClasses,
+                'h-11 px-4',
+                step === 0 ? 'opacity-60 cursor-not-allowed' : ''
+              )}
+            >
+              Back
+            </button>
+            <div className="flex-1" />
+            <button
+              type="submit"
+              disabled={!canContinue() || submitting}
+              className={classNames(primaryButtonClasses, 'px-5', !canContinue() || submitting ? 'opacity-60 cursor-not-allowed' : '')}
+            >
+              {submitting ? 'Sending...' : step >= stepsTotal - 1 ? 'Get my quick-start' : 'Continue'}
+            </button>
+          </div>
+
+          {submitted && (
+            <div className="rounded-2xl border border-emerald-300/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+              Thanks! Redirecting you to the Starter Kit...
             </div>
-          </form>
-        </CardShell>
+          )}
+
+          <div className="text-xs text-white/60">
+            Protected by TeslaHelper · No spam. UTM captured: {Object.keys(storedUtm).length ? 'yes' : 'none'}.
+          </div>
+        </form>
       </div>
     );
   }
 
-  function SectionTitle({ title, subtitle }) {
+function SectionTitle({ title, subtitle }) {
     return (
       <div className="mb-5 max-w-3xl">
         <h2

@@ -216,6 +216,7 @@
     const pauseBtn = document.getElementById('pauseBtn');
 
     const lanes = 3;
+    const roadProfile = { widthTop: 0.25, widthBottom: 0.86, horizon: 0.45 };
     let laneWidth = canvas.width / lanes;
 
     const player = {
@@ -260,8 +261,8 @@
     resize();
     window.addEventListener('resize', resize);
 
-    function laneX(lane) {
-      return lane * laneWidth + laneWidth / 2;
+    function horizonY() {
+      return canvas.height * roadProfile.horizon;
     }
 
     function drawBackdrop(time) {
@@ -441,7 +442,7 @@
       ctx.strokeStyle = o.hue;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.roundRect(-o.size / 2, -o.size / 2, o.size, o.size, 18);
+      ctx.roundRect(-size / 2, -size / 2, size, size, 18);
       ctx.fill();
       ctx.stroke();
 

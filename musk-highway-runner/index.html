@@ -376,13 +376,13 @@
       ctx.strokeStyle = player.tint;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.roundRect(-48, -28, 96, 56, 18);
+      roundedRect(ctx, -48, -28, 96, 56, 18);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = '#0f1220';
       ctx.beginPath();
-      ctx.roundRect(-34, -20, 68, 40, 12);
+      roundedRect(ctx, -34, -20, 68, 40, 12);
       ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.12)';
       ctx.stroke();
@@ -458,7 +458,7 @@
       ctx.strokeStyle = o.hue;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.roundRect(-size / 2, -size / 2, size, size, 18);
+      roundedRect(ctx, -o.size / 2, -o.size / 2, o.size, o.size, 18);
       ctx.fill();
       ctx.stroke();
 

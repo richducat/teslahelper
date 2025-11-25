@@ -266,9 +266,17 @@
     const uiMessages = [];
 
     function resize() {
-      const ratio = 16 / 9;
-      const w = Math.min(1180, window.innerWidth - 32);
-      const h = w / ratio;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const ratio = isPortrait ? 1 : 16 / 9;
+      let w = Math.min(1180, window.innerWidth - (isPortrait ? 16 : 32));
+      let h = w / ratio;
+
+      const maxHeight = isPortrait ? window.innerHeight * 0.6 : Infinity;
+      if (h > maxHeight) {
+        h = maxHeight;
+        w = h * ratio;
+      }
+
       canvas.width = w;
       canvas.height = h;
       laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;

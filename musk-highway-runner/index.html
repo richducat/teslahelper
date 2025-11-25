@@ -12,19 +12,24 @@
     :root {
       color-scheme: dark;
       --bg: #05060c;
-      --road: #0f111a;
-      --lane: #171a26;
-      --accent: #ff4fa4;
-      --good: #32d399;
-      --warn: #f3b83b;
-      --text: #f5f7ff;
+      --bg-soft: rgba(255, 255, 255, 0.02);
+      --road: #0c0f18;
+      --lane: #131726;
+      --accent: #e82127;
+      --accent-soft: #ff6b6f;
+      --good: #2de8b5;
+      --warn: #f6c65b;
+      --text: #eef2ff;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at 20% 20%, rgba(230,57,142,0.16), transparent 30%),
-        radial-gradient(circle at 80% 10%, rgba(50,211,153,0.16), transparent 25%),
+      background:
+        radial-gradient(circle at 20% 20%, rgba(232, 33, 39, 0.14), transparent 28%),
+        radial-gradient(circle at 80% 18%, rgba(76, 111, 255, 0.12), transparent 32%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 30%, transparent 32%),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0%, transparent 12%),
         var(--bg);
       color: var(--text);
       font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -35,34 +40,42 @@
       gap: 16px;
     }
     header { text-align: center; max-width: 960px; }
-    h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.02em; }
-    p.lede { margin: 0; opacity: 0.86; }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 4vw, 40px);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    p.lede { margin: 0; opacity: 0.86; line-height: 1.6; }
     .card {
       width: min(1100px, 100%);
-      background: rgba(15, 17, 26, 0.82);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      background: rgba(9, 11, 19, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
       border-radius: 20px;
       overflow: hidden;
+      backdrop-filter: blur(12px);
     }
     .hud {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
       padding: 16px;
-      background: rgba(0, 0, 0, 0.38);
+      background: rgba(255, 255, 255, 0.02);
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
     }
     .metric {
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
+      padding: 14px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
-    .metric .label { opacity: 0.7; font-size: 12px; letter-spacing: 0.03em; }
-    .metric .value { font-size: 18px; font-weight: 700; margin-top: 2px; }
-    canvas { width: 100%; display: block; background: var(--road); }
+    .metric .label { opacity: 0.72; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+    .metric .value { font-size: 20px; font-weight: 800; margin-top: 4px; letter-spacing: -0.01em; }
+    canvas { width: 100%; display: block; background: var(--road); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
     .controls {
       padding: 14px 16px 16px;
       background: rgba(255, 255, 255, 0.02);
@@ -74,17 +87,17 @@
       font-size: 14px;
     }
     .pill {
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.03);
       display: inline-flex;
       align-items: center;
       gap: 8px;
       color: var(--text);
     }
     button.play, button.pause {
-      background: linear-gradient(135deg, #e6398e, #4c6fff);
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
       color: white;
       border: none;
       padding: 12px 18px;
@@ -92,7 +105,8 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 10px 30px rgba(76, 111, 255, 0.35);
+      letter-spacing: 0.02em;
+      box-shadow: 0 10px 30px rgba(232, 33, 39, 0.35);
     }
     button.play:active, button.pause:active { transform: translateY(1px); }
     .powerups {
@@ -104,8 +118,8 @@
     .chip {
       padding: 6px 10px;
       border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       font-size: 12px;
       display: inline-flex;
       align-items: center;
@@ -117,7 +131,7 @@
       inset: 0;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at 50% 20%, rgba(76,111,255,0.08), rgba(5,6,12,0.84));
+      background: radial-gradient(circle at 50% 20%, rgba(232,33,39,0.1), rgba(5,6,12,0.9));
       color: #fff;
       text-align: center;
       padding: 24px;
@@ -127,12 +141,13 @@
     }
     .overlay.visible { opacity: 1; pointer-events: all; }
     .overlay .panel {
-      background: rgba(12,14,24,0.88);
-      padding: 20px 24px;
+      background: rgba(7, 9, 15, 0.9);
+      padding: 22px 26px;
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
       max-width: 520px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+      box-shadow: 0 20px 44px rgba(0,0,0,0.4);
+      backdrop-filter: blur(14px);
     }
     .overlay h2 { margin: 0 0 12px; }
     .overlay p { margin: 0 0 16px; opacity: 0.9; }
@@ -241,7 +256,7 @@
       x: 0,
       y: canvas.height - 140,
       size: 62,
-      tint: '#ff4fa4',
+      tint: '#e82127',
       tilt: 0,
     };
 
@@ -291,17 +306,22 @@
 
     function drawBackdrop(time) {
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#0d1226');
-      gradient.addColorStop(0.45, '#0a0d18');
+      gradient.addColorStop(0, '#0f1629');
+      gradient.addColorStop(0.4, '#0b0f1d');
       gradient.addColorStop(1, '#05060c');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
-      for (let i = 0; i < 14; i++) {
-        const x = ((i * 180 + time * 0.08) % (canvas.width + 120)) - 120;
-        const y = 100 + Math.sin((x + time * 0.05) * 0.02) * 12;
-        ctx.fillRect(x, y, 90, 4);
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      const spacing = 120;
+      for (let i = -1; i < canvas.width / spacing + 2; i++) {
+        const x = ((i * spacing + time * 0.06) % (canvas.width + spacing)) - spacing;
+        const y = 110 + Math.sin((x + time * 0.05) * 0.03) * 14;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 90, y - 22);
+        ctx.stroke();
       }
 
       const hillGrad = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
@@ -330,13 +350,14 @@
       ctx.lineTo((canvas.width - roadWidthBottom) / 2, canvas.height);
       ctx.closePath();
       const roadGrad = ctx.createLinearGradient(0, horizon, 0, canvas.height);
-      roadGrad.addColorStop(0, '#131726');
-      roadGrad.addColorStop(1, '#0b0d16');
+      roadGrad.addColorStop(0, '#151a2b');
+      roadGrad.addColorStop(0.55, '#0f1321');
+      roadGrad.addColorStop(1, '#080a12');
       ctx.fillStyle = roadGrad;
       ctx.fill();
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1.5;
       for (let i = 1; i < lanes; i++) {
         const t = i / lanes;
         const top = (canvas.width - roadWidthTop) / 2 + roadWidthTop * t;
@@ -347,9 +368,9 @@
         ctx.stroke();
       }
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.strokeStyle = 'rgba(232,33,39,0.8)';
       ctx.lineWidth = 5;
-      const dash = 28, gap = 22;
+      const dash = 24, gap = 20;
       let y = (time * 0.6) % (dash + gap) * -1;
       while (y < canvas.height) {
         const lerp = (a, b, t) => a + (b - a) * t;
@@ -422,11 +443,11 @@
     function spawnOpponent() {
       const lane = Math.floor(Math.random() * lanes);
       const tags = [
-        { label: 'Politician', hue: '#ff4fa4' },
-        { label: 'Legacy OEM', hue: '#f3b83b' },
-        { label: 'Short Seller', hue: '#5dd3ff' },
-        { label: 'Old Media', hue: '#ff7f50' },
-        { label: 'Botnet', hue: '#9a7cff' },
+        { label: 'Politician', hue: '#e82127' },
+        { label: 'Legacy OEM', hue: '#ff6b6f' },
+        { label: 'Short Seller', hue: '#67d7ff' },
+        { label: 'Old Media', hue: '#f6c65b' },
+        { label: 'Botnet', hue: '#b5a1ff' },
       ];
       const pick = tags[Math.floor(Math.random() * tags.length)];
       const type = Math.random() > 0.5 ? 'block' : 'swerve';
@@ -445,12 +466,12 @@
     function spawnPickup() {
       const lane = Math.floor(Math.random() * lanes);
       const types = [
-        { label: '🔋 Battery', color: '#32d399', points: 120, kind: 'score' },
-        { label: '✅ Contract', color: '#5dd3ff', points: 180, kind: 'score' },
-        { label: '💰 Money', color: '#f3b83b', points: 260, kind: 'score' },
-        { label: '🛡️ Shield', color: '#8ef0ff', points: 0, kind: 'shield' },
+        { label: '🔋 Battery', color: '#2de8b5', points: 120, kind: 'score' },
+        { label: '✅ Contract', color: '#67d7ff', points: 180, kind: 'score' },
+        { label: '💰 Money', color: '#f6c65b', points: 260, kind: 'score' },
+        { label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield' },
         { label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet' },
-        { label: '🚀 Turbo', color: '#c18bff', points: 0, kind: 'turbo' },
+        { label: '🚀 Turbo', color: '#d0b7ff', points: 0, kind: 'turbo' },
       ];
       const pick = types[Math.floor(Math.random() * types.length)];
       pickups.push({

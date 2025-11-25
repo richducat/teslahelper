@@ -267,16 +267,18 @@
 
     function resize() {
       const isPortrait = window.innerHeight > window.innerWidth;
-      const ratio = isPortrait ? 9 / 16 : 16 / 9;
-      const maxHeight = isPortrait ? window.innerHeight * 0.9 : window.innerHeight * 0.82;
-      const maxWidth = window.innerWidth - (isPortrait ? 12 : 32);
+      const ratio = isPortrait ? 1 : 16 / 9;
+      let w = Math.min(1180, window.innerWidth - (isPortrait ? 16 : 32));
+      let h = w / ratio;
 
-      const widthFromHeight = maxHeight * ratio;
-      const targetWidth = Math.min(1180, maxWidth, widthFromHeight);
-      const targetHeight = targetWidth / ratio;
+      const maxHeight = isPortrait ? window.innerHeight * 0.6 : Infinity;
+      if (h > maxHeight) {
+        h = maxHeight;
+        w = h * ratio;
+      }
 
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
+      canvas.width = w;
+      canvas.height = h;
       laneWidth = (canvas.width * roadProfile.widthBottom) / lanes;
       player.y = canvas.height - 140;
     }

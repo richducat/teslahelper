@@ -286,89 +286,34 @@
     }
 
     const playerSprite = [
-      '..rrrrr......',
-      '.rRRRRRRR....',
-      'rRRRRRRRRR...',
-      'rRRRGGGGRRR..',
-      'rRRRGGGGRRR..',
-      'rRRkssskRRR..',
-      'rRRkshskRRR..',
-      'rRRkkkkkRRR..',
-      'rRRBBBBBRRR..',
-      'rRRBBBBBRRR..',
-      '.rRRRRRRRr...',
-      '..rrrrrrrr...',
-      '...kkkkkk....',
+      '.....rr.....',
+      '...rRRRRr...',
+      '..rRRRRRRr..',
+      '.rRRRGGRRRr.',
+      'rRRRGGGRRRRr',
+      'rRRRRRRRRRRr',
+      'rRRBBBBRRRRr',
+      'rRRBBBBRRRRr',
+      'rRRRRRRRRRRr',
+      'rRRRRRRRRRRr',
+      '.rRRkkRRRr..',
+      '..rRRRRRr...',
+      '...rrrrr....',
     ];
 
-    const opponentSprites = {
-      car: {
-        sprite: [
-          '...ddttdd...',
-          '..dttTTttd..',
-          '.dTTTWWTTTd.',
-          '.dTTTWWTTTd.',
-          'tTTTTTTTTTt',
-          'tTTkkkkkTTt',
-          'tTTkkkkkTTt',
-          'tTTTTTTTTTt',
-          '.dTTtGGtTd.',
-          '..dtttttd..',
-          '...ddrdd...',
-        ],
-        palette: (hue) => {
-          const darker = adjustColor(hue, -26);
-          const brighter = adjustColor(hue, 22);
-          return {
-            d: 'rgba(0,0,0,0.2)',
-            t: darker,
-            T: hue,
-            W: '#cfe8ff',
-            k: adjustColor(hue, -60),
-            G: brighter,
-            r: '#ff9aa2',
-          };
-        },
-      },
-      dino: {
-        sprite: [
-          '....ggg.....',
-          '...gGGGg....',
-          '..gGGGGGg...',
-          '.gGGGGGGGg..',
-          '.gGGNNGGGg..',
-          'gGGNNNGGGg..',
-          'gGGGGGGGGg..',
-          'gGGGggGGGG..',
-          'gGGg..gGGg..',
-          '.gGG..GGg...',
-          '..gg..gg....',
-          '..gg..gg....',
-        ],
-        palette: (hue) => ({
-          g: adjustColor(hue, -40),
-          G: hue,
-          N: adjustColor(hue, 28),
-        }),
-      },
-      poop: {
-        sprite: [
-          '....bb.....',
-          '...bPPb....',
-          '..bPPPPb...',
-          '.bPPPPPPb..',
-          '.bPppppPb..',
-          '..bppppb...',
-          '...bppb....',
-          '...bbbb....',
-        ],
-        palette: () => ({
-          b: '#2b1a12',
-          P: '#a36b3c',
-          p: '#8b5529',
-        }),
-      },
-    };
+    const opponentSprite = [
+      '...ddttdd...',
+      '..dttTTttd..',
+      '.dTTTWWTTTd.',
+      '.dTTTWWTTTd.',
+      'tTTTTTTTTTt',
+      'tTTkkkkkTTt',
+      'tTTkkkkkTTt',
+      'tTTTTTTTTTt',
+      '.dTTtGGtTd.',
+      '..dtttttd..',
+      '...ddrdd...',
+    ];
     const hud = {
       score: document.getElementById('score'),
       distance: document.getElementById('distance'),
@@ -569,8 +514,6 @@
         G: '#a7f1ff',
         k: '#0f1220',
         B: '#ffd166',
-        s: '#ffd9a0',
-        h: '#3b2a1a',
       }, spriteScale);
 
       ctx.globalAlpha = 0.45;
@@ -698,21 +641,19 @@
       },
       magnet: {
         sprite: [
-          '...kkkk....',
-          '..kRRRk....',
-          '.kRsssRk...',
-          '.kRsssRk...',
-          '.kRsssRk...',
-          '.kRsssRk...',
-          '.kRsssRk...',
-          '.kRsssRk...',
-          '..kRRRk....',
-          '...RRR.....',
+          '....rrrrr....',
+          '...rRRRRRr...',
+          '..rRRrrRRr..',
+          '.rRRr..rRRr.',
+          '.rRRr..rRRr.',
+          '.rRRr..rRRr.',
+          '..rRRrrRRr..',
+          '...rRRRRRr...',
+          '....rrrrr....',
         ],
         palette: {
-          k: '#0c0f18',
+          r: '#211010',
           R: '#ff6b6f',
-          s: '#dfe5ff',
         },
       },
       turbo: {
@@ -768,10 +709,18 @@
       ctx.beginPath();
       ctx.arc(0, 0, o.size / 2 + 12, 0, Math.PI * 2);
       ctx.fill();
-      const spriteDef = opponentSprites[o.spriteKey] || opponentSprites.car;
-      const palette = typeof spriteDef.palette === 'function' ? spriteDef.palette(o.hue) : spriteDef.palette;
-      const spriteScale = o.size / (spriteDef.sprite[0].length * 0.92);
-      drawPixelSprite(spriteDef.sprite, palette, spriteScale);
+      const spriteScale = o.size / (opponentSprite[0].length * 0.92);
+      const darker = adjustColor(o.hue, -26);
+      const brighter = adjustColor(o.hue, 22);
+      drawPixelSprite(opponentSprite, {
+        d: 'rgba(0,0,0,0.2)',
+        t: darker,
+        T: o.hue,
+        W: '#cfe8ff',
+        k: adjustColor(o.hue, -60),
+        G: brighter,
+        r: '#ff9aa2',
+      }, spriteScale);
 
       ctx.fillStyle = '#f7f7ff';
       ctx.font = 'bold 12px Inter';

@@ -200,6 +200,17 @@
       box-shadow: 0 20px 44px rgba(0,0,0,0.4);
       backdrop-filter: blur(14px);
     }
+    .overlay .panel .best-hook {
+      background: linear-gradient(120deg, rgba(232,33,39,0.14), rgba(255,107,111,0.08));
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #fff;
+      box-shadow: 0 10px 28px rgba(232,33,39,0.16);
+    }
+    .overlay .panel .summary-copy { opacity: 0.94; line-height: 1.5; }
     .overlay .panel-header {
       display: flex;
       align-items: center;
@@ -216,6 +227,23 @@
     }
     .overlay h2 { margin: 0 0 12px; }
     .overlay p { margin: 0 0 16px; opacity: 0.9; }
+    .progress-stack { display: grid; gap: 10px; }
+    .progress-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 12px 14px;
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .progress-card .progress-title { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 6px; }
+    .progress-card .delta { color: var(--warn); font-weight: 800; font-size: 13px; }
+    .progress-card .bar { height: 8px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+    .progress-card .bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); transition: width 0.25s ease; }
+    .progress-card small { opacity: 0.78; }
+    .quick-upgrade { display: grid; gap: 8px; }
+    .quick-upgrade .cta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .quick-upgrade .cta button { min-width: 120px; }
+    .replay-cta { width: 100%; font-size: 17px; padding: 15px; box-shadow: 0 16px 32px rgba(232,33,39,0.35); }
     .touch-bar {
       position: absolute;
       inset: 0;
@@ -282,15 +310,17 @@
           <button class="ghost" id="closeStatsBtn" aria-label="Close stats and return">✕ Close</button>
         </div>
         <div class="grid">
-          <p id="summary"></p>
-          <div id="postProgress"></div>
+          <div id="bestHook" class="best-hook"></div>
+          <p id="summary" class="summary-copy"></p>
+          <div id="postProgress" class="progress-stack"></div>
           <div id="currencySummary"></div>
+          <div id="quickUpgrade"></div>
           <div id="upgradeShop"></div>
           <div id="leaderboards"></div>
           <div id="challengeLink"></div>
         </div>
         <div class="panel-actions">
-          <button class="play" id="restartBtn">One more rage drive</button>
+          <button class="play replay-cta" id="restartBtn">One more rage drive</button>
           <button class="ghost" id="backToStartBtn">Back to launch screen</button>
         </div>
       </div>
@@ -521,9 +551,11 @@
 
     const startOverlay = document.getElementById('startOverlay');
     const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const bestHook = document.getElementById('bestHook');
     const summary = document.getElementById('summary');
     const postProgress = document.getElementById('postProgress');
     const currencySummary = document.getElementById('currencySummary');
+    const quickUpgrade = document.getElementById('quickUpgrade');
     const upgradeShop = document.getElementById('upgradeShop');
     const leaderboards = document.getElementById('leaderboards');
     const challengeLink = document.getElementById('challengeLink');
@@ -609,12 +641,14 @@
     const defaults = {
       credits: 0,
       runs: 0,
-      achievements: {},
+      achievements: { fundingSecured: 0 },
       campaign: 0,
+      campaignProgress: 0,
       upgrades: { shieldDuration: 0, magnetDuration: 0, turboDuration: 0, startShield: 0, extraLife: 0, autopilotCharge: 0 },
       weekly: [],
     };
     Object.keys(defaults).forEach((k) => { if (meta[k] === undefined) meta[k] = JSON.parse(JSON.stringify(defaults[k])); });
+    if (meta.achievements?.fundingSecured === undefined) meta.achievements.fundingSecured = 0;
 
     const upgradeDefs = [
       { key: 'shieldDuration', label: 'Shield longevity', desc: '+10% shield duration per level', baseCost: 18 },
@@ -1373,6 +1407,26 @@
         meta.upgrades[key] = level + 1;
         saveMeta();
         renderUpgradeShop();
+        renderQuickUpgrade();
+        renderCurrencies(creditsFromRun());
+      }
+    });
+    quickUpgrade.addEventListener('click', (e) => {
+      const key = e.target.dataset?.key;
+      if (e.target.dataset?.dismiss === 'quick') {
+        quickUpgrade.innerHTML = '<p class="summary-copy">Okay, saving that boost for later.</p>';
+        return;
+      }
+      if (!key) return;
+      const def = upgradeDefs.find((u) => u.key === key);
+      const level = meta.upgrades[key] || 0;
+      const cost = Math.round(def.baseCost * (1 + level * 0.6));
+      if (meta.credits >= cost && !(key === 'extraLife' && level >= 2)) {
+        meta.credits -= cost;
+        meta.upgrades[key] = level + 1;
+        saveMeta();
+        renderUpgradeShop();
+        renderQuickUpgrade();
         renderCurrencies(creditsFromRun());
       }
     });
@@ -1562,6 +1616,45 @@
       upgradeShop.appendChild(list);
     }
 
+    function renderQuickUpgrade(runCredits = 0) {
+      quickUpgrade.innerHTML = '<h3>Quick upgrade suggestion</h3>';
+      const options = upgradeDefs
+        .map((up) => {
+          const level = meta.upgrades[up.key] || 0;
+          const cost = Math.round(up.baseCost * (1 + level * 0.6));
+          return { ...up, level, cost };
+        })
+        .filter((opt) => opt.cost <= meta.credits && !(opt.key === 'extraLife' && opt.level >= 2));
+
+      if (!options.length) {
+        quickUpgrade.innerHTML += `<p class="summary-copy">Banked ${meta.credits} ⚡. Grab more loot to line up your next boost.</p>`;
+        return;
+      }
+
+      const suggestion = options.sort((a, b) => a.level - b.level || a.cost - b.cost)[0];
+      const punchyCopy = suggestion.key === 'magnetDuration'
+        ? '+10% magnet duration'
+        : suggestion.key === 'shieldDuration'
+          ? '+10% shield time'
+          : suggestion.key === 'turboDuration'
+            ? '+8% turbo burn'
+            : suggestion.desc;
+
+      const card = document.createElement('div');
+      card.className = 'progress-card quick-upgrade';
+      card.innerHTML = `
+        <div class="progress-title"><span>Spend ${suggestion.cost} ⚡?</span><span class="delta">You have ${meta.credits} ⚡</span></div>
+        <div class="label">${punchyCopy}</div>
+        <p class="summary-copy">${suggestion.desc} (Lv.${suggestion.level})</p>
+        <div class="cta">
+          <button class="play" data-key="${suggestion.key}">Upgrade</button>
+          <button class="ghost" data-dismiss="quick">Later</button>
+        </div>
+        <small>${runCredits ? `Earned ${runCredits} ⚡ this run – reinvest while it's fresh.` : 'Best value pick available now.'}</small>
+      `;
+      quickUpgrade.appendChild(card);
+    }
+
     function renderCurrencies(runCredits) {
       currencySummary.innerHTML = `
         <h3>Loot banked</h3>
@@ -1587,15 +1680,29 @@
       leaderboards.appendChild(list);
     }
 
-    function renderProgress() {
+    function renderProgress(campaignBefore, campaignAfter, achievementBefore, achievementAfter) {
       const nextCampaign = Math.min(stages.length - 1, meta.campaign + 1);
-      const target = stages[nextCampaign]?.threshold || stages[stages.length - 1].threshold;
-      const progress = Math.min(1, state.distance / target);
-      postProgress.innerHTML = `
-        <h3>Campaign</h3>
-        <div class="metric"><div class="label">${stages[meta.campaign].name} ➜ ${stages[nextCampaign]?.name || 'Endless'}</div>
-        <div class="bar"><span style="width:${progress * 100}%"></span></div>
-        <small>${Math.round(progress * 100)}% toward unlocking ${stages[nextCampaign]?.name || 'the next sky'}</small></div>`;
+      const progressDelta = Math.max(0, campaignAfter - campaignBefore);
+      const achievementDelta = Math.max(0, achievementAfter - achievementBefore);
+      const campaignLabel = `${stages[meta.campaign].name} ➜ ${stages[nextCampaign]?.name || 'Endless'}`;
+
+      const campaignCard = `
+        <div class="progress-card">
+          <div class="progress-title"><span>Campaign</span><span class="delta">${Math.round(campaignBefore * 100)}% → ${Math.round(campaignAfter * 100)}%</span></div>
+          <div class="label">${campaignLabel}</div>
+          <div class="bar"><span style="width:${campaignAfter * 100}%"></span></div>
+          <small>${Math.round(campaignAfter * 100)}% toward unlocking ${stages[nextCampaign]?.name || 'the next sky'}${progressDelta > 0 ? ` (+${Math.round(progressDelta * 100)}%)` : ''}</small>
+        </div>`;
+
+      const achievementCard = `
+        <div class="progress-card">
+          <div class="progress-title"><span>Achievement progress</span><span class="delta">${Math.round(achievementBefore * 100)}% → ${Math.round(achievementAfter * 100)}%</span></div>
+          <div class="label">“Funding Secured”</div>
+          <div class="bar"><span style="width:${achievementAfter * 100}%"></span></div>
+          <small>${Math.round(achievementAfter * 100)}% complete${achievementDelta > 0 ? ` (+${Math.round(achievementDelta * 100)}%)` : ''}</small>
+        </div>`;
+
+      postProgress.innerHTML = `${campaignCard}${achievementCard}`;
     }
 
     function renderChallengeLink() {
@@ -1820,28 +1927,47 @@
       state.running = false;
       state.paused = false;
       touchBar.style.opacity = 0;
+      const campaignBefore = meta.campaignProgress || 0;
+      const achievementBefore = meta.achievements?.fundingSecured || 0;
+      const previousCampaignStage = meta.campaign;
       const previousHigh = state.high;
       if (state.score > state.high) {
         state.high = Math.round(state.score);
         localStorage.setItem('elon_high_score', state.high);
       }
       const diff = Math.abs(Math.round(state.score) - previousHigh);
-      const highLine = state.score > previousHigh
-        ? `New High Score! +${diff.toLocaleString()} over your best.`
-        : `You were ${diff.toLocaleString()} away from your best.`;
-      summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak.toFixed(1)}x streak. ${highLine}`;
+      const isHigh = state.score > previousHigh;
+      const hookLine = isHigh
+        ? `New High Score! +${diff.toLocaleString()} over your previous best.`
+        : diff === 0
+          ? 'You matched your personal best!'
+          : `You were ${diff.toLocaleString()} points away from your best!`;
+      bestHook.textContent = hookLine;
+      const nextName = stages[Math.min(stages.length - 1, state.stageIndex + 1)]?.name || 'Endless mode';
+      summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak.toFixed(1)}x streak. ${hookLine} Next stop: ${nextName}.`;
 
       const runCredits = creditsFromRun();
       meta.credits += runCredits;
       meta.runs += 1;
       meta.campaign = Math.max(meta.campaign, state.stageIndex);
+      const nextCampaign = Math.min(stages.length - 1, meta.campaign + 1);
+      const nextTarget = stages[nextCampaign]?.threshold || stages[stages.length - 1].threshold;
+      const campaignAfter = Math.min(1, state.distance / nextTarget);
+      meta.campaignProgress = Math.max(meta.campaignProgress || 0, campaignAfter);
+      const fundingGain = runCurrency.contract * 0.04 + runCurrency.money * 0.02 + runCurrency.battery * 0.01;
+      meta.achievements.fundingSecured = Math.min(1, (meta.achievements.fundingSecured || 0) + fundingGain);
+      const achievementAfter = meta.achievements.fundingSecured;
       meta.weekly = [{ score: Math.round(state.score), seed: state.seed, date: Date.now() }, ...(meta.weekly || [])].slice(0, 8);
       saveMeta();
       renderCurrencies(runCredits);
       renderUpgradeShop();
       renderLeaderboards();
-      renderProgress();
+      const displayCampaignBefore = meta.campaign === previousCampaignStage ? campaignBefore : 0;
+      renderProgress(displayCampaignBefore, campaignAfter, achievementBefore, achievementAfter);
+      renderQuickUpgrade(runCredits);
       renderChallengeLink();
+      const replayLines = ['Send the drones again', 'One more rage drive'];
+      restartBtn.textContent = replayLines[Math.floor(rand() * replayLines.length)];
       gameOverOverlay.classList.add('visible');
       updateHud();
     }

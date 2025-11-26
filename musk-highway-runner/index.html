@@ -477,7 +477,7 @@
           <div class="hud-label">Plasma blaster</div>
           <div class="hud-value" id="blasterStatus">Armed</div>
           <div class="bar"><span id="blasterBar"></span></div>
-          <small id="blasterMeta">Press F/Space while driving to fire.</small>
+          <small id="blasterMeta">Tap the screen or press F/Space while driving to fire.</small>
         </div>
         <div class="ticker quest" id="questCard">
           <div class="hud-label">Side quest</div>
@@ -1172,7 +1172,7 @@
         startCopy.textContent = 'Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks and grab power-ups to climb the stages.';
       }
 
-      startNotesContent.unshift('🔫 Plasma blaster: press F/Space mid-run to vaporize blockers. Upgrades make it absurd.');
+      startNotesContent.unshift('🔫 Plasma blaster: tap the screen or press F/Space mid-run to vaporize blockers. Upgrades make it absurd.');
 
       startNotes.innerHTML = '';
       if (startNotesContent.length) {
@@ -2075,6 +2075,15 @@
     });
 
     const touchBar = document.getElementById('touchBar');
+    canvas.addEventListener(
+      'touchstart',
+      (e) => {
+        e.preventDefault();
+        if (!state.running) return;
+        fireBlaster();
+      },
+      { passive: false }
+    );
     function bindTouch(id, dir) {
       document.getElementById(id).addEventListener(
         'touchstart',

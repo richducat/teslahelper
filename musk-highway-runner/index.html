@@ -9,35 +9,37 @@
     content="Dodge critics, collect energy, and chain boosts in this upgraded Tesla highway runner."
   />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Rajdhani:wght@600;700&display=swap');
     :root {
       color-scheme: dark;
-      --bg: #05060c;
-      --bg-soft: rgba(255, 255, 255, 0.02);
-      --road: #0c0f18;
-      --lane: #131726;
-      --accent: #e82127;
-      --accent-soft: #ff6b6f;
-      --good: #2de8b5;
-      --warn: #f6c65b;
-      --text: #eef2ff;
+      --bg: #040c16;
+      --bg-soft: rgba(17, 40, 67, 0.65);
+      --road: #071223;
+      --lane: #0d1e33;
+      --accent: #2ef26a;
+      --accent-soft: #66ffb0;
+      --good: #62ff91;
+      --warn: #f4d453;
+      --text: #f6f8ff;
+      --panel: #0c1d2f;
+      --panel-strong: #0b1726;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 20% 20%, rgba(232, 33, 39, 0.14), transparent 28%),
-        radial-gradient(circle at 80% 18%, rgba(76, 111, 255, 0.12), transparent 32%),
-        linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 30%, transparent 32%),
-        linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0%, transparent 12%),
-        var(--bg);
+        radial-gradient(circle at 16% 18%, rgba(55, 109, 163, 0.14), transparent 24%),
+        radial-gradient(circle at 82% 12%, rgba(46, 242, 106, 0.12), transparent 26%),
+        linear-gradient(180deg, #0f2438 0%, #09182a 46%, #040c16 100%);
       color: var(--text);
-      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Rajdhani', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 14px 14px 40px;
       gap: 12px;
+      letter-spacing: 0.02em;
     }
     header { text-align: center; max-width: 960px; }
     h1 {
@@ -50,52 +52,81 @@
     p.lede { margin: 0; opacity: 0.86; line-height: 1.6; }
     .card {
       width: min(1140px, 100%);
-      background: rgba(9, 11, 19, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
-      border-radius: 20px;
-      overflow: hidden;
-      backdrop-filter: blur(12px);
-    }
-    .hud {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      padding: 12px 14px;
-      background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(12px);
-    }
-    .metric {
-      padding: 10px 10px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-    .metric .bar {
-      margin-top: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, #0f2336 0%, #081523 30%, #040c16 100%);
+      border: 1px solid #143049;
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      border-radius: 18px;
       overflow: hidden;
       position: relative;
     }
-    .metric .bar span {
+    .hud {
+      padding: 14px 16px 12px;
+      background: linear-gradient(180deg, #112a42 0%, #0b1c2d 100%);
+      border-bottom: 1px solid #1e4060;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .hud-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .hud-block {
+      flex: 1;
+      min-width: 210px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid #1c3b59;
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .hud-feed { border-color: #2ef26a55; background: linear-gradient(180deg, rgba(46, 242, 106, 0.08), rgba(46, 242, 106, 0.02)); }
+    .hud-label { font-size: 11px; color: var(--accent); font-weight: 800; letter-spacing: 0.18em; }
+    .hud-feed .hud-label { color: #84ffb1; }
+    .feed-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+    .feed-item {
+      color: #c8e7ff;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      background: rgba(0, 0, 0, 0.18);
+      border-left: 3px solid #27e265;
+      padding: 6px 10px;
+      border-radius: 8px;
+      text-transform: uppercase;
+    }
+    .stage-name { font-size: clamp(22px, 4vw, 30px); color: #f4d453; font-weight: 800; letter-spacing: 0.16em; margin-top: 4px; text-transform: uppercase; }
+    .stage-next { color: #9fd6ff; font-weight: 700; margin-top: 4px; text-transform: uppercase; }
+    .stage-note { color: #7ee0ff; font-weight: 600; margin-top: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .streak-value { font-size: clamp(22px, 4vw, 30px); color: var(--good); font-weight: 800; letter-spacing: 0.14em; margin-top: 4px; }
+    .subtle { color: #b6c8da; font-weight: 700; margin-top: 4px; }
+    .hud-value { font-size: clamp(24px, 4vw, 32px); font-weight: 800; letter-spacing: 0.08em; margin-top: 4px; }
+    .bar {
+      margin-top: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    .bar span {
       display: block;
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, var(--accent), var(--accent-soft));
-      box-shadow: 0 6px 16px rgba(232,33,39,0.28);
-      transition: width 0.2s ease, background 0.3s ease;
+      transition: width 0.2s ease;
+      box-shadow: 0 6px 16px rgba(98, 255, 145, 0.22);
     }
-    .metric small { opacity: 0.7; font-weight: 600; }
-    .metric .label { opacity: 0.72; font-size: clamp(11px, 1.5vw, 13px); letter-spacing: 0.12em; text-transform: uppercase; }
-    .metric .value { font-size: clamp(19px, 3vw, 22px); font-weight: 800; margin-top: 2px; letter-spacing: -0.01em; }
+    .stage-progress { height: 4px; margin-top: 4px; background: rgba(255, 255, 255, 0.08); }
+    .hidden { display: none; }
     canvas {
       width: 100%;
       display: block;
-      background: var(--road);
+      background: linear-gradient(180deg, #0b1625 0%, #060e1c 100%);
       border-bottom-left-radius: 20px;
       border-bottom-right-radius: 20px;
       touch-action: none;
@@ -103,47 +134,56 @@
     }
     .controls {
       padding: 12px 14px 14px;
-      background: rgba(255, 255, 255, 0.02);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(10, 24, 40, 0.92);
+      border-top: 1px solid #1c3b59;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      justify-content: center;
+      align-items: stretch;
+      justify-content: space-between;
       font-size: 14px;
       position: sticky;
       bottom: 0;
       z-index: 2;
       backdrop-filter: blur(10px);
     }
-    .pill {
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.03);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text);
-      font-weight: 600;
+    .control-tickers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      flex: 1;
     }
+    .ticker {
+      border: 1px solid #1f3f60;
+      background: linear-gradient(180deg, #0c1f31 0%, #0a1726 100%);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      min-width: 0;
+    }
+    .ticker .hud-label { color: #93d7ff; }
+    .ticker.distance .hud-value { color: #9ee5ff; }
+    .ticker.score .hud-value { color: var(--good); text-shadow: 0 0 14px rgba(98, 255, 145, 0.3); }
+    .ticker.lives .hud-value { color: #eaf2ff; }
     button.play, button.pause {
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      color: white;
+      background: linear-gradient(135deg, #26e35c, #8affc0);
+      color: #03101b;
       border: none;
       padding: 12px 14px;
       border-radius: 12px;
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
-      letter-spacing: 0.01em;
-      box-shadow: 0 10px 24px rgba(232, 33, 39, 0.32);
+      letter-spacing: 0.08em;
+      box-shadow: 0 10px 24px rgba(46, 242, 106, 0.25);
       min-width: 140px;
+      text-transform: uppercase;
     }
     button.play:active, button.pause:active, button.ghost:active { transform: translateY(1px); }
     button.pause {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.08);
       color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: none;
     }
     button.ghost {
@@ -299,7 +339,8 @@
       @media (max-width: 720px) {
         body { padding: 12px 12px 54px; }
         header { text-align: left; }
-        .hud { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+        .hud-row { flex-direction: column; }
+        .hud-block { min-width: 100%; }
         .controls {
           flex-direction: column;
           align-items: stretch;
@@ -309,9 +350,8 @@
         button.play, button.pause { width: 100%; }
       }
       @media (max-width: 520px) {
-        .hud { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-        .metric { padding: 10px 10px; }
         .controls { font-size: 13px; }
+        .control-tickers { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
       }
   </style>
 </head>
@@ -323,16 +363,26 @@
 
   <div class="card" style="position: relative;">
     <div class="hud" id="hud">
-      <div class="metric"><div class="label">Score</div><div class="value" id="score">0</div></div>
-      <div class="metric"><div class="label">Distance</div><div class="value" id="distance">0 m</div><div class="bar"><span id="distanceBar"></span></div><small id="tierLabel"></small></div>
-      <div class="metric"><div class="label">Stage</div><div class="value" id="stage">Launch Lane</div><div class="bar"><span id="stageBar"></span></div><small id="stageNote">Warm up</small></div>
-      <div class="metric"><div class="label">Streak</div><div class="value" id="streak">x1</div><div class="bar"><span id="streakBar"></span></div><small id="streakHint">Stack near misses for bonus</small></div>
-      <div class="metric"><div class="label">Lives</div><div class="value" id="lives">3</div></div>
-      <div class="metric"><div class="label">High Score</div><div class="value" id="high">0</div></div>
-      <div class="metric">
-        <div class="label">Power-ups</div>
-        <div class="powerups" id="powerups"></div>
+      <div class="hud-row">
+        <div class="hud-block hud-feed">
+          <div class="hud-label">Live Feed</div>
+          <div class="feed-list" id="powerups"></div>
+        </div>
+        <div class="hud-block">
+          <div class="hud-label">Stage</div>
+            <div class="stage-name" id="stage">LAUNCH LANE</div>
+            <div class="stage-next">Next Stage: <span id="tierLabel"></span></div>
+            <div class="stage-note" id="stageNote">WARM UP</div>
+        </div>
+        <div class="hud-block">
+          <div class="hud-label">Streak</div>
+            <div class="streak-value" id="streak">X1</div>
+          <div class="subtle">High Score: <span id="high">0</span></div>
+          <div class="hidden bar"><span id="streakBar"></span></div>
+          <div class="subtle" id="streakHint"></div>
+        </div>
       </div>
+      <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
     </div>
     <div class="message-stack" id="messageStack" aria-live="polite"></div>
     <canvas id="game" width="960" height="540" aria-label="Elon Highway Runner game"></canvas>
@@ -373,9 +423,21 @@
       </div>
     </div>
     <div class="controls">
-      <span class="pill">⬅️/➡️ Move lanes</span>
-      <span class="pill">⏩ Stack streaks to multiply score</span>
-      <span class="pill">🛡️ Shield • 🧲 Magnet • 🚀 Turbo</span>
+      <div class="control-tickers">
+        <div class="ticker distance">
+          <div class="hud-label">Distance</div>
+          <div class="hud-value" id="distance">0 m</div>
+          <div class="hidden bar"><span id="distanceBar"></span></div>
+        </div>
+        <div class="ticker score">
+          <div class="hud-label">Score</div>
+          <div class="hud-value" id="score">0</div>
+        </div>
+        <div class="ticker lives">
+          <div class="hud-label">Lives</div>
+          <div class="hud-value" id="lives">3</div>
+        </div>
+      </div>
       <button class="pause" id="pauseBtn">Pause</button>
     </div>
   </div>
@@ -1694,8 +1756,8 @@
     function updateHud() {
       hud.score.textContent = Math.round(state.score).toLocaleString();
       hud.distance.textContent = `${Math.round(state.distance)} m`;
-      hud.stage.textContent = stages[state.stageIndex].name;
-      hud.streak.textContent = `x${state.streak.toFixed(1)}`;
+      hud.stage.textContent = stages[state.stageIndex].name.toUpperCase();
+      hud.streak.textContent = `X${state.streak.toFixed(1)}`;
       hud.lives.textContent = state.lives;
       hud.high.textContent = state.high.toLocaleString();
       const curStage = stages[state.stageIndex];
@@ -1703,48 +1765,48 @@
       const stageProgress = Math.min(1, Math.max(0, (state.distance - curStage.threshold) / (nextStage.threshold - curStage.threshold)));
       hud.stageBar.style.width = `${stageProgress * 100}%`;
       hud.stageBar.style.background = `linear-gradient(90deg, ${curStage.accent}, ${nextStage.accent || curStage.accent})`;
-      hud.stageNote.textContent = `${curStage.note || ''}`;
+      hud.stageNote.textContent = `${curStage.note || ''}`.toUpperCase();
 
       const tierDistance = nextStage.threshold - curStage.threshold;
       const tierProgress = Math.min(1, (state.distance - curStage.threshold) / tierDistance);
       hud.distanceBar.style.width = `${tierProgress * 100}%`;
-      hud.tierLabel.textContent = nextStage.name ? `Next: ${nextStage.name}` : 'Deep space';
+      hud.tierLabel.textContent = nextStage.name ? `${nextStage.name}`.toUpperCase() : 'DEEP SPACE';
 
       const streakFrac = state.streak - Math.floor(state.streak);
       hud.streakBar.style.width = `${Math.min(1, streakFrac + 0.05) * 100}%`;
       if (activeArcStep === 1) {
-        hud.streakHint.textContent = 'Arc 2: Streak x2 → x3 = crazy score multipliers';
+        hud.streakHint.textContent = 'ARC 2: STREAK X2 → X3 = CRAZY SCORE MULTIPLIERS';
       } else if (activeArcStep === 2) {
-        hud.streakHint.textContent = 'Arc 3: Build streaks, then spend ⚡ on upgrades';
+        hud.streakHint.textContent = 'ARC 3: BUILD STREAKS, THEN SPEND ⚡ ON UPGRADES';
       } else {
-        hud.streakHint.textContent = state.streak >= 5 ? 'Keep the heat: streak turbocharges score' : 'Near misses nudge streak forward';
+        hud.streakHint.textContent = state.streak >= 5 ? 'KEEP THE HEAT: STREAK TURBOCHARGES SCORE' : 'NEAR MISSES NUDGE STREAK FORWARD';
       }
       renderPowerups();
     }
 
     function renderPowerups() {
       hud.powerups.innerHTML = '';
-      const entries = [
-        ['🛡️', 'Shield', powerTimers.shield],
-        ['🧲', 'Magnet', powerTimers.magnet],
-        ['🚀', 'Turbo', powerTimers.turbo],
-        ['🤖', 'Autopilot', powerTimers.autopilot],
-        ['🔋', 'Battery x2', powerTimers.batteryBoost],
-        ['🚀✨', 'Hype', powerTimers.streakBoost],
-      ];
-      entries.forEach(([icon, label, time]) => {
-        if (time > 0) {
-          const chip = document.createElement('span');
-          chip.className = 'chip';
-          chip.innerHTML = `${icon} <span>${label}</span> ${(time).toFixed(1)}s`;
-          hud.powerups.appendChild(chip);
-        }
+      const feedEntries = [];
+      if (powerTimers.batteryBoost > 0) feedEntries.push('Battery values doubled');
+      if (meta.upgrades.extraLife > 0 || state.lives > 3) feedEntries.push('Extra life');
+      if (powerTimers.shield > 0) feedEntries.push('Shield online');
+      if (powerTimers.magnet > 0) feedEntries.push('Magnet engaged');
+      if (powerTimers.turbo > 0) feedEntries.push('Turbo active');
+      if (powerTimers.autopilot > 0) feedEntries.push('Autopilot steering');
+      if (powerTimers.streakBoost > 0) feedEntries.push('Streak booster');
+
+      feedEntries.slice(0, 4).forEach((text) => {
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+        item.textContent = text.toUpperCase();
+        hud.powerups.appendChild(item);
       });
+
       if (!hud.powerups.children.length) {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = 'None equipped';
-        hud.powerups.appendChild(chip);
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+        item.textContent = 'AWAITING SIGNALS';
+        hud.powerups.appendChild(item);
       }
     }
 

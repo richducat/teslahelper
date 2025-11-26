@@ -306,6 +306,7 @@
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
+    const card = document.querySelector('.card');
     let viewWidth = canvas.width;
     let viewHeight = canvas.height;
     const dpr = Math.min(3, window.devicePixelRatio || 1);
@@ -674,7 +675,8 @@
       function resize() {
         const isPortrait = window.innerHeight > window.innerWidth;
         const ratio = isPortrait ? 0.7 : 14 / 9;
-        let w = Math.min(1400, window.innerWidth - (isPortrait ? 12 : 32));
+        const containerWidth = card?.clientWidth || window.innerWidth;
+        let w = Math.min(containerWidth, Math.min(1400, window.innerWidth - (isPortrait ? 12 : 32)));
         let h = w / ratio;
 
         const maxHeight = window.innerHeight * (isPortrait ? 0.92 : 0.88);

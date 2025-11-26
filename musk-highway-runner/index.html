@@ -36,12 +36,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 18px 16px 56px;
-      gap: 16px;
+      padding: 14px 14px 40px;
+      gap: 12px;
     }
     header { text-align: center; max-width: 960px; }
     h1 {
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       font-size: clamp(30px, 4vw, 40px);
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -49,7 +49,7 @@
     }
     p.lede { margin: 0; opacity: 0.86; line-height: 1.6; }
     .card {
-      width: min(1100px, 100%);
+      width: min(1140px, 100%);
       background: rgba(9, 11, 19, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
@@ -59,22 +59,22 @@
     }
     .hud {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      padding: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      padding: 12px 14px;
       background: rgba(255, 255, 255, 0.02);
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(12px);
     }
     .metric {
-      padding: 14px 12px;
+      padding: 10px 10px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
+      border-radius: 12px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
     .metric .label { opacity: 0.72; font-size: clamp(11px, 1.5vw, 13px); letter-spacing: 0.12em; text-transform: uppercase; }
-    .metric .value { font-size: clamp(19px, 3vw, 24px); font-weight: 800; margin-top: 4px; letter-spacing: -0.01em; }
+    .metric .value { font-size: clamp(19px, 3vw, 22px); font-weight: 800; margin-top: 2px; letter-spacing: -0.01em; }
     canvas {
       width: 100%;
       display: block;
@@ -85,26 +85,27 @@
       image-rendering: pixelated;
     }
     .controls {
-      padding: 14px 16px 16px;
+      padding: 12px 14px 14px;
       background: rgba(255, 255, 255, 0.02);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
-      font-size: 15px;
+      font-size: 14px;
       position: sticky;
       bottom: 0;
       z-index: 2;
+      backdrop-filter: blur(10px);
     }
     .pill {
       border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.03);
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       color: var(--text);
       font-weight: 600;
     }
@@ -112,15 +113,22 @@
       background: linear-gradient(135deg, var(--accent), var(--accent-soft));
       color: white;
       border: none;
-      padding: 14px 18px;
-      border-radius: 14px;
-      font-size: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      letter-spacing: 0.02em;
-      box-shadow: 0 10px 30px rgba(232, 33, 39, 0.35);
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 24px rgba(232, 33, 39, 0.32);
+      min-width: 140px;
     }
     button.play:active, button.pause:active { transform: translateY(1px); }
+    button.pause {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: none;
+    }
     .powerups {
       display: flex;
       gap: 8px;
@@ -173,21 +181,21 @@
     }
     .touch-bar div { background: transparent; }
       @media (max-width: 720px) {
-        body { padding: 14px 12px 60px; }
+        body { padding: 12px 12px 54px; }
         header { text-align: left; }
         .hud { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
         .controls {
           flex-direction: column;
           align-items: stretch;
-          gap: 10px;
+          gap: 8px;
         }
         .controls .pill { justify-content: center; }
         button.play, button.pause { width: 100%; }
       }
       @media (max-width: 520px) {
         .hud { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-        .metric { padding: 12px 10px; }
-        .controls { font-size: 14px; }
+        .metric { padding: 10px 10px; }
+        .controls { font-size: 13px; }
       }
   </style>
 </head>
@@ -333,7 +341,7 @@
     const pauseBtn = document.getElementById('pauseBtn');
 
     const lanes = 3;
-    const roadProfile = { widthTop: 0.25, widthBottom: 0.86, horizon: 0.45 };
+    const roadProfile = { widthTop: 0.32, widthBottom: 0.96, horizon: 0.42 };
     let laneWidth = (viewWidth * roadProfile.widthBottom) / lanes;
 
     const player = {
@@ -427,17 +435,17 @@
 
       function resize() {
         const isPortrait = window.innerHeight > window.innerWidth;
-        const ratio = isPortrait ? 1 : 16 / 9;
-        let w = Math.min(1180, window.innerWidth - (isPortrait ? 16 : 32));
+        const ratio = isPortrait ? 0.75 : 16 / 9;
+        let w = Math.min(1280, window.innerWidth - (isPortrait ? 12 : 32));
         let h = w / ratio;
 
-        const maxHeight = isPortrait ? window.innerHeight * 0.7 : Infinity;
+        const maxHeight = window.innerHeight * (isPortrait ? 0.9 : 0.82);
         if (h > maxHeight) {
           h = maxHeight;
           w = h * ratio;
         }
 
-        const minHeight = isPortrait ? 360 : 400;
+        const minHeight = isPortrait ? 420 : 420;
         if (h < minHeight) {
           h = minHeight;
           w = h * ratio;
@@ -496,9 +504,9 @@
     }
 
     function drawRoad(time) {
-      const roadWidthTop = viewWidth * 0.25;
-      const roadWidthBottom = viewWidth * 0.86;
-      const horizon = viewHeight * 0.45;
+      const roadWidthTop = viewWidth * roadProfile.widthTop;
+      const roadWidthBottom = viewWidth * roadProfile.widthBottom;
+      const horizon = viewHeight * roadProfile.horizon;
       ctx.save();
       ctx.beginPath();
       ctx.moveTo((viewWidth - roadWidthTop) / 2, horizon);

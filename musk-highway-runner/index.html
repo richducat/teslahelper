@@ -150,14 +150,22 @@
       border-top: 1px solid #1c3b59;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      align-items: stretch;
+      gap: 12px;
+      align-items: center;
       justify-content: space-between;
       font-size: 14px;
       position: sticky;
       bottom: 0;
       z-index: 2;
       backdrop-filter: blur(10px);
+    }
+    .control-tickers {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+      gap: 10px;
+      flex: 1;
+      min-width: 420px;
+      align-items: stretch;
     }
     .pill {
       border: 1px solid #1f3f60;
@@ -374,7 +382,7 @@
       @media (max-width: 520px) {
         .hud-bottom { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
         .controls { font-size: 13px; }
-        .control-tickers { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        .control-tickers { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); min-width: 100%; }
       }
   </style>
 </head>

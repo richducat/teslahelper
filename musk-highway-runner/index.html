@@ -149,7 +149,7 @@
     }
     .control-tickers {
       display: grid;
-      grid-template-columns: repeat(3, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
       flex: 1;
       min-width: 420px;
@@ -345,6 +345,14 @@
     .share-card .caption { opacity: 0.85; }
     .share-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .share-card button { min-width: 120px; }
+    .hype-bar { height: 6px; margin-top: 6px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+    .hype-bar span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #2ef26a, #8affc0); box-shadow: 0 10px 18px rgba(46,242,106,0.25); transition: width 0.2s ease; }
+    .hype-note { color: #9ee5ff; font-weight: 700; margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .quest-title { font-weight: 800; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: #f4d453; margin-top: 2px; }
+    .quest-meta { color: #c8e7ff; font-weight: 700; letter-spacing: 0.06em; }
+    .quest-progress { margin-top: 6px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .quest-progress span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffd166, #ff9d5c); transition: width 0.2s ease; box-shadow: 0 8px 16px rgba(255,209,102,0.28); }
+    .ticker.quest { border-color: #ffb45c55; background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); }
     .touch-bar {
       position: absolute;
       inset: 0;
@@ -376,7 +384,7 @@
 <body>
     <header>
       <h1>Elon vs F$cking Everyone</h1>
-      <p class="lede">Dodge critics, collect batteries, government contracts, and bags of money as Elon Musk in a Tesla Roadster. Now with a five-stage campaign, new power-ups, and buttery smooth controls.</p>
+      <p class="lede">Dodge critics, collect batteries, government contracts, and bags of money as Elon Musk in a Tesla Roadster. Now with a five-stage campaign, hype-fueled Overdrive, and mid-run side quests that keep every dash spicy.</p>
     </header>
 
   <div class="card" style="position: relative;">
@@ -398,6 +406,12 @@
           <div class="subtle">High Score: <span id="high">0</span></div>
           <div class="hidden bar"><span id="streakBar"></span></div>
           <div class="subtle" id="streakHint"></div>
+        </div>
+        <div class="hud-block">
+          <div class="hud-label">Hype Meter</div>
+          <div class="streak-value" id="hype">Idle</div>
+          <div class="hype-bar"><span id="hypeBar"></span></div>
+          <div class="hype-note" id="hypeStatus">Stack streaks + pickups to trigger Overdrive.</div>
         </div>
       </div>
       <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
@@ -454,6 +468,12 @@
         <div class="ticker lives">
           <div class="hud-label">Lives</div>
           <div class="hud-value" id="lives">3</div>
+        </div>
+        <div class="ticker quest" id="questCard">
+          <div class="hud-label">Side quest</div>
+          <div class="quest-title" id="questTitle">Calibrating new mission…</div>
+          <div class="quest-progress"><span id="questProgress"></span></div>
+          <div class="quest-meta" id="questMeta">Finish runs to unlock bolder dares.</div>
         </div>
       </div>
       <button class="pause" id="pauseBtn">Pause</button>
@@ -677,6 +697,17 @@
       tierLabel: document.getElementById('tierLabel'),
       streakHint: document.getElementById('streakHint'),
     };
+    const hypeHud = {
+      label: document.getElementById('hype'),
+      bar: document.getElementById('hypeBar'),
+      status: document.getElementById('hypeStatus'),
+    };
+    const questHud = {
+      card: document.getElementById('questCard'),
+      title: document.getElementById('questTitle'),
+      progress: document.getElementById('questProgress'),
+      meta: document.getElementById('questMeta'),
+    };
 
     const startOverlay = document.getElementById('startOverlay');
     const startTitle = document.getElementById('startTitle');
@@ -837,6 +868,10 @@
     let lastStreakBanner = 1;
     let controlScramble = 0;
     let slowdownTimer = 0;
+    let hype = 0;
+    let hypeFlash = 0;
+    let sideQuest = null;
+    let questCooldown = 0;
 
     function saveMeta() {
       localStorage.setItem('elon_meta', JSON.stringify(meta));
@@ -949,12 +984,149 @@
       arcCallout.appendChild(card);
     }
 
+    function questPool() {
+      const pickupsTarget = 5 + Math.floor(rand() * 3);
+      const nearMissTarget = 3 + Math.floor(rand() * 2);
+      const distanceTarget = 700 + Math.floor(rand() * 500);
+      return [
+        {
+          type: 'pickup',
+          target: pickupsTarget,
+          duration: 26,
+          title: `Collect ${pickupsTarget} goodies`,
+          reward: { score: 420, magnet: 2.8, hype: 0.35 },
+        },
+        {
+          type: 'nearMiss',
+          target: nearMissTarget,
+          duration: 22,
+          title: `${nearMissTarget} near misses`,
+          reward: { score: 360, shield: 1.8, streak: 0.6 },
+        },
+        {
+          type: 'distance',
+          target: distanceTarget,
+          duration: 24,
+          title: `Drive ${distanceTarget} m clean`,
+          reward: { score: 320, turbo: 2.4, hype: 0.25 },
+        },
+      ];
+    }
+
+    function describeReward(reward) {
+      const parts = [];
+      if (reward.score) parts.push(`${reward.score} pts`);
+      if (reward.magnet) parts.push('magnet boost');
+      if (reward.turbo) parts.push('turbo burn');
+      if (reward.shield) parts.push('shield time');
+      if (reward.hype) parts.push('hype charge');
+      if (reward.streak) parts.push('streak bump');
+      return parts.join(' + ');
+    }
+
+    function startSideQuest() {
+      const pool = questPool();
+      const pick = pool[Math.floor(rand() * pool.length)];
+      sideQuest = { ...pick, progress: 0, remaining: pick.duration, startDistance: state.distance };
+      sideQuest.rewardText = describeReward(sideQuest.reward);
+      addMessage(`Side quest: ${sideQuest.title}`, '#ffd166');
+      renderQuest();
+    }
+
+    function renderQuest() {
+      if (!questHud.title) return;
+      if (!sideQuest) {
+        questHud.title.textContent = 'Next mission incoming';
+        questHud.meta.textContent = questCooldown > 0 ? `New dare in ${Math.ceil(questCooldown)}s` : 'Rolling a dare now…';
+        questHud.progress.style.width = '0%';
+        return;
+      }
+      const pct = Math.min(1, sideQuest.type === 'distance'
+        ? (state.distance - sideQuest.startDistance) / sideQuest.target
+        : sideQuest.progress / sideQuest.target);
+      questHud.title.textContent = sideQuest.title;
+      questHud.progress.style.width = `${Math.max(0, pct) * 100}%`;
+      questHud.meta.textContent = `${Math.round(Math.max(0, sideQuest.target - (sideQuest.type === 'distance'
+        ? state.distance - sideQuest.startDistance
+        : sideQuest.progress)))} to go • ${Math.ceil(sideQuest.remaining)}s • Reward: ${sideQuest.rewardText}`;
+    }
+
+    function applyQuestReward(quest) {
+      if (!quest) return;
+      const reward = quest.reward || {};
+      const hypeBonus = reward.hype || 0;
+      const scoreBonus = reward.score || 0;
+      state.score += scoreBonus * Math.max(1, state.streak);
+      if (reward.magnet) powerTimers.magnet = Math.min(12, powerTimers.magnet + reward.magnet);
+      if (reward.turbo) powerTimers.turbo = Math.min(10, powerTimers.turbo + reward.turbo);
+      if (reward.shield) powerTimers.shield = Math.min(10, powerTimers.shield + reward.shield);
+      if (reward.streak) state.streak = Math.min(15, state.streak + reward.streak);
+      if (hypeBonus) addHype(hypeBonus);
+      addMessage('Quest reward banked', '#8ef0ff');
+    }
+
+    function completeQuest() {
+      if (!sideQuest) return;
+      addMessage(`Quest cleared: ${sideQuest.title}`, '#f4d453');
+      applyQuestReward(sideQuest);
+      sideQuest = null;
+      questCooldown = 6;
+      renderQuest();
+    }
+
+    function expireQuest() {
+      if (!sideQuest) return;
+      addMessage('Quest expired. New dare soon.', '#9ee5ff');
+      sideQuest = null;
+      questCooldown = 6;
+      renderQuest();
+    }
+
+    function tickQuest(delta) {
+      if (!sideQuest) {
+        questCooldown = Math.max(0, questCooldown - delta);
+        if (questCooldown <= 0) startSideQuest();
+        return;
+      }
+      sideQuest.remaining = Math.max(0, sideQuest.remaining - delta);
+      if (sideQuest.type === 'distance') {
+        sideQuest.progress = Math.max(sideQuest.progress, state.distance - sideQuest.startDistance);
+      }
+      if (sideQuest.progress >= sideQuest.target) {
+        completeQuest();
+      } else if (sideQuest.remaining <= 0) {
+        expireQuest();
+      }
+    }
+
+    function progressQuest(kind) {
+      if (!sideQuest) return;
+      if (sideQuest.type === 'pickup' && kind === 'pickup') sideQuest.progress += 1;
+      if (sideQuest.type === 'nearMiss' && kind === 'nearMiss') sideQuest.progress += 1;
+    }
+
+    function addHype(amount) {
+      if (powerTimers.hype > 0) return;
+      hype = Math.min(1, hype + amount);
+      hypeFlash = 0.6;
+      if (hype >= 1) triggerHype();
+    }
+
+    function triggerHype() {
+      powerTimers.hype = 6;
+      powerTimers.turbo = Math.max(powerTimers.turbo, 3.2);
+      powerTimers.magnet = Math.max(powerTimers.magnet, 3.4);
+      powerTimers.autopilot = Math.max(powerTimers.autopilot, 2 + meta.upgrades.autopilotCharge);
+      hype = 0;
+      addMessage('OVERDRIVE: turbo + magnet + autopilot!', '#2ef26a');
+    }
+
     renderStartOverlay();
 
     const obstacles = [];
     const pickups = [];
     const particles = [];
-    const powerTimers = { shield: 0, magnet: 0, turbo: 0, autopilot: 0, batteryBoost: 0, streakBoost: 0 };
+    const powerTimers = { shield: 0, magnet: 0, turbo: 0, autopilot: 0, batteryBoost: 0, streakBoost: 0, hype: 0 };
     const uiMessages = [];
     let rafId = null;
 
@@ -1706,13 +1878,17 @@
       player.tint = stages[state.stageIndex].accent;
       player.x = laneX(1, player.y);
       powerTimers.shield = powerTimers.magnet = powerTimers.turbo = powerTimers.autopilot = 0;
-      powerTimers.batteryBoost = powerTimers.streakBoost = 0;
+      powerTimers.batteryBoost = powerTimers.streakBoost = powerTimers.hype = 0;
       runCurrency.battery = runCurrency.contract = runCurrency.money = 0;
       slowMo = 0;
       nearMissFlash = 0;
       controlScramble = 0;
       slowdownTimer = 0;
       lastStreakBanner = 1;
+      hype = 0;
+      hypeFlash = 0;
+      sideQuest = null;
+      questCooldown = 0.5;
       rngSeed = state.seed;
       if (meta.upgrades.startShield > 0) powerTimers.shield = 2 + meta.upgrades.startShield * 1.5;
       state.lives += meta.upgrades.extraLife;
@@ -1804,11 +1980,15 @@
         hud.streakHint.textContent = state.streak >= 5 ? 'KEEP THE HEAT: STREAK TURBOCHARGES SCORE' : 'NEAR MISSES NUDGE STREAK FORWARD';
       }
       renderPowerups();
+      renderHypeHud();
+      renderQuest();
     }
 
     function renderPowerups() {
       hud.powerups.innerHTML = '';
       const feedEntries = [];
+      if (powerTimers.hype > 0) feedEntries.push('OVERDRIVE storm');
+      else if (hype > 0.75) feedEntries.push('Hype almost ready');
       if (powerTimers.batteryBoost > 0) feedEntries.push('Battery values doubled');
       if (meta.upgrades.extraLife > 0 || state.lives > 3) feedEntries.push('Extra life');
       if (powerTimers.shield > 0) feedEntries.push('Shield online');
@@ -1829,6 +2009,24 @@
         item.className = 'feed-item';
         item.textContent = 'AWAITING SIGNALS';
         hud.powerups.appendChild(item);
+      }
+    }
+
+    function renderHypeHud() {
+      const pct = powerTimers.hype > 0 ? 1 : hype;
+      hypeHud.bar.style.width = `${Math.min(1, pct) * 100}%`;
+      if (powerTimers.hype > 0) {
+        hypeHud.label.textContent = 'OVERDRIVE';
+        hypeHud.status.textContent = 'Turbo + magnet + autopilot active';
+      } else if (pct > 0.85) {
+        hypeHud.label.textContent = 'Primed';
+        hypeHud.status.textContent = 'One more near miss to unleash Overdrive';
+      } else if (pct > 0.45) {
+        hypeHud.label.textContent = 'Building';
+        hypeHud.status.textContent = 'Keep streaking + pickups to fill the meter';
+      } else {
+        hypeHud.label.textContent = 'Idle';
+        hypeHud.status.textContent = 'Stack streaks to wake up the hype meter';
       }
     }
 
@@ -2121,6 +2319,7 @@
       const delta = rawDelta * timeScale;
       slowMo = Math.max(0, slowMo - rawDelta);
       nearMissFlash = Math.max(0, nearMissFlash - rawDelta);
+      hypeFlash = Math.max(0, hypeFlash - delta);
       state.lastTime = timestamp;
       state.elapsed += delta;
 
@@ -2129,12 +2328,14 @@
 
       const easeIn = Math.min(1, state.elapsed / 30);
       const slowdownFactor = slowdownTimer > 0 ? 0.78 : 1;
-      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5) * slowdownFactor;
+      const hypeSpeed = powerTimers.hype > 0 ? 1.12 : 1;
+      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5) * slowdownFactor * hypeSpeed;
       state.distance += baseSpeed * delta;
       state.lastSpawn += delta;
       state.lastGood += delta;
       state.difficulty = stages[state.stageIndex].speed + state.distance / 6200;
       checkStageProgression();
+      tickQuest(delta);
 
       const spawnGap = Math.max(0.55, 1.2 - easeIn * 0.4 - state.difficulty * 0.08);
       const pickupGap = Math.max(0.4, 0.8 - easeIn * 0.2 - state.difficulty * 0.05);
@@ -2143,6 +2344,7 @@
 
       const magnetStrength = powerTimers.magnet > 0 ? laneWidth * 0.6 : 0;
       const trafficSpeedMod = powerTimers.autopilot > 0 ? 0.7 : 1;
+      const hypeScoreMultiplier = powerTimers.hype > 0 ? 1.35 : 1;
 
       for (const o of obstacles) {
         if (o.swapSequence) {
@@ -2167,15 +2369,17 @@
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
         const proximity = Math.abs(laneX(player.targetLane, player.y) - laneX(o.lane, o.y));
-          if (!o.nearMissed && proximity < laneWidth * 0.52 && o.y > player.y - 70 && o.y < player.y + 60) {
-            o.nearMissed = true;
-            const streakBoost = powerTimers.streakBoost > 0 ? 0.2 : 0;
-            state.streak = Math.min(state.streak + 0.25 + streakBoost, 15);
-            state.peakStreak = Math.max(state.peakStreak, state.streak);
-            state.score += 35 * state.streak;
-            slowMo = 0.25;
-            nearMissFlash = 0.18;
+        if (!o.nearMissed && proximity < laneWidth * 0.52 && o.y > player.y - 70 && o.y < player.y + 60) {
+          o.nearMissed = true;
+          const streakBoost = powerTimers.streakBoost > 0 ? 0.2 : 0;
+          state.streak = Math.min(state.streak + 0.25 + streakBoost, 15);
+          state.peakStreak = Math.max(state.peakStreak, state.streak);
+          state.score += 35 * state.streak * hypeScoreMultiplier;
+          slowMo = 0.25;
+          nearMissFlash = 0.18;
           addMessage('NEAR MISS + streak juice', '#f6c65b');
+          progressQuest('nearMiss');
+          addHype(0.18);
         }
         if (collide(player, o, 54)) {
           obstacles.splice(i, 1);
@@ -2229,36 +2433,44 @@
         const p = pickups[i];
         if (collide(player, p, 52)) {
           pickups.splice(i, 1);
+          progressQuest('pickup');
           if (p.kind === 'score') {
             const streakGain = powerTimers.streakBoost > 0 ? 1.3 : 1;
             const currencyMultiplier = p.currency === 'battery' && powerTimers.batteryBoost > 0 ? 2 : 1;
-            state.score += p.points * currencyMultiplier * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1);
+            state.score += p.points * currencyMultiplier * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1) * hypeScoreMultiplier;
             state.streak = Math.min(state.streak + streakGain, 15);
             state.peakStreak = Math.max(state.peakStreak, state.streak);
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
             if (p.currency) runCurrency[p.currency] += currencyMultiplier;
+            addHype(0.08);
           } else if (p.kind === 'shield') {
             const boost = 1 + meta.upgrades.shieldDuration * 0.1;
             powerTimers.shield = Math.min(8, powerTimers.shield + 3.5 * boost);
             addMessage('Shield online', '#8ef0ff');
+            addHype(0.05);
           } else if (p.kind === 'magnet') {
             const boost = 1 + meta.upgrades.magnetDuration * 0.1;
             powerTimers.magnet = Math.min(10, powerTimers.magnet + 5 * boost);
             addMessage('Magnet engaged', '#ff9d5c');
             if (p.bonusScore) state.score += p.bonusScore * state.streak;
+            addHype(0.06);
           } else if (p.kind === 'turbo') {
             const boost = 1 + meta.upgrades.turboDuration * 0.08;
             powerTimers.turbo = Math.min(8, powerTimers.turbo + 3 * boost);
             addMessage('Turbo boost!', '#c18bff');
+            addHype(0.06);
           } else if (p.kind === 'autopilot') {
             powerTimers.autopilot = Math.min(9 + meta.upgrades.autopilotCharge, powerTimers.autopilot + 4 + meta.upgrades.autopilotCharge);
             addMessage('Autopilot smoothing traffic', '#8ef0ff');
+            addHype(0.05);
           } else if (p.kind === 'battery_boost') {
             powerTimers.batteryBoost = Math.min(10, powerTimers.batteryBoost + 6);
             addMessage('Battery values doubled', '#8ef0ff');
+            addHype(0.05);
           } else if (p.kind === 'streak_boost') {
             powerTimers.streakBoost = Math.min(10, powerTimers.streakBoost + 5);
             addMessage('Fan hype accelerates streaks', '#ff9aa2');
+            addHype(0.06);
           } else if (p.kind === 'drone') {
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
             addMessage('Drone strike clears the lane', '#8af7cd');
@@ -2275,8 +2487,9 @@
           } else if (p.kind === 'bonus_coins') {
             const bonus = 3;
             runCurrency.money += bonus;
-            state.score += 260 * bonus * (powerTimers.turbo > 0 ? 1.5 : 1);
+            state.score += 260 * bonus * (powerTimers.turbo > 0 ? 1.5 : 1) * hypeScoreMultiplier;
             addMessage('EV tax credit windfall!', '#ffd166');
+            addHype(0.08);
           }
         }
         if (p.y > viewHeight + 100) pickups.splice(i, 1);
@@ -2288,6 +2501,8 @@
       powerTimers.autopilot = Math.max(0, powerTimers.autopilot - delta);
       powerTimers.batteryBoost = Math.max(0, powerTimers.batteryBoost - delta);
       powerTimers.streakBoost = Math.max(0, powerTimers.streakBoost - delta);
+      powerTimers.hype = Math.max(0, powerTimers.hype - delta);
+      if (powerTimers.hype <= 0) hype = Math.max(0, hype - delta * 0.05);
 
       ctx.save();
       if (screenShake > 0) {

@@ -244,7 +244,7 @@
     <div class="overlay visible" id="startOverlay" aria-live="polite">
         <div class="panel">
           <h2>Ready to floor it?</h2>
-          <p>Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks, grab power-ups (shield, magnet, turbo, autopilot, drone strike, extra life), and keep Elon on the road. Finish stages for new skies and faster payouts. Space or tap Start to begin.</p>
+          <p>Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks, grab the new levers (green legislation shields, gov contract magnets, earnings turbo, FSD thumbs-up autopilot, battery breakthroughs, hype rockets, extra lives), and keep Elon on the road. Finish stages for new skies and faster payouts. Space or tap Start to begin.</p>
           <button class="play" id="startBtn">Start Run</button>
         </div>
     </div>
@@ -335,19 +335,141 @@
       '...rrrrr....',
     ];
 
-    const opponentSprite = [
-      '...ddttdd...',
-      '..dttTTttd..',
-      '.dTTTWWTTTd.',
-      '.dTTTWWTTTd.',
-      'tTTTTTTTTTt',
-      'tTTkkkkkTTt',
-      'tTTkkkkkTTt',
-      'tTTTTTTTTTt',
-      '.dTTtGGtTd.',
-      '..dtttttd..',
-      '...ddrdd...',
-    ];
+    const opponentSprites = {
+      car: {
+        sprite: [
+          '...ddttdd...',
+          '..dttTTttd..',
+          '.dTTTWWTTTd.',
+          '.dTTTWWTTTd.',
+          'tTTTTTTTTTt',
+          'tTTkkkkkTTt',
+          'tTTkkkkkTTt',
+          'tTTTTTTTTTt',
+          '.dTTtGGtTd.',
+          '..dtttttd..',
+          '...ddrdd...',
+        ],
+        palette: { d: 'rgba(0,0,0,0.2)', t: '#2e324a', T: '#4e557a', W: '#cfe8ff', k: '#0f1220', G: '#8ef0ff', r: '#ff9aa2' },
+      },
+      truck: {
+        sprite: [
+          '...dddddd...',
+          '..dTTTTTTd..',
+          '.dTTTTTTTTd.',
+          'tTTTTTTTTTTt',
+          'tTTwwwwwwTTt',
+          'tTTwwwwwwTTt',
+          'tTTkkkkkkTTt',
+          '.dTTTTTTTTd.',
+          '..dTTttTTd..',
+          '...dd..dd...',
+        ],
+        palette: { d: 'rgba(0,0,0,0.25)', t: '#2a2730', T: '#4b4a58', w: '#d8d0ff', k: '#0c101b' },
+      },
+      barricade: {
+        sprite: [
+          '...rrrrrr...',
+          '..rYYrrYYr..',
+          '.rYYrrrrYYr.',
+          'rYYrrrrrYYrr',
+          'rYYrrrrrYYrr',
+          '.rYYrrrrYYr.',
+          '..rYYrrYYr..',
+          '...rrrrrr...',
+          '...GG..GG...',
+        ],
+        palette: { r: '#3a1920', Y: '#ff6b6f', G: '#b5a1ff' },
+      },
+      van: {
+        sprite: [
+          '...ddttdd...',
+          '..dttTTttd..',
+          '.dTTTWWTTTd.',
+          '.dTTTWWTTTd.',
+          'tTTTTTTTTTt',
+          'tTTwwwwTTt',
+          'tTTwwwwTTt',
+          'tTTTTTTTTTt',
+          '.dTTtttTTd.',
+          '..dtttttd..',
+          '...dd..dd...',
+        ],
+        palette: { d: 'rgba(0,0,0,0.2)', t: '#1b2c46', T: '#2f4a76', W: '#cfe8ff', w: '#9fe8ff' },
+      },
+      bear: {
+        sprite: [
+          '....bbbb....',
+          '...bBBBBb...',
+          '..bBBrBBb..',
+          '.bBBRRRBBb.',
+          'bBBRRRRRBBb',
+          'bBBkrrkBBb',
+          'bBBRRRRRBBb',
+          '.bBBRRRBBb.',
+          '..bBBBBBb..',
+          '...bBBb...',
+        ],
+        palette: { b: '#1c1410', B: '#4c2c1a', R: '#f6c65b', k: '#0c101b', r: '#ff9aa2' },
+      },
+      ev: {
+        sprite: [
+          '...ddttdd...',
+          '..dttTTttd..',
+          '.dTTTWWTTTd.',
+          '.dTTTWWTTTd.',
+          'tTTTTTTTTTt',
+          'tTTGGGGTTt',
+          'tTTGGGGTTt',
+          'tTTTTTTTTTt',
+          '.dTTtttTTd.',
+          '..dtttttd..',
+          '...dd..dd...',
+        ],
+        palette: { d: 'rgba(0,0,0,0.2)', t: '#12352a', T: '#1f5946', W: '#cfe8ff', G: '#7ad966' },
+      },
+      app: {
+        sprite: [
+          '...bbbbbb...',
+          '..bBWWWWBb..',
+          '.bBWWWWWWBb.',
+          '.bWWWXXWWBb.',
+          '.bWWXXXXWBb.',
+          '.bWWWXXWWBb.',
+          '.bBWWWWWWBb.',
+          '..bBWWWWBb..',
+          '...bbbbbb...',
+        ],
+        palette: { b: '#0e1a33', B: '#1f3b70', W: '#9cc4ff', X: '#1a2440' },
+      },
+      bot: {
+        sprite: [
+          '...pppp....',
+          '..pBBBBp...',
+          '.pBwwwwBp..',
+          'pBwPPPwBp.',
+          'pBwPPPwBp.',
+          '.pBwwwwBp..',
+          '..pBBBBp...',
+          '...pppp....',
+        ],
+        palette: { p: '#20102a', B: '#4a2c70', w: '#dfe5ff', P: '#8ef0ff' },
+      },
+      report: {
+        sprite: [
+          '...pppp....',
+          '..pWWWWp...',
+          '.pWrrrWp..',
+          '.pWrrrWp..',
+          '.pWrrrWp..',
+          '.pWrrrWp..',
+          '.pWrrrWp..',
+          '..pWWWWp...',
+          '...pppp....',
+        ],
+        palette: { p: '#1d0f18', W: '#f7f7ff', r: '#ff6b6f' },
+      },
+    };
     const hud = {
       score: document.getElementById('score'),
       distance: document.getElementById('distance'),
@@ -496,6 +618,8 @@
     let nearMissFlash = 0;
     let screenShake = 0;
     let lastStreakBanner = 1;
+    let controlScramble = 0;
+    let slowdownTimer = 0;
 
     function saveMeta() {
       localStorage.setItem('elon_meta', JSON.stringify(meta));
@@ -508,7 +632,7 @@
     const obstacles = [];
     const pickups = [];
     const particles = [];
-    const powerTimers = { shield: 0, magnet: 0, turbo: 0, autopilot: 0 };
+    const powerTimers = { shield: 0, magnet: 0, turbo: 0, autopilot: 0, batteryBoost: 0, streakBoost: 0 };
     const uiMessages = [];
     let rafId = null;
 
@@ -705,33 +829,55 @@
       ctx.restore();
     }
 
-    function spawnOpponent() {
-      const lane = Math.floor(rand() * lanes);
+    const opponentCatalog = [
+      { id: 'bad_legislation_truck', label: 'Bad Legislation', hue: '#8b6b6f', spriteKey: 'truck', effect: 'damage', size: 70, speedMod: 0.95 },
+      { id: 'regulatory_roadblock', label: 'Regulatory Roadblock', hue: '#d34b4b', spriteKey: 'barricade', effect: 'lane_block', size: 74, speedMod: 0.9 },
+      { id: 'fud_headline_van', label: 'FUD Headline Van', hue: '#6a9bff', spriteKey: 'van', effect: 'drop_multiplier', speedMod: 1.1 },
+      { id: 'short_seller_bear', label: 'Short Seller Bear', hue: '#f6c65b', spriteKey: 'bear', effect: 'score_penalty', size: 62 },
+      { id: 'rival_ev_fleet', label: 'Rival EV', hue: '#7ad966', spriteKey: 'ev', effect: 'fleet', size: 60 },
+      { id: 'old_brand_app_icon', label: 'Old-brand App', hue: '#7aa8ff', spriteKey: 'app', effect: 'reverse_controls', size: 54, hover: true, speedMod: 0.85 },
+      { id: 'ai_distraction_bot', label: 'AI Distraction Bot', hue: '#b38bff', spriteKey: 'bot', effect: 'slowdown', size: 58, hover: true, speedMod: 0.95 },
+      { id: 'red_earnings_report', label: 'Red-Ink Report', hue: '#ff6b6f', spriteKey: 'report', effect: 'reset_multiplier', size: 52, speedMod: 1.05 },
+    ];
+
+    function createObstacle(template, laneOverride, extra = {}) {
+      const lane = laneOverride ?? Math.floor(rand() * lanes);
       const stage = stages[state.stageIndex];
-      const tags = [
-        { label: 'Politician', hue: '#e82127', sprite: 'car' },
-        { label: 'Legacy OEM', hue: '#7ad966', sprite: 'dino' },
-        { label: 'Legislation', hue: '#a36b3c', sprite: 'poop' },
-        { label: 'Short Seller', hue: '#67d7ff', sprite: 'car' },
-        { label: 'Old Media', hue: '#f6c65b', sprite: 'car' },
-        { label: 'Botnet', hue: '#b5a1ff', sprite: 'car' },
-        { label: 'Space Debris', hue: '#9fe8ff', sprite: 'car' },
-        { label: 'TikTok FUD', hue: '#ff7b45', sprite: 'car' },
-      ];
-      const pick = tags[Math.floor(rand() * tags.length)];
-      const type = rand() > 0.6 - state.stageIndex * 0.04 ? 'swerve' : 'block';
-      const baseSpeed = 240 + rand() * 120 * state.difficulty * stage.speed;
+      const baseSpeed = (template.baseSpeed || 240) + rand() * 120 * state.difficulty * stage.speed;
       obstacles.push({
         lane,
         y: -80,
-        speed: baseSpeed,
-        label: pick.label,
-        hue: pick.hue,
-        size: 62,
-        type,
+        speed: baseSpeed * (template.speedMod || 1),
+        label: template.label,
+        hue: template.hue,
+        size: template.size || 62,
+        type: template.behavior || 'block',
         drift: rand() * 0.6 - 0.3,
-        spriteKey: pick.sprite,
+        spriteKey: template.spriteKey,
+        effect: template.effect || 'damage',
+        hover: template.hover,
+        ...extra,
       });
+    }
+
+    function spawnOpponent() {
+      const pick = opponentCatalog[Math.floor(rand() * opponentCatalog.length)];
+      if (pick.id === 'rival_ev_fleet') {
+        const count = 2 + Math.floor(rand() * 2);
+        const laneOrder = [0, 1, 2].sort(() => rand() - 0.5).slice(0, count);
+        const swapSequence = [0, 1, 2];
+        laneOrder.forEach((lane, idx) => {
+          createObstacle(pick, lane, {
+            swapSequence,
+            swapInterval: 0.9 + rand() * 0.35,
+            swapIndex: (idx + 1) % swapSequence.length,
+          });
+        });
+        return;
+      }
+
+      const type = pick.id === 'regulatory_roadblock' ? 'block' : rand() > 0.6 - state.stageIndex * 0.04 ? 'swerve' : 'block';
+      createObstacle({ ...pick, behavior: type }, Math.floor(rand() * lanes));
     }
 
     const pickupSprites = {
@@ -917,6 +1063,122 @@
           o: '#ff9d5c',
         },
       },
+      green_legislation: {
+        sprite: [
+          '...ggggg...',
+          '..gLLLLg..',
+          '.gLLLLLLg.',
+          '.gLLcLLLg.',
+          '.gLLLcLLg.',
+          '.gLLcLLLg.',
+          '.gLLLLLLg.',
+          '.gLLLLLLg.',
+          '..gLLLLg..',
+          '...ggggg...',
+        ],
+        palette: { g: '#0f1f19', L: '#2de8b5', c: '#9ff4d3' },
+      },
+      gov_contract_case: {
+        sprite: [
+          '...yyyyy...',
+          '..yGGGGy..',
+          '.yGCCCCGy.',
+          '.yGCCCCGy.',
+          '.yGCCCCGy.',
+          '.yGCCCCGy.',
+          '.yGCCCCGy.',
+          '.yGCCCCGy.',
+          '.yGCCCCGy.',
+          '..yGGGGy..',
+          '...yyyyy...',
+        ],
+        palette: { y: '#3a220c', G: '#f6c65b', C: '#dfe5ff' },
+      },
+      earnings_beat_chart: {
+        sprite: [
+          '....ggg....',
+          '...gGGGg...',
+          '..gGAAAGg..',
+          '.gGAAAAGg.',
+          '.gGAAaAGg.',
+          '.gGAAAAgg.',
+          '..gGAAgg..',
+          '...gGGg...',
+          '....gg....',
+        ],
+        palette: { g: '#102218', G: '#2de8b5', A: '#6cf2d5', a: '#9ff4d3' },
+      },
+      fsd_thumbs_up: {
+        sprite: [
+          '...bbbb....',
+          '..bWWWWb...',
+          '.bWcWWcWb..',
+          '.bWcWWcWb..',
+          '.bWWWWWWb..',
+          '.bWcccccB..',
+          '.bWWWWWBB..',
+          '..bBBBBb...',
+          '...bbbb....',
+        ],
+        palette: { b: '#0f1220', W: '#d0e8ff', c: '#8ef0ff', B: '#9fe8ff' },
+      },
+      battery_breakthrough: {
+        sprite: [
+          '...ggggg...',
+          '..gYYYYg..',
+          '.gYLLLYg.',
+          '.gYLLLYg.',
+          '.gYLLLYg.',
+          '.gYLLLYg.',
+          '.gYLLLYg.',
+          '..gYYYYg..',
+          '...ggggg...',
+          '....pp....',
+        ],
+        palette: { g: '#0f1f19', Y: '#8ef0ff', L: '#2de8b5', p: '#ffd166' },
+      },
+      fan_hype_rocket: {
+        sprite: [
+          '....rr....',
+          '...rHHr...',
+          '..rHHHHr..',
+          '.rHHffHHr.',
+          '.rHHffHHr.',
+          '..rHHHHr..',
+          '...rHHr...',
+          '....rr....',
+          '...ppp...',
+          '..ppppp..',
+        ],
+        palette: { r: '#1a0c18', H: '#ff9aa2', f: '#ffd166', p: '#9fe8ff' },
+      },
+      gigafactory_extra_life: {
+        sprite: [
+          '..bbbbbbbb..',
+          '.bGGGGGGGGb.',
+          '.bGwwGGwwGb.',
+          '.bGwwGGwwGb.',
+          '.bGGGGGGGGb.',
+          '.bGGGGGGGGb.',
+          '.bGGGGGGGGb.',
+          '..bbbbbbbb..',
+        ],
+        palette: { b: '#0f1220', G: '#9fe8ff', w: '#67d7ff' },
+      },
+      ev_tax_credit_badge: {
+        sprite: [
+          '...yyyyy...',
+          '..yGGGGy..',
+          '.yGEEEGy.',
+          '.yGEEEGy.',
+          '.yGEEEGy.',
+          '.yGEEEGy.',
+          '.yG%%%Gy.',
+          '..yGGGGy..',
+          '...yyyyy...',
+        ],
+        palette: { y: '#4c3712', G: '#ffd166', E: '#2e9a42', '%': '#9fe8ff' },
+      },
     };
 
     function spawnPickup(forceType = null) {
@@ -925,12 +1187,14 @@
         { label: '🔋 Battery', color: '#2de8b5', points: 120, kind: 'score', art: 'battery', currency: 'battery' },
         { label: '✅ Contract', color: '#67d7ff', points: 180, kind: 'score', art: 'contract', currency: 'contract' },
         { label: '💰 Money', color: '#f6c65b', points: 260, kind: 'score', art: 'money', currency: 'money' },
-        { label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield', art: 'shield' },
-        { label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet', art: 'magnet' },
-        { label: '🚀 Turbo', color: '#d0b7ff', points: 0, kind: 'turbo', art: 'turbo' },
-        { label: '🤖 Autopilot', color: '#8ef0ff', points: 0, kind: 'autopilot', art: 'autopilot' },
-        { label: '🛸 Drone Strike', color: '#8af7cd', points: 0, kind: 'drone', art: 'drone' },
-        { label: '❤️ Extra Life', color: '#ff4fa4', points: 0, kind: 'life', art: 'life' },
+        { label: '📜 Green Legislation', color: '#2de8b5', points: 0, kind: 'shield', art: 'green_legislation' },
+        { label: '💼 Gov Contract Case', color: '#f6c65b', points: 160, kind: 'magnet', art: 'gov_contract_case', bonusScore: 120 },
+        { label: '📈 Earnings Beat Chart', color: '#2de8b5', points: 0, kind: 'turbo', art: 'earnings_beat_chart' },
+        { label: '👍 FSD Thumbs-up', color: '#8ef0ff', points: 0, kind: 'autopilot', art: 'fsd_thumbs_up' },
+        { label: '🔋 Battery Breakthrough', color: '#8ef0ff', points: 0, kind: 'battery_boost', art: 'battery_breakthrough' },
+        { label: '🚀 Fan Hype Rocket', color: '#ff9aa2', points: 0, kind: 'streak_boost', art: 'fan_hype_rocket' },
+        { label: '🏭 Gigafactory Life', color: '#9fe8ff', points: 0, kind: 'life', art: 'gigafactory_extra_life' },
+        { label: '🪙 EV Tax Credit Badge', color: '#ffd166', points: 0, kind: 'bonus_coins', art: 'ev_tax_credit_badge' },
       ];
       const pick = forceType || types[Math.floor(rand() * types.length)];
       pickups.push({
@@ -951,18 +1215,13 @@
       ctx.beginPath();
       ctx.arc(0, 0, o.size / 2 + 12, 0, Math.PI * 2);
       ctx.fill();
-      const spriteScale = o.size / (opponentSprite[0].length * 0.92);
-      const darker = adjustColor(o.hue, -26);
-      const brighter = adjustColor(o.hue, 22);
-      drawPixelSprite(opponentSprite, {
-        d: 'rgba(0,0,0,0.2)',
-        t: darker,
-        T: o.hue,
-        W: '#cfe8ff',
-        k: adjustColor(o.hue, -60),
-        G: brighter,
-        r: '#ff9aa2',
-      }, spriteScale);
+      const spriteDef = opponentSprites[o.spriteKey] || opponentSprites.car;
+      const spriteScale = o.size / (spriteDef.sprite[0].length * 0.92);
+      const palette = { ...spriteDef.palette };
+      if (palette.T !== undefined) palette.T = adjustColor(o.hue, 10);
+      if (palette.t !== undefined) palette.t = adjustColor(o.hue, -20);
+      if (palette.G !== undefined) palette.G = adjustColor(o.hue, 26);
+      drawPixelSprite(spriteDef.sprite, palette, spriteScale);
 
       ctx.fillStyle = '#f7f7ff';
       ctx.font = 'bold 12px Inter';
@@ -1038,7 +1297,8 @@
 
     function moveLane(dir) {
       if (!state.running || state.paused) return;
-      player.targetLane = Math.max(0, Math.min(lanes - 1, player.targetLane + dir));
+      const effectiveDir = controlScramble > 0 ? -dir : dir;
+      player.targetLane = Math.max(0, Math.min(lanes - 1, player.targetLane + effectiveDir));
     }
 
     window.addEventListener('keydown', (e) => {
@@ -1100,9 +1360,12 @@
       player.tint = stages[state.stageIndex].accent;
       player.x = laneX(1, player.y);
       powerTimers.shield = powerTimers.magnet = powerTimers.turbo = powerTimers.autopilot = 0;
+      powerTimers.batteryBoost = powerTimers.streakBoost = 0;
       runCurrency.battery = runCurrency.contract = runCurrency.money = 0;
       slowMo = 0;
       nearMissFlash = 0;
+      controlScramble = 0;
+      slowdownTimer = 0;
       lastStreakBanner = 1;
       rngSeed = state.seed;
       if (meta.upgrades.startShield > 0) powerTimers.shield = 2 + meta.upgrades.startShield * 1.5;
@@ -1178,6 +1441,8 @@
         ['🧲', 'Magnet', powerTimers.magnet],
         ['🚀', 'Turbo', powerTimers.turbo],
         ['🤖', 'Autopilot', powerTimers.autopilot],
+        ['🔋', 'Battery x2', powerTimers.batteryBoost],
+        ['🚀✨', 'Hype', powerTimers.streakBoost],
       ];
       entries.forEach(([icon, label, time]) => {
         if (time > 0) {
@@ -1316,8 +1581,12 @@
       state.lastTime = timestamp;
       state.elapsed += delta;
 
+      controlScramble = Math.max(0, controlScramble - delta);
+      slowdownTimer = Math.max(0, slowdownTimer - delta);
+
       const easeIn = Math.min(1, state.elapsed / 30);
-      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5);
+      const slowdownFactor = slowdownTimer > 0 ? 0.78 : 1;
+      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5) * slowdownFactor;
       state.distance += baseSpeed * delta;
       state.lastSpawn += delta;
       state.lastGood += delta;
@@ -1332,7 +1601,19 @@
       const magnetStrength = powerTimers.magnet > 0 ? laneWidth * 0.6 : 0;
       const trafficSpeedMod = powerTimers.autopilot > 0 ? 0.7 : 1;
 
-      for (const o of obstacles) o.y += o.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
+      for (const o of obstacles) {
+        if (o.swapSequence) {
+          o.swapTimer = (o.swapTimer || 0) + delta;
+          if (o.swapTimer > (o.swapInterval || 1)) {
+            o.swapTimer = 0;
+            o.swapIndex = ((o.swapIndex || 0) + 1) % o.swapSequence.length;
+          }
+          const targetLane = o.swapSequence[o.swapIndex || 0];
+          o.lane += (targetLane - o.lane) * 0.12;
+        }
+        const hoverOffset = o.hover ? Math.sin((state.elapsed + o.drift) * 2) * 8 : 0;
+        o.y += (o.speed * delta + hoverOffset * delta) * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
+      }
       for (const p of pickups) {
         p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
         if (magnetStrength && Math.abs(laneX(p.lane, p.y) - player.x) < magnetStrength) {
@@ -1343,12 +1624,13 @@
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
         const proximity = Math.abs(laneX(player.targetLane, player.y) - laneX(o.lane, o.y));
-        if (!o.nearMissed && proximity < laneWidth * 0.52 && o.y > player.y - 70 && o.y < player.y + 60) {
-          o.nearMissed = true;
-          state.streak = Math.min(state.streak + 0.25, 15);
-          state.score += 35 * state.streak;
-          slowMo = 0.25;
-          nearMissFlash = 0.18;
+          if (!o.nearMissed && proximity < laneWidth * 0.52 && o.y > player.y - 70 && o.y < player.y + 60) {
+            o.nearMissed = true;
+            const streakBoost = powerTimers.streakBoost > 0 ? 0.2 : 0;
+            state.streak = Math.min(state.streak + 0.25 + streakBoost, 15);
+            state.score += 35 * state.streak;
+            slowMo = 0.25;
+            nearMissFlash = 0.18;
           addMessage('NEAR MISS + streak juice', '#f6c65b');
         }
         if (collide(player, o, 54)) {
@@ -1358,7 +1640,33 @@
             emitBurst(laneX(player.targetLane, player.y), player.y, '#8ef0ff');
             addMessage('Shield saved you!', '#8ef0ff');
           } else {
-            state.streak = 1;
+            if (o.effect === 'drop_multiplier') {
+              state.streak = Math.max(1, state.streak * 0.35);
+              addMessage('FUD dropped your multiplier', '#6a9bff');
+            }
+            if (o.effect === 'score_penalty') {
+              state.score = Math.max(0, state.score - 400);
+              addMessage('Shorts clipped your score', '#f6c65b');
+            }
+            if (o.effect === 'reverse_controls') {
+              controlScramble = Math.max(controlScramble, 1.6);
+              addMessage('Controls scrambled!', '#7aa8ff');
+            }
+            if (o.effect === 'slowdown') {
+              slowdownTimer = Math.max(slowdownTimer, 2.6);
+              addMessage('AI distraction slowed you', '#b38bff');
+            }
+            if (o.effect === 'reset_multiplier') {
+              state.streak = 1;
+              const lostBags = Math.min(runCurrency.money, 1);
+              runCurrency.money -= lostBags;
+              addMessage('Earnings miss reset your streak', '#ff6b6f');
+            }
+            if (o.effect === 'lane_block') addMessage('Regulatory roadblock!', '#d34b4b');
+            if (o.effect !== 'drop_multiplier' && o.effect !== 'reset_multiplier') state.streak = 1;
+
+            state.streak = Math.min(state.streak, 10);
+            state.streak = Math.max(state.streak, 1);
             state.lives -= 1;
             const crashTint = '#ff5c8a';
             player.tint = crashTint;
@@ -1378,10 +1686,12 @@
         if (collide(player, p, 52)) {
           pickups.splice(i, 1);
           if (p.kind === 'score') {
-            state.score += p.points * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1);
-            state.streak = Math.min(state.streak + 1, 15);
+            const streakGain = powerTimers.streakBoost > 0 ? 1.3 : 1;
+            const currencyMultiplier = p.currency === 'battery' && powerTimers.batteryBoost > 0 ? 2 : 1;
+            state.score += p.points * currencyMultiplier * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1);
+            state.streak = Math.min(state.streak + streakGain, 15);
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
-            if (p.currency) runCurrency[p.currency] += 1;
+            if (p.currency) runCurrency[p.currency] += currencyMultiplier;
           } else if (p.kind === 'shield') {
             const boost = 1 + meta.upgrades.shieldDuration * 0.1;
             powerTimers.shield = Math.min(8, powerTimers.shield + 3.5 * boost);
@@ -1390,6 +1700,7 @@
             const boost = 1 + meta.upgrades.magnetDuration * 0.1;
             powerTimers.magnet = Math.min(10, powerTimers.magnet + 5 * boost);
             addMessage('Magnet engaged', '#ff9d5c');
+            if (p.bonusScore) state.score += p.bonusScore * state.streak;
           } else if (p.kind === 'turbo') {
             const boost = 1 + meta.upgrades.turboDuration * 0.08;
             powerTimers.turbo = Math.min(8, powerTimers.turbo + 3 * boost);
@@ -1397,6 +1708,12 @@
           } else if (p.kind === 'autopilot') {
             powerTimers.autopilot = Math.min(9 + meta.upgrades.autopilotCharge, powerTimers.autopilot + 4 + meta.upgrades.autopilotCharge);
             addMessage('Autopilot smoothing traffic', '#8ef0ff');
+          } else if (p.kind === 'battery_boost') {
+            powerTimers.batteryBoost = Math.min(10, powerTimers.batteryBoost + 6);
+            addMessage('Battery values doubled', '#8ef0ff');
+          } else if (p.kind === 'streak_boost') {
+            powerTimers.streakBoost = Math.min(10, powerTimers.streakBoost + 5);
+            addMessage('Fan hype accelerates streaks', '#ff9aa2');
           } else if (p.kind === 'drone') {
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
             addMessage('Drone strike clears the lane', '#8af7cd');
@@ -1410,6 +1727,11 @@
               state.score += 300 * state.streak;
               addMessage('Max lives – converted to score', '#ff4fa4');
             }
+          } else if (p.kind === 'bonus_coins') {
+            const bonus = 3;
+            runCurrency.money += bonus;
+            state.score += 260 * bonus * (powerTimers.turbo > 0 ? 1.5 : 1);
+            addMessage('EV tax credit windfall!', '#ffd166');
           }
         }
         if (p.y > viewHeight + 100) pickups.splice(i, 1);
@@ -1419,6 +1741,8 @@
       powerTimers.magnet = Math.max(0, powerTimers.magnet - delta);
       powerTimers.turbo = Math.max(0, powerTimers.turbo - delta);
       powerTimers.autopilot = Math.max(0, powerTimers.autopilot - delta);
+      powerTimers.batteryBoost = Math.max(0, powerTimers.batteryBoost - delta);
+      powerTimers.streakBoost = Math.max(0, powerTimers.streakBoost - delta);
 
       ctx.save();
       if (screenShake > 0) {

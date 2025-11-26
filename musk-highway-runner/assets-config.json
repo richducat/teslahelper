@@ -1,0 +1,22 @@
+{
+  "opponents": [
+    { "id": "bad_legislation_truck", "index": 0, "effect": "damage" },
+    { "id": "regulatory_roadblock", "index": 1, "effect": "lane_block" },
+    { "id": "fud_headline_van", "index": 2, "effect": "damage_and_drop_multiplier" },
+    { "id": "short_seller_bear", "index": 3, "effect": "damage_and_score_penalty" },
+    { "id": "rival_ev_fleet", "index": 4, "effect": "damage" },
+    { "id": "old_brand_app_icon", "index": 5, "effect": "reverse_controls" },
+    { "id": "ai_distraction_bot", "index": 6, "effect": "slowdown" },
+    { "id": "red_earnings_report", "index": 7, "effect": "reset_multiplier" }
+  ],
+  "powerUps": [
+    { "id": "green_legislation", "index": 0, "effect": "shield" },
+    { "id": "gov_contract_case", "index": 1, "effect": "magnet" },
+    { "id": "earnings_beat_chart", "index": 2, "effect": "turbo" },
+    { "id": "fsd_thumbs_up", "index": 3, "effect": "autopilot" },
+    { "id": "battery_breakthrough", "index": 4, "effect": "double_batteries" },
+    { "id": "fan_hype_rocket", "index": 5, "effect": "streak_boost" },
+    { "id": "gigafactory_extra_life", "index": 6, "effect": "extra_life" },
+    { "id": "ev_tax_credit_badge", "index": 7, "effect": "bonus_coins" }
+  ]
+}

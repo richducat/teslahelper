@@ -105,19 +105,7 @@
     .stage-note { color: #7ee0ff; font-weight: 600; margin-top: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
     .streak-value { font-size: clamp(22px, 4vw, 30px); color: var(--good); font-weight: 800; letter-spacing: 0.14em; margin-top: 4px; }
     .subtle { color: #b6c8da; font-weight: 700; margin-top: 4px; }
-    .hud-bottom { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-    .hud-stat {
-      background: linear-gradient(180deg, #0b1d2f 0%, #081624 100%);
-      border: 1px solid #1c3b59;
-      border-radius: 12px;
-      padding: 10px 12px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    }
-    .hud-stat .hud-label { color: #93d7ff; }
     .hud-value { font-size: clamp(24px, 4vw, 32px); font-weight: 800; letter-spacing: 0.08em; margin-top: 4px; }
-    .hud-score .hud-value { color: var(--good); text-shadow: 0 0 14px rgba(98, 255, 145, 0.3); }
-    .hud-distance .hud-value { color: #9ee5ff; }
-    .hud-lives .hud-value { color: #eaf2ff; }
     .bar {
       margin-top: 6px;
       height: 6px;
@@ -380,7 +368,6 @@
         button.play, button.pause { width: 100%; }
       }
       @media (max-width: 520px) {
-        .hud-bottom { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
         .controls { font-size: 13px; }
         .control-tickers { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); min-width: 100%; }
       }
@@ -411,21 +398,6 @@
           <div class="subtle">High Score: <span id="high">0</span></div>
           <div class="hidden bar"><span id="streakBar"></span></div>
           <div class="subtle" id="streakHint"></div>
-        </div>
-      </div>
-      <div class="hud-bottom">
-        <div class="hud-stat hud-distance">
-          <div class="hud-label">Distance</div>
-          <div class="hud-value" id="distance">0 m</div>
-          <div class="hidden bar"><span id="distanceBar"></span></div>
-        </div>
-        <div class="hud-stat hud-score">
-          <div class="hud-label">Score</div>
-          <div class="hud-value" id="score">0</div>
-        </div>
-        <div class="hud-stat hud-lives">
-          <div class="hud-label">Lives</div>
-          <div class="hud-value" id="lives">3</div>
         </div>
       </div>
       <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
@@ -988,12 +960,12 @@
 
       function resize() {
         const isPortrait = window.innerHeight > window.innerWidth;
-        const ratio = isPortrait ? 0.7 : 14 / 9;
+        const ratio = isPortrait ? 0.7 : 1.4;
         const containerWidth = card?.clientWidth || window.innerWidth;
         let w = Math.min(containerWidth, Math.min(1400, window.innerWidth - (isPortrait ? 12 : 32)));
         let h = w / ratio;
 
-        const maxHeight = window.innerHeight * (isPortrait ? 0.92 : 0.88);
+        const maxHeight = window.innerHeight * (isPortrait ? 0.92 : 0.94);
         if (h > maxHeight) {
           h = maxHeight;
           w = h * ratio;

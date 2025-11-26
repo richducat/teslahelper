@@ -1764,7 +1764,11 @@
     }
 
     function startGame() {
-      if (state.running) return;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
       state.seed = sharedChallenge?.seed ?? Date.now();
       rngSeed = state.seed % 2147483647;
       activeArcStep = Math.min(meta.runs, 3);

@@ -73,6 +73,23 @@
       border-radius: 12px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
+    .metric .bar {
+      margin-top: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      position: relative;
+    }
+    .metric .bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+      box-shadow: 0 6px 16px rgba(232,33,39,0.28);
+      transition: width 0.2s ease, background 0.3s ease;
+    }
+    .metric small { opacity: 0.7; font-weight: 600; }
     .metric .label { opacity: 0.72; font-size: clamp(11px, 1.5vw, 13px); letter-spacing: 0.12em; text-transform: uppercase; }
     .metric .value { font-size: clamp(19px, 3vw, 22px); font-weight: 800; margin-top: 2px; letter-spacing: -0.01em; }
     canvas {
@@ -159,6 +176,7 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
+    .overlay .grid { display: grid; gap: 10px; }
     .overlay.visible { opacity: 1; pointer-events: all; }
     .overlay .panel {
       background: rgba(7, 9, 15, 0.9);
@@ -208,9 +226,9 @@
   <div class="card" style="position: relative;">
     <div class="hud" id="hud">
       <div class="metric"><div class="label">Score</div><div class="value" id="score">0</div></div>
-      <div class="metric"><div class="label">Distance</div><div class="value" id="distance">0 m</div></div>
-      <div class="metric"><div class="label">Stage</div><div class="value" id="stage">Launch Lane</div></div>
-      <div class="metric"><div class="label">Streak</div><div class="value" id="streak">x1</div></div>
+      <div class="metric"><div class="label">Distance</div><div class="value" id="distance">0 m</div><div class="bar"><span id="distanceBar"></span></div><small id="tierLabel"></small></div>
+      <div class="metric"><div class="label">Stage</div><div class="value" id="stage">Launch Lane</div><div class="bar"><span id="stageBar"></span></div><small id="stageNote">Warm up</small></div>
+      <div class="metric"><div class="label">Streak</div><div class="value" id="streak">x1</div><div class="bar"><span id="streakBar"></span></div><small id="streakHint">Stack near misses for bonus</small></div>
       <div class="metric"><div class="label">Lives</div><div class="value" id="lives">3</div></div>
       <div class="metric"><div class="label">High Score</div><div class="value" id="high">0</div></div>
       <div class="metric">
@@ -233,8 +251,15 @@
     <div class="overlay" id="gameOverOverlay" aria-live="polite">
       <div class="panel">
         <h2>Run Over</h2>
-        <p id="summary"></p>
-        <button class="play" id="restartBtn">Restart</button>
+        <div class="grid">
+          <p id="summary"></p>
+          <div id="postProgress"></div>
+          <div id="currencySummary"></div>
+          <div id="upgradeShop"></div>
+          <div id="leaderboards"></div>
+          <div id="challengeLink"></div>
+          <button class="play" id="restartBtn">One more rage drive</button>
+        </div>
       </div>
     </div>
     <div class="controls">
@@ -331,11 +356,22 @@
       lives: document.getElementById('lives'),
       high: document.getElementById('high'),
       powerups: document.getElementById('powerups'),
+      stageBar: document.getElementById('stageBar'),
+      distanceBar: document.getElementById('distanceBar'),
+      streakBar: document.getElementById('streakBar'),
+      stageNote: document.getElementById('stageNote'),
+      tierLabel: document.getElementById('tierLabel'),
+      streakHint: document.getElementById('streakHint'),
     };
 
     const startOverlay = document.getElementById('startOverlay');
     const gameOverOverlay = document.getElementById('gameOverOverlay');
     const summary = document.getElementById('summary');
+    const postProgress = document.getElementById('postProgress');
+    const currencySummary = document.getElementById('currencySummary');
+    const upgradeShop = document.getElementById('upgradeShop');
+    const leaderboards = document.getElementById('leaderboards');
+    const challengeLink = document.getElementById('challengeLink');
     const startBtn = document.getElementById('startBtn');
     const restartBtn = document.getElementById('restartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
@@ -412,20 +448,62 @@
       get accent() { return stages[state.stageIndex].accent; },
     };
 
+    const meta = JSON.parse(localStorage.getItem('elon_meta') || '{}');
+    const defaults = {
+      credits: 0,
+      runs: 0,
+      achievements: {},
+      campaign: 0,
+      upgrades: { shieldDuration: 0, magnetDuration: 0, turboDuration: 0, startShield: 0, extraLife: 0, autopilotCharge: 0 },
+      weekly: [],
+    };
+    Object.keys(defaults).forEach((k) => { if (meta[k] === undefined) meta[k] = JSON.parse(JSON.stringify(defaults[k])); });
+
+    const upgradeDefs = [
+      { key: 'shieldDuration', label: 'Shield longevity', desc: '+10% shield duration per level', baseCost: 18 },
+      { key: 'magnetDuration', label: 'Magnet duration', desc: '+10% magnet duration per level', baseCost: 18 },
+      { key: 'turboDuration', label: 'Turbo burn', desc: '+8% turbo duration per level', baseCost: 18 },
+      { key: 'startShield', label: 'Start shielded', desc: 'Spawn with a brief shield', baseCost: 26 },
+      { key: 'extraLife', label: 'Extra life', desc: '+1 permanent life (max +2)', baseCost: 40 },
+      { key: 'autopilotCharge', label: 'Autopilot charge', desc: '+1 autopilot second each run', baseCost: 28 },
+    ];
+
+    let rngSeed = Date.now() % 2147483647;
+    function rand() {
+      rngSeed = (rngSeed * 48271) % 2147483647;
+      return (rngSeed & 2147483647) / 2147483647;
+    }
+
     const state = {
       running: false,
       paused: false,
       score: 0,
       distance: 0,
       streak: 1,
+      streakProgress: 0,
       lives: 3,
       lastSpawn: 0,
       lastGood: 0,
       lastTime: 0,
+      elapsed: 0,
       difficulty: 1,
       stageIndex: 0,
       high: Number(localStorage.getItem('elon_high_score') || 0),
+      seed: rngSeed,
     };
+    const runCurrency = { battery: 0, contract: 0, money: 0 };
+    let slowMo = 0;
+    let nearMissFlash = 0;
+    let screenShake = 0;
+    let lastStreakBanner = 1;
+
+    function saveMeta() {
+      localStorage.setItem('elon_meta', JSON.stringify(meta));
+    }
+
+    function creditsFromRun() {
+      return runCurrency.battery + runCurrency.contract * 2 + runCurrency.money * 3;
+    }
 
     const obstacles = [];
     const pickups = [];
@@ -552,6 +630,37 @@
       ctx.restore();
     }
 
+    function drawPowerFx(time) {
+      if (powerTimers.autopilot > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        const glow = ctx.createLinearGradient(0, horizonY(), 0, viewHeight);
+        glow.addColorStop(0, 'rgba(142, 240, 255, 0.12)');
+        glow.addColorStop(1, 'rgba(142, 240, 255, 0.4)');
+        ctx.fillStyle = glow;
+        for (let i = 0; i < lanes; i++) {
+          const x = laneX(i, viewHeight * 0.9);
+          ctx.fillRect(x - 8, horizonY(), 4, viewHeight * 0.6);
+        }
+        ctx.restore();
+      }
+      if (powerTimers.turbo > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#c18bff';
+        ctx.filter = 'blur(2px)';
+        ctx.fillRect(0, 0, viewWidth, viewHeight);
+        ctx.restore();
+      }
+      if (nearMissFlash > 0) {
+        ctx.save();
+        ctx.globalAlpha = nearMissFlash * 1.2;
+        ctx.fillStyle = '#f6c65b';
+        ctx.fillRect(0, 0, viewWidth, viewHeight);
+        ctx.restore();
+      }
+    }
+
     function laneX(lane, y = viewHeight) {
       const horizon = horizonY();
       const clampedY = Math.max(horizon, Math.min(y, viewHeight));
@@ -597,7 +706,7 @@
     }
 
     function spawnOpponent() {
-      const lane = Math.floor(Math.random() * lanes);
+      const lane = Math.floor(rand() * lanes);
       const stage = stages[state.stageIndex];
       const tags = [
         { label: 'Politician', hue: '#e82127', sprite: 'car' },
@@ -609,9 +718,9 @@
         { label: 'Space Debris', hue: '#9fe8ff', sprite: 'car' },
         { label: 'TikTok FUD', hue: '#ff7b45', sprite: 'car' },
       ];
-      const pick = tags[Math.floor(Math.random() * tags.length)];
-      const type = Math.random() > 0.6 - state.stageIndex * 0.04 ? 'swerve' : 'block';
-      const baseSpeed = 240 + Math.random() * 120 * state.difficulty * stage.speed;
+      const pick = tags[Math.floor(rand() * tags.length)];
+      const type = rand() > 0.6 - state.stageIndex * 0.04 ? 'swerve' : 'block';
+      const baseSpeed = 240 + rand() * 120 * state.difficulty * stage.speed;
       obstacles.push({
         lane,
         y: -80,
@@ -620,7 +729,7 @@
         hue: pick.hue,
         size: 62,
         type,
-        drift: Math.random() * 0.6 - 0.3,
+        drift: rand() * 0.6 - 0.3,
         spriteKey: pick.sprite,
       });
     }
@@ -810,12 +919,12 @@
       },
     };
 
-    function spawnPickup() {
-      const lane = Math.floor(Math.random() * lanes);
+    function spawnPickup(forceType = null) {
+      const lane = Math.floor(rand() * lanes);
       const types = [
-        { label: '🔋 Battery', color: '#2de8b5', points: 120, kind: 'score', art: 'battery' },
-        { label: '✅ Contract', color: '#67d7ff', points: 180, kind: 'score', art: 'contract' },
-        { label: '💰 Money', color: '#f6c65b', points: 260, kind: 'score', art: 'money' },
+        { label: '🔋 Battery', color: '#2de8b5', points: 120, kind: 'score', art: 'battery', currency: 'battery' },
+        { label: '✅ Contract', color: '#67d7ff', points: 180, kind: 'score', art: 'contract', currency: 'contract' },
+        { label: '💰 Money', color: '#f6c65b', points: 260, kind: 'score', art: 'money', currency: 'money' },
         { label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield', art: 'shield' },
         { label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet', art: 'magnet' },
         { label: '🚀 Turbo', color: '#d0b7ff', points: 0, kind: 'turbo', art: 'turbo' },
@@ -823,14 +932,14 @@
         { label: '🛸 Drone Strike', color: '#8af7cd', points: 0, kind: 'drone', art: 'drone' },
         { label: '❤️ Extra Life', color: '#ff4fa4', points: 0, kind: 'life', art: 'life' },
       ];
-      const pick = types[Math.floor(Math.random() * types.length)];
+      const pick = forceType || types[Math.floor(rand() * types.length)];
       pickups.push({
         lane,
         y: -60,
-        speed: 210 + Math.random() * 80,
+        speed: 210 + rand() * 80,
         ...pick,
         size: 48,
-        wobble: Math.random() * Math.PI,
+        wobble: rand() * Math.PI,
       });
     }
 
@@ -907,14 +1016,14 @@
 
     function emitBurst(x, y, color) {
       for (let i = 0; i < 12; i++) {
-        const ang = Math.random() * Math.PI * 2;
+        const ang = rand() * Math.PI * 2;
         particles.push({
           x,
           y,
-          vx: Math.cos(ang) * (0.6 + Math.random() * 1.4),
-          vy: Math.sin(ang) * (0.6 + Math.random() * 1.4),
+          vx: Math.cos(ang) * (0.6 + rand() * 1.4),
+          vy: Math.sin(ang) * (0.6 + rand() * 1.4),
           color,
-          size: 3 + Math.random() * 3,
+          size: 3 + rand() * 3,
           life: 0.8,
         });
       }
@@ -956,6 +1065,20 @@
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);
     pauseBtn.addEventListener('click', togglePause);
+    upgradeShop.addEventListener('click', (e) => {
+      const key = e.target.dataset?.key;
+      if (!key) return;
+      const def = upgradeDefs.find((u) => u.key === key);
+      const level = meta.upgrades[key] || 0;
+      const cost = Math.round(def.baseCost * (1 + level * 0.6));
+      if (meta.credits >= cost && !(key === 'extraLife' && level >= 2)) {
+        meta.credits -= cost;
+        meta.upgrades[key] = level + 1;
+        saveMeta();
+        renderUpgradeShop();
+        renderCurrencies(creditsFromRun());
+      }
+    });
 
     function reset() {
       obstacles.length = 0;
@@ -964,10 +1087,12 @@
       state.score = 0;
       state.distance = 0;
       state.streak = 1;
+      state.streakProgress = 0;
       state.lives = 3;
       state.lastSpawn = 0;
       state.lastGood = 0;
       state.lastTime = 0;
+      state.elapsed = 0;
       state.difficulty = 1;
       state.stageIndex = 0;
       player.lane = 1;
@@ -975,18 +1100,30 @@
       player.tint = stages[state.stageIndex].accent;
       player.x = laneX(1, player.y);
       powerTimers.shield = powerTimers.magnet = powerTimers.turbo = powerTimers.autopilot = 0;
+      runCurrency.battery = runCurrency.contract = runCurrency.money = 0;
+      slowMo = 0;
+      nearMissFlash = 0;
+      lastStreakBanner = 1;
+      rngSeed = state.seed;
+      if (meta.upgrades.startShield > 0) powerTimers.shield = 2 + meta.upgrades.startShield * 1.5;
+      state.lives += meta.upgrades.extraLife;
       uiMessages.length = 0;
       updateHud();
     }
 
     function startGame() {
       if (state.running) return;
+      const params = new URLSearchParams(location.search);
+      state.seed = params.get('seed') ? Number(params.get('seed')) : Date.now();
+      rngSeed = state.seed % 2147483647;
       reset();
       state.running = true;
       state.paused = false;
       startOverlay.classList.remove('visible');
       gameOverOverlay.classList.remove('visible');
       touchBar.style.opacity = 1;
+      setTimeout(() => spawnPickup({ label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield', art: 'shield' }), 400);
+      setTimeout(() => spawnPickup({ label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet', art: 'magnet' }), 900);
       rafId = window.requestAnimationFrame(loop);
     }
 
@@ -1013,9 +1150,24 @@
       hud.score.textContent = Math.round(state.score).toLocaleString();
       hud.distance.textContent = `${Math.round(state.distance)} m`;
       hud.stage.textContent = stages[state.stageIndex].name;
-      hud.streak.textContent = `x${state.streak}`;
+      hud.streak.textContent = `x${state.streak.toFixed(1)}`;
       hud.lives.textContent = state.lives;
       hud.high.textContent = state.high.toLocaleString();
+      const curStage = stages[state.stageIndex];
+      const nextStage = stages[state.stageIndex + 1] || { threshold: state.distance + 1600, name: '∞' };
+      const stageProgress = Math.min(1, Math.max(0, (state.distance - curStage.threshold) / (nextStage.threshold - curStage.threshold)));
+      hud.stageBar.style.width = `${stageProgress * 100}%`;
+      hud.stageBar.style.background = `linear-gradient(90deg, ${curStage.accent}, ${nextStage.accent || curStage.accent})`;
+      hud.stageNote.textContent = `${curStage.note || ''}`;
+
+      const tierDistance = nextStage.threshold - curStage.threshold;
+      const tierProgress = Math.min(1, (state.distance - curStage.threshold) / tierDistance);
+      hud.distanceBar.style.width = `${tierProgress * 100}%`;
+      hud.tierLabel.textContent = nextStage.name ? `Next: ${nextStage.name}` : 'Deep space';
+
+      const streakFrac = state.streak - Math.floor(state.streak);
+      hud.streakBar.style.width = `${Math.min(1, streakFrac + 0.05) * 100}%`;
+      hud.streakHint.textContent = state.streak >= 5 ? 'Keep the heat: streak turbocharges score' : 'Near misses nudge streak forward';
       renderPowerups();
     }
 
@@ -1043,8 +1195,8 @@
       }
     }
 
-    function addMessage(text, color = '#fff') {
-      uiMessages.push({ text, color, life: 1.8 });
+    function addMessage(text, color = '#fff', size = 24, life = 1.8) {
+      uiMessages.push({ text, color, life, size });
     }
 
     function drawMessages(delta) {
@@ -1054,11 +1206,92 @@
         if (m.life <= 0) { uiMessages.splice(i, 1); continue; }
         ctx.globalAlpha = Math.min(1, m.life * 1.4);
         ctx.fillStyle = m.color;
-        ctx.font = 'bold 24px Inter';
+        ctx.font = `bold ${m.size || 24}px Inter`;
         ctx.textAlign = 'center';
         ctx.fillText(m.text, viewWidth / 2, viewHeight * 0.32 + (1 - m.life) * -10);
         ctx.globalAlpha = 1;
       }
+    }
+
+    function checkStreakMoments() {
+      const thresholds = [3, 5, 10];
+      for (const t of thresholds) {
+        if (state.streak >= t && lastStreakBanner < t) {
+          addMessage(`STREAK x${t}!`, '#f6c65b', 40, 1.4);
+          addMessage('Keep weaving – score is skyrocketing', '#fff', 20, 1.2);
+          lastStreakBanner = t;
+        }
+      }
+    }
+
+    function renderUpgradeShop() {
+      upgradeShop.innerHTML = '<h3>Upgrade garage</h3>';
+      const list = document.createElement('div');
+      list.style.display = 'grid';
+      list.style.gap = '8px';
+      upgradeDefs.forEach((up) => {
+        const level = meta.upgrades[up.key] || 0;
+        const cost = Math.round(up.baseCost * (1 + level * 0.6));
+        const row = document.createElement('div');
+        row.className = 'metric';
+        row.innerHTML = `<div class="label">${up.label} (Lv.${level})</div><div class="value" style="font-size:15px;">${up.desc}</div>`;
+        const action = document.createElement('button');
+        action.textContent = cost <= meta.credits ? `Upgrade for ${cost} ⚡` : `${cost} ⚡ needed`;
+        action.className = 'play';
+        action.style.minWidth = 'auto';
+        action.dataset.key = up.key;
+        action.disabled = cost > meta.credits || (up.key === 'extraLife' && level >= 2);
+        row.appendChild(action);
+        list.appendChild(row);
+      });
+      upgradeShop.appendChild(list);
+    }
+
+    function renderCurrencies(runCredits) {
+      currencySummary.innerHTML = `
+        <h3>Loot banked</h3>
+        <p>🔋 ${runCurrency.battery} Batteries • 📜 ${runCurrency.contract} Contracts • 💰 ${runCurrency.money} Money Bags = <strong>${runCredits}</strong> ⚡ credits</p>
+        <p>Total bank: ${meta.credits} ⚡</p>`;
+    }
+
+    function renderLeaderboards() {
+      meta.weekly = (meta.weekly || []).slice(0, 10);
+      const sorted = [...meta.weekly].sort((a, b) => b.score - a.score).slice(0, 5);
+      leaderboards.innerHTML = '<h3>Weekly brag board</h3>';
+      const list = document.createElement('ol');
+      sorted.forEach((entry, idx) => {
+        const li = document.createElement('li');
+        li.textContent = `${idx + 1}. ${entry.score.toLocaleString()} pts (seed ${entry.seed})`;
+        list.appendChild(li);
+      });
+      if (!sorted.length) {
+        const li = document.createElement('p');
+        li.textContent = 'Finish a run to seed the board.';
+        leaderboards.appendChild(li);
+      }
+      leaderboards.appendChild(list);
+    }
+
+    function renderProgress() {
+      const nextCampaign = Math.min(stages.length - 1, meta.campaign + 1);
+      const target = stages[nextCampaign]?.threshold || stages[stages.length - 1].threshold;
+      const progress = Math.min(1, state.distance / target);
+      postProgress.innerHTML = `
+        <h3>Campaign</h3>
+        <div class="metric"><div class="label">${stages[meta.campaign].name} ➜ ${stages[nextCampaign]?.name || 'Endless'}</div>
+        <div class="bar"><span style="width:${progress * 100}%"></span></div>
+        <small>${Math.round(progress * 100)}% toward unlocking ${stages[nextCampaign]?.name || 'the next sky'}</small></div>`;
+    }
+
+    function renderChallengeLink() {
+      const url = new URL(location.href);
+      url.searchParams.set('seed', state.seed);
+      const text = `Beat my Elon Highway score: ${Math.round(state.score)} (Stage ${stages[state.stageIndex].name})`;
+      challengeLink.innerHTML = `<h3>Challenge this run</h3><p>${text}</p><div class="chip" role="button" tabindex="0">Copy seed link</div>`;
+      challengeLink.querySelector('.chip').onclick = () => {
+        navigator.clipboard.writeText(`${text} – ${url.toString()}`);
+        challengeLink.querySelector('.chip').textContent = 'Copied! Share it.';
+      };
     }
 
     function checkStageProgression() {
@@ -1067,6 +1300,7 @@
         player.tint = stages[state.stageIndex].accent;
         addMessage(`${stages[state.stageIndex].name} ✅`, stages[state.stageIndex].accent);
         addMessage(stages[state.stageIndex].note, '#dfe5ff');
+        emitBurst(viewWidth / 2, horizonY() + 40, stages[state.stageIndex].accent);
       }
     }
 
@@ -1074,17 +1308,24 @@
       rafId = null;
       if (!state.running || state.paused) return;
       if (!state.lastTime) state.lastTime = timestamp;
-      const delta = Math.min(32, timestamp - state.lastTime) / 1000;
+      const rawDelta = Math.min(32, timestamp - state.lastTime) / 1000;
+      const timeScale = slowMo > 0 ? 0.45 : 1;
+      const delta = rawDelta * timeScale;
+      slowMo = Math.max(0, slowMo - rawDelta);
+      nearMissFlash = Math.max(0, nearMissFlash - rawDelta);
       state.lastTime = timestamp;
+      state.elapsed += delta;
 
-      state.distance += (powerTimers.turbo > 0 ? 180 : 120) * delta;
+      const easeIn = Math.min(1, state.elapsed / 30);
+      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5);
+      state.distance += baseSpeed * delta;
       state.lastSpawn += delta;
       state.lastGood += delta;
-      state.difficulty = stages[state.stageIndex].speed + state.distance / 6000;
+      state.difficulty = stages[state.stageIndex].speed + state.distance / 6200;
       checkStageProgression();
 
-      const spawnGap = Math.max(0.55, 1 - state.difficulty * 0.08);
-      const pickupGap = Math.max(0.5, 0.9 - state.difficulty * 0.06);
+      const spawnGap = Math.max(0.55, 1.2 - easeIn * 0.4 - state.difficulty * 0.08);
+      const pickupGap = Math.max(0.4, 0.8 - easeIn * 0.2 - state.difficulty * 0.05);
       if (state.lastSpawn > spawnGap) { spawnOpponent(); state.lastSpawn = 0; }
       if (state.lastGood > pickupGap) { spawnPickup(); state.lastGood = 0; }
 
@@ -1101,6 +1342,15 @@
 
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
+        const proximity = Math.abs(laneX(player.targetLane, player.y) - laneX(o.lane, o.y));
+        if (!o.nearMissed && proximity < laneWidth * 0.52 && o.y > player.y - 70 && o.y < player.y + 60) {
+          o.nearMissed = true;
+          state.streak = Math.min(state.streak + 0.25, 15);
+          state.score += 35 * state.streak;
+          slowMo = 0.25;
+          nearMissFlash = 0.18;
+          addMessage('NEAR MISS + streak juice', '#f6c65b');
+        }
         if (collide(player, o, 54)) {
           obstacles.splice(i, 1);
           if (powerTimers.shield > 0) {
@@ -1131,21 +1381,26 @@
             state.score += p.points * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1);
             state.streak = Math.min(state.streak + 1, 15);
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
+            if (p.currency) runCurrency[p.currency] += 1;
           } else if (p.kind === 'shield') {
-            powerTimers.shield = Math.min(6, powerTimers.shield + 3.5);
+            const boost = 1 + meta.upgrades.shieldDuration * 0.1;
+            powerTimers.shield = Math.min(8, powerTimers.shield + 3.5 * boost);
             addMessage('Shield online', '#8ef0ff');
           } else if (p.kind === 'magnet') {
-            powerTimers.magnet = Math.min(8, powerTimers.magnet + 5);
+            const boost = 1 + meta.upgrades.magnetDuration * 0.1;
+            powerTimers.magnet = Math.min(10, powerTimers.magnet + 5 * boost);
             addMessage('Magnet engaged', '#ff9d5c');
           } else if (p.kind === 'turbo') {
-            powerTimers.turbo = Math.min(6, powerTimers.turbo + 3);
+            const boost = 1 + meta.upgrades.turboDuration * 0.08;
+            powerTimers.turbo = Math.min(8, powerTimers.turbo + 3 * boost);
             addMessage('Turbo boost!', '#c18bff');
           } else if (p.kind === 'autopilot') {
-            powerTimers.autopilot = Math.min(7, powerTimers.autopilot + 4);
+            powerTimers.autopilot = Math.min(9 + meta.upgrades.autopilotCharge, powerTimers.autopilot + 4 + meta.upgrades.autopilotCharge);
             addMessage('Autopilot smoothing traffic', '#8ef0ff');
           } else if (p.kind === 'drone') {
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
             addMessage('Drone strike clears the lane', '#8af7cd');
+            screenShake = 0.5;
             clearObstacles();
           } else if (p.kind === 'life') {
             if (state.lives < 6) {
@@ -1165,16 +1420,24 @@
       powerTimers.turbo = Math.max(0, powerTimers.turbo - delta);
       powerTimers.autopilot = Math.max(0, powerTimers.autopilot - delta);
 
+      ctx.save();
+      if (screenShake > 0) {
+        const shake = screenShake * 6;
+        ctx.translate((rand() - 0.5) * shake, (rand() - 0.5) * shake);
+        screenShake = Math.max(0, screenShake - delta);
+      }
       ctx.clearRect(0, 0, viewWidth, viewHeight);
       drawBackdrop(timestamp);
       drawRoad(timestamp);
+      drawPowerFx(timestamp);
       drawMessages(delta);
       drawPlayer(delta);
 
       for (const o of obstacles) drawOpponent(o, timestamp);
       for (const p of pickups) drawPickup(p, timestamp);
       drawParticles(delta);
-
+      ctx.restore();
+      checkStreakMoments();
       updateHud();
       rafId = window.requestAnimationFrame(loop);
     }
@@ -1183,11 +1446,28 @@
       state.running = false;
       state.paused = false;
       touchBar.style.opacity = 0;
+      const previousHigh = state.high;
       if (state.score > state.high) {
         state.high = Math.round(state.score);
         localStorage.setItem('elon_high_score', state.high);
       }
-      summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak}x streak.`;
+      const diff = Math.abs(Math.round(state.score) - previousHigh);
+      const highLine = state.score > previousHigh
+        ? `New High Score! +${diff.toLocaleString()} over your best.`
+        : `You were ${diff.toLocaleString()} away from your best.`;
+      summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak.toFixed(1)}x streak. ${highLine}`;
+
+      const runCredits = creditsFromRun();
+      meta.credits += runCredits;
+      meta.runs += 1;
+      meta.campaign = Math.max(meta.campaign, state.stageIndex);
+      meta.weekly = [{ score: Math.round(state.score), seed: state.seed, date: Date.now() }, ...(meta.weekly || [])].slice(0, 8);
+      saveMeta();
+      renderCurrencies(runCredits);
+      renderUpgradeShop();
+      renderLeaderboards();
+      renderProgress();
+      renderChallengeLink();
       gameOverOverlay.classList.add('visible');
       updateHud();
     }

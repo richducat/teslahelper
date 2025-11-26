@@ -215,6 +215,19 @@
     ],
   };
 
+  const TINY_ACHIEVEMENTS = [
+    { id: 'funding-secured', title: 'Funding Secured', detail: 'Collect 100 gov contracts lifetime.' },
+    { id: 'fsd-beta', title: 'Full Self-Driving (Beta)', detail: 'Use autopilot 10 times.' },
+    { id: 'moon', title: 'To the Mooon', detail: 'Reach Stage 4 once.' },
+    { id: 'hardcore', title: 'Hardcore Engineer', detail: 'Reach x10 streak without a power-up.' },
+  ];
+
+  const TINY_ACHIEVEMENT_REWARDS = [
+    { id: 'currency', icon: '💰', label: 'Lump of currency' },
+    { id: 'cosmetic', icon: '🎨', label: 'Cosmetic item (car colour, trail, horn sound)' },
+    { id: 'badge', icon: '🏅', label: 'Shiny badge + confetti' },
+  ];
+
   const TESLA_AUTH_DEFAULT = {
     clientId: 'ownerapi',
     clientSecret: '',
@@ -1756,6 +1769,52 @@
                       <ProgressBar value={a.current} max={a.target} label="Progress" isDark={isDark} />
                     </div>
                   ))}
+                  <div
+                    className={classNames(
+                      'space-y-2 rounded-lg border p-3',
+                      isDark ? 'border-neutral-800 bg-neutral-900/80' : 'border-neutral-200 bg-neutral-50'
+                    )}
+                  >
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] opacity-70">
+                      <span>Tiny achievement set</span>
+                      <span className="rounded-full bg-amber-500/20 px-2 py-1 text-[11px] font-semibold text-amber-500">
+                        New
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {TINY_ACHIEVEMENTS.map((a) => (
+                        <div key={a.id} className="space-y-0.5">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-semibold">{a.title}</span>
+                            <span aria-hidden="true">✨</span>
+                          </div>
+                          <div className="text-xs opacity-70">{a.detail}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div
+                      className={classNames(
+                        'flex flex-wrap gap-2 border-t pt-2 text-[11px] font-semibold',
+                        isDark ? 'border-neutral-800 text-neutral-100' : 'border-neutral-200 text-neutral-800'
+                      )}
+                    >
+                      <span className="uppercase tracking-[0.2em] opacity-70">Rewards</span>
+                      {TINY_ACHIEVEMENT_REWARDS.map((reward) => (
+                        <span
+                          key={reward.id}
+                          className={classNames(
+                            'inline-flex items-center gap-1 rounded-full px-2 py-1',
+                            isDark ? 'bg-neutral-800 text-neutral-50' : 'bg-white text-neutral-800',
+                            'shadow-sm ring-1 ring-inset',
+                            isDark ? 'ring-neutral-700' : 'ring-neutral-200'
+                          )}
+                        >
+                          <span aria-hidden="true">{reward.icon}</span>
+                          {reward.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </Card>
 

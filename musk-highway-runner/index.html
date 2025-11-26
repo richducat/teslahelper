@@ -432,6 +432,7 @@
     const particles = [];
     const powerTimers = { shield: 0, magnet: 0, turbo: 0, autopilot: 0 };
     const uiMessages = [];
+    let rafId = null;
 
       function resize() {
         const isPortrait = window.innerHeight > window.innerWidth;
@@ -979,13 +980,14 @@
     }
 
     function startGame() {
+      if (state.running) return;
       reset();
       state.running = true;
       state.paused = false;
       startOverlay.classList.remove('visible');
       gameOverOverlay.classList.remove('visible');
       touchBar.style.opacity = 1;
-      window.requestAnimationFrame(loop);
+      rafId = window.requestAnimationFrame(loop);
     }
 
     function togglePause() {
@@ -994,7 +996,10 @@
       pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
       if (!state.paused) {
         state.lastTime = 0;
-        window.requestAnimationFrame(loop);
+        rafId = window.requestAnimationFrame(loop);
+      } else if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
       }
     }
 
@@ -1066,6 +1071,7 @@
     }
 
     function loop(timestamp) {
+      rafId = null;
       if (!state.running || state.paused) return;
       if (!state.lastTime) state.lastTime = timestamp;
       const delta = Math.min(32, timestamp - state.lastTime) / 1000;
@@ -1104,9 +1110,10 @@
           } else {
             state.streak = 1;
             state.lives -= 1;
-            player.tint = '#ff5c8a';
-            emitBurst(laneX(player.targetLane, player.y), player.y, '#ff4fa4');
-            setTimeout(() => (player.tint = '#ff4fa4'), 150);
+            const crashTint = '#ff5c8a';
+            player.tint = crashTint;
+            emitBurst(laneX(player.targetLane, player.y), player.y, crashTint);
+            setTimeout(() => (player.tint = stages[state.stageIndex].accent), 180);
             if (state.lives <= 0) {
               endGame();
               return;
@@ -1169,7 +1176,7 @@
       drawParticles(delta);
 
       updateHud();
-      window.requestAnimationFrame(loop);
+      rafId = window.requestAnimationFrame(loop);
     }
 
     function endGame() {

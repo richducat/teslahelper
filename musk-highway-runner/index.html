@@ -139,12 +139,25 @@
       box-shadow: 0 10px 24px rgba(232, 33, 39, 0.32);
       min-width: 140px;
     }
-    button.play:active, button.pause:active { transform: translateY(1px); }
+    button.play:active, button.pause:active, button.ghost:active { transform: translateY(1px); }
     button.pause {
       background: rgba(255, 255, 255, 0.06);
       color: var(--text);
       border: 1px solid rgba(255, 255, 255, 0.14);
       box-shadow: none;
+    }
+    button.ghost {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .powerups {
       display: flex;
@@ -186,6 +199,20 @@
       max-width: 520px;
       box-shadow: 0 20px 44px rgba(0,0,0,0.4);
       backdrop-filter: blur(14px);
+    }
+    .overlay .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .overlay .panel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      justify-content: center;
     }
     .overlay h2 { margin: 0 0 12px; }
     .overlay p { margin: 0 0 16px; opacity: 0.9; }
@@ -250,7 +277,10 @@
     </div>
     <div class="overlay" id="gameOverOverlay" aria-live="polite">
       <div class="panel">
-        <h2>Run Over</h2>
+        <div class="panel-header">
+          <h2>Run Over</h2>
+          <button class="ghost" id="closeStatsBtn" aria-label="Close stats and return">✕ Close</button>
+        </div>
         <div class="grid">
           <p id="summary"></p>
           <div id="postProgress"></div>
@@ -258,7 +288,10 @@
           <div id="upgradeShop"></div>
           <div id="leaderboards"></div>
           <div id="challengeLink"></div>
+        </div>
+        <div class="panel-actions">
           <button class="play" id="restartBtn">One more rage drive</button>
+          <button class="ghost" id="backToStartBtn">Back to launch screen</button>
         </div>
       </div>
     </div>
@@ -496,6 +529,8 @@
     const challengeLink = document.getElementById('challengeLink');
     const startBtn = document.getElementById('startBtn');
     const restartBtn = document.getElementById('restartBtn');
+    const closeStatsBtn = document.getElementById('closeStatsBtn');
+    const backToStartBtn = document.getElementById('backToStartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
 
     const lanes = 3;
@@ -1324,6 +1359,8 @@
 
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);
+    closeStatsBtn.addEventListener('click', showStartScreen);
+    backToStartBtn.addEventListener('click', showStartScreen);
     pauseBtn.addEventListener('click', togglePause);
     upgradeShop.addEventListener('click', (e) => {
       const key = e.target.dataset?.key;
@@ -1372,6 +1409,19 @@
       state.lives += meta.upgrades.extraLife;
       uiMessages.length = 0;
       updateHud();
+    }
+
+    function showStartScreen() {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      state.running = false;
+      state.paused = false;
+      pauseBtn.textContent = 'Pause';
+      touchBar.style.opacity = 0;
+      gameOverOverlay.classList.remove('visible');
+      startOverlay.classList.add('visible');
     }
 
     function startGame() {

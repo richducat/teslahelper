@@ -869,7 +869,6 @@
     const backToStartBtn = document.getElementById('backToStartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const marketHealth = new StockMarketHealth();
-    const envManager = new EnvironmentManager();
     const tweetEffects = { speedMultiplier: 1, invertControls: false, gravity: 1, coinsToDoge: false };
     const gameEngine = {
       setSpeed(multiplier) {
@@ -955,6 +954,8 @@
         console.log(`Traveling to ${stage.toUpperCase()}...`);
       }
     }
+
+    const envManager = new EnvironmentManager();
 
     let meta;
     try {

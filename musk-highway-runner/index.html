@@ -270,8 +270,9 @@
     </div>
     <div class="overlay visible" id="startOverlay" aria-live="polite">
         <div class="panel">
-          <h2>Ready to floor it?</h2>
-          <p>Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks, grab the new levers (green legislation shields, gov contract magnets, earnings turbo, FSD thumbs-up autopilot, battery breakthroughs, hype rockets, extra lives), and keep Elon on the road. Finish stages for new skies and faster payouts. Space or tap Start to begin.</p>
+          <h2 id="startTitle">Ready to floor it?</h2>
+          <p id="startCopy">Swipe or tap left/right (or use arrow keys) to change lanes. Space or tap Start to begin.</p>
+          <div class="powerups" id="startNotes"></div>
           <button class="play" id="startBtn">Start Run</button>
         </div>
     </div>
@@ -283,6 +284,7 @@
         </div>
         <div class="grid">
           <p id="summary"></p>
+          <div id="arcCallout"></div>
           <div id="postProgress"></div>
           <div id="currencySummary"></div>
           <div id="upgradeShop"></div>
@@ -520,8 +522,12 @@
     };
 
     const startOverlay = document.getElementById('startOverlay');
+    const startTitle = document.getElementById('startTitle');
+    const startCopy = document.getElementById('startCopy');
+    const startNotes = document.getElementById('startNotes');
     const gameOverOverlay = document.getElementById('gameOverOverlay');
     const summary = document.getElementById('summary');
+    const arcCallout = document.getElementById('arcCallout');
     const postProgress = document.getElementById('postProgress');
     const currencySummary = document.getElementById('currencySummary');
     const upgradeShop = document.getElementById('upgradeShop');
@@ -613,6 +619,7 @@
       campaign: 0,
       upgrades: { shieldDuration: 0, magnetDuration: 0, turboDuration: 0, startShield: 0, extraLife: 0, autopilotCharge: 0 },
       weekly: [],
+      guidedChoiceClaimed: false,
     };
     Object.keys(defaults).forEach((k) => { if (meta[k] === undefined) meta[k] = JSON.parse(JSON.stringify(defaults[k])); });
 
@@ -637,6 +644,7 @@
       score: 0,
       distance: 0,
       streak: 1,
+      peakStreak: 1,
       streakProgress: 0,
       lives: 3,
       lastSpawn: 0,
@@ -648,6 +656,7 @@
       high: Number(localStorage.getItem('elon_high_score') || 0),
       seed: rngSeed,
     };
+    let activeArcStep = Math.min(meta.runs, 3);
     const runCurrency = { battery: 0, contract: 0, money: 0 };
     let slowMo = 0;
     let nearMissFlash = 0;
@@ -663,6 +672,111 @@
     function creditsFromRun() {
       return runCurrency.battery + runCurrency.contract * 2 + runCurrency.money * 3;
     }
+
+    function renderStartOverlay() {
+      const arcStep = Math.min(meta.runs, 3);
+      activeArcStep = arcStep;
+      const startNotesContent = [];
+
+      if (arcStep === 0) {
+        startTitle.textContent = 'Run 1: Power fantasy & clarity';
+        startCopy.textContent = 'Swipe left/right (or arrow keys) to change lanes. A shield and magnet drop immediately so you can feel unstoppable.';
+        startNotesContent.push('🛡️ Guaranteed shield appears first.');
+        startNotesContent.push('🧲 Magnet spawns right after — pull goodies into your lane.');
+        startNotesContent.push('🎯 Goal: survive your first PR storm.');
+      } else if (arcStep === 1) {
+        startTitle.textContent = 'Run 2: Ride the streak';
+        startCopy.textContent = 'Build Streak x2 → x3 with near misses. Labels will shout when you level up.';
+        startNotesContent.push('⏩ Near misses nudge your streak meter.');
+        startNotesContent.push('📈 Higher streaks multiply every pickup.');
+      } else if (arcStep === 2) {
+        startTitle.textContent = 'Run 3: Upgrade primer';
+        startCopy.textContent = 'Bank enough ⚡ credits to unlock your first upgrade right after this drive.';
+        startNotesContent.push('💰 Grab batteries/contracts/money for ⚡ credits.');
+        startNotesContent.push('🎁 A perk choice awaits after this run.');
+      } else {
+        startTitle.textContent = 'Ready to floor it?';
+        startCopy.textContent = 'Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks and grab power-ups to climb the stages.';
+      }
+
+      startNotes.innerHTML = '';
+      if (startNotesContent.length) {
+        startNotesContent.forEach((note) => {
+          const chip = document.createElement('div');
+          chip.className = 'chip';
+          chip.textContent = note;
+          startNotes.appendChild(chip);
+        });
+      } else {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.textContent = 'Pro tip: streaks fuel ridiculous scores.';
+        startNotes.appendChild(chip);
+      }
+    }
+
+    function applyArcPrompts() {
+      if (activeArcStep === 0) {
+        addMessage('Swipe left/right (or arrow keys) to change lanes.', '#dfe5ff', 22, 2.6);
+        addMessage('Shield then magnet drop in early — feel invincible.', '#8ef0ff', 18, 2.4);
+      } else if (activeArcStep === 1) {
+        addMessage('Streak x2 → x3: weave for near misses.', '#f6c65b', 26, 2.8);
+        addMessage('Bump streaks fast to supercharge every pickup.', '#fff', 18, 2.4);
+      } else if (activeArcStep === 2) {
+        addMessage('Bank ⚡ credits — upgrades unlock after this run.', '#8ef0ff', 22, 2.6);
+      }
+    }
+
+    function renderArcCallout(runNumber, runCredits) {
+      arcCallout.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'metric';
+
+      if (runNumber === 1) {
+        card.innerHTML = '<div class="label">Arc 1</div><div class="value" style="font-size:16px;">You survived your first PR storm!</div><small>Keep swapping lanes and enjoy that shield + magnet opener.</small>';
+      } else if (runNumber === 2) {
+        const streakHighlight = Math.max(5, Math.floor(state.peakStreak || 1));
+        card.innerHTML = `<div class="label">Arc 2</div><div class="value" style="font-size:16px;">You hit x${streakHighlight} streak — higher streaks = insane scores.</div><small>Streak labels (x2 → x3) now pop loudly so you can chase them.</small>`;
+      } else if (runNumber === 3) {
+        if (meta.guidedChoiceClaimed) {
+          card.innerHTML = '<div class="label">Perk locked in</div><div class="value" style="font-size:16px;">Your onboarding perk is already active.</div><small>Grab more upgrades with your ⚡ bank.</small>';
+        } else {
+          card.innerHTML = '<div class="label">Pick a perk for future runs</div><div class="value" style="font-size:16px;">Choose one to auto-equip:</div><small>Credits topped up so you can grab your first upgrade.</small>';
+          const actions = document.createElement('div');
+          actions.className = 'panel-actions';
+
+        const lockChoice = (key, label) => {
+          if (meta.guidedChoiceClaimed) return;
+          meta.upgrades[key] = (meta.upgrades[key] || 0) + 1;
+          meta.guidedChoiceClaimed = true;
+          saveMeta();
+          renderUpgradeShop();
+          renderCurrencies(runCredits);
+          card.querySelector('small').textContent = `${label} locked in for all future runs.`;
+        };
+
+        const lifeBtn = document.createElement('button');
+        lifeBtn.className = 'play';
+        lifeBtn.textContent = '+1 Life';
+        lifeBtn.onclick = () => lockChoice('extraLife', '+1 Life');
+
+        const turboBtn = document.createElement('button');
+        turboBtn.className = 'play';
+        turboBtn.textContent = '+10% Turbo duration';
+        turboBtn.onclick = () => lockChoice('turboDuration', '+10% Turbo duration');
+
+          actions.appendChild(lifeBtn);
+          actions.appendChild(turboBtn);
+          card.appendChild(actions);
+        }
+      } else {
+        card.innerHTML = '<div class="label">Campaign</div><div class="value" style="font-size:16px;">Keep stacking streaks and upgrades.</div><small>Share a seed link to challenge friends.</small>';
+      }
+
+      arcCallout.appendChild(card);
+    }
+
+    renderStartOverlay();
 
     const obstacles = [];
     const pickups = [];
@@ -1384,6 +1498,7 @@
       state.score = 0;
       state.distance = 0;
       state.streak = 1;
+      state.peakStreak = 1;
       state.streakProgress = 0;
       state.lives = 3;
       state.lastSpawn = 0;
@@ -1421,6 +1536,7 @@
       pauseBtn.textContent = 'Pause';
       touchBar.style.opacity = 0;
       gameOverOverlay.classList.remove('visible');
+      renderStartOverlay();
       startOverlay.classList.add('visible');
     }
 
@@ -1429,12 +1545,14 @@
       const params = new URLSearchParams(location.search);
       state.seed = params.get('seed') ? Number(params.get('seed')) : Date.now();
       rngSeed = state.seed % 2147483647;
+      activeArcStep = Math.min(meta.runs, 3);
       reset();
       state.running = true;
       state.paused = false;
       startOverlay.classList.remove('visible');
       gameOverOverlay.classList.remove('visible');
       touchBar.style.opacity = 1;
+      applyArcPrompts();
       setTimeout(() => spawnPickup({ label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield', art: 'shield' }), 400);
       setTimeout(() => spawnPickup({ label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet', art: 'magnet' }), 900);
       rafId = window.requestAnimationFrame(loop);
@@ -1480,7 +1598,13 @@
 
       const streakFrac = state.streak - Math.floor(state.streak);
       hud.streakBar.style.width = `${Math.min(1, streakFrac + 0.05) * 100}%`;
-      hud.streakHint.textContent = state.streak >= 5 ? 'Keep the heat: streak turbocharges score' : 'Near misses nudge streak forward';
+      if (activeArcStep === 1) {
+        hud.streakHint.textContent = 'Arc 2: Streak x2 → x3 = crazy score multipliers';
+      } else if (activeArcStep === 2) {
+        hud.streakHint.textContent = 'Arc 3: Build streaks, then spend ⚡ on upgrades';
+      } else {
+        hud.streakHint.textContent = state.streak >= 5 ? 'Keep the heat: streak turbocharges score' : 'Near misses nudge streak forward';
+      }
       renderPowerups();
     }
 
@@ -1529,11 +1653,16 @@
     }
 
     function checkStreakMoments() {
-      const thresholds = [3, 5, 10];
+      const thresholds = activeArcStep === 1 ? [2, 3, 5, 10] : [3, 5, 10];
       for (const t of thresholds) {
         if (state.streak >= t && lastStreakBanner < t) {
-          addMessage(`STREAK x${t}!`, '#f6c65b', 40, 1.4);
-          addMessage('Keep weaving – score is skyrocketing', '#fff', 20, 1.2);
+          if (activeArcStep === 1 && (t === 2 || t === 3)) {
+            addMessage(`STREAK x${t} → next stop: x3`, '#f6c65b', 36, 1.6);
+            addMessage('Ride near misses to keep climbing', '#fff', 20, 1.2);
+          } else {
+            addMessage(`STREAK x${t}!`, '#f6c65b', 40, 1.4);
+            addMessage('Keep weaving – score is skyrocketing', '#fff', 20, 1.2);
+          }
           lastStreakBanner = t;
         }
       }
@@ -1678,6 +1807,7 @@
             o.nearMissed = true;
             const streakBoost = powerTimers.streakBoost > 0 ? 0.2 : 0;
             state.streak = Math.min(state.streak + 0.25 + streakBoost, 15);
+            state.peakStreak = Math.max(state.peakStreak, state.streak);
             state.score += 35 * state.streak;
             slowMo = 0.25;
             nearMissFlash = 0.18;
@@ -1740,6 +1870,7 @@
             const currencyMultiplier = p.currency === 'battery' && powerTimers.batteryBoost > 0 ? 2 : 1;
             state.score += p.points * currencyMultiplier * state.streak * (powerTimers.turbo > 0 ? 1.5 : 1);
             state.streak = Math.min(state.streak + streakGain, 15);
+            state.peakStreak = Math.max(state.peakStreak, state.streak);
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
             if (p.currency) runCurrency[p.currency] += currencyMultiplier;
           } else if (p.kind === 'shield') {
@@ -1832,7 +1963,9 @@
       summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak.toFixed(1)}x streak. ${highLine}`;
 
       const runCredits = creditsFromRun();
+      const completedRun = meta.runs + 1;
       meta.credits += runCredits;
+      if (completedRun === 3 && meta.credits < 20) meta.credits = 20;
       meta.runs += 1;
       meta.campaign = Math.max(meta.campaign, state.stageIndex);
       meta.weekly = [{ score: Math.round(state.score), seed: state.seed, date: Date.now() }, ...(meta.weekly || [])].slice(0, 8);
@@ -1842,6 +1975,7 @@
       renderLeaderboards();
       renderProgress();
       renderChallengeLink();
+      renderArcCallout(completedRun, runCredits);
       gameOverOverlay.classList.add('visible');
       updateHud();
     }

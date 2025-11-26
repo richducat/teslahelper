@@ -240,6 +240,9 @@
       padding: 8px 14px 2px;
       display: grid;
       gap: 8px;
+      max-height: 150px;
+      overflow: hidden;
+      pointer-events: none;
     }
     .message-card {
       background: rgba(255, 255, 255, 0.05);
@@ -1846,6 +1849,7 @@
     }
 
     function addMessage(text, color = '#fff', size = 24, life = 1.8) {
+      trimMessages(1);
       const card = document.createElement('div');
       card.className = 'message-card';
       card.style.color = color;
@@ -1855,6 +1859,7 @@
       messageStack.appendChild(card);
 
       uiMessages.push({ text, color, life, maxLife: life, size, el: card });
+      trimMessages(2);
     }
 
     function updateMessages(delta) {

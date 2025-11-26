@@ -180,7 +180,9 @@
     .ticker .hud-label { color: #93d7ff; }
     .ticker.distance .hud-value { color: #9ee5ff; }
     .ticker.score .hud-value { color: var(--good); text-shadow: 0 0 14px rgba(98, 255, 145, 0.3); }
-    .ticker.lives .hud-value { color: #eaf2ff; }
+    .ticker.stock .hud-value { color: #eaf2ff; font-family: 'Inter', 'Rajdhani', sans-serif; letter-spacing: 0.04em; }
+    .ticker.stock .hud-meta { color: #8af7cd; font-weight: 700; letter-spacing: 0.06em; margin-top: 2px; text-transform: uppercase; }
+    #stock-price-display { font-variant-numeric: tabular-nums; }
     button.play, button.pause {
       background: linear-gradient(135deg, #26e35c, #8affc0);
       color: #03101b;
@@ -357,6 +359,22 @@
     .ticker.blaster { border-color: #8ef0ff55; background: linear-gradient(180deg, rgba(142, 240, 255, 0.08) 0%, rgba(142, 240, 255, 0.02) 100%); }
     .ticker.blaster .hud-value { color: #8ef0ff; }
     .ticker.blaster small { color: #c8e7ff; font-weight: 700; letter-spacing: 0.04em; }
+    .tweet-box {
+      border: 1px solid #2ef26a;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+      margin-top: 8px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .tweet-header { color: #9ee5ff; font-weight: 700; letter-spacing: 0.04em; display: flex; gap: 8px; align-items: center; }
+    .tweet-body { margin-top: 4px; font-weight: 800; letter-spacing: 0.05em; color: #eaf2ff; }
+    .tweet-popup-anim { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.4); }
+    .market-alert-float { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); font-weight: 900; letter-spacing: 0.12em; padding: 8px 12px; background: rgba(0,0,0,0.6); border-radius: 999px; z-index: 5; text-shadow: 0 0 16px rgba(0,0,0,0.6); }
+    body.theme-earth { background: linear-gradient(180deg, #0f2438 0%, #09182a 46%, #040c16 100%); }
+    body.theme-space { background: linear-gradient(180deg, #0a1026 0%, #070d1f 40%, #040814 100%); }
+    body.theme-mars { background: linear-gradient(180deg, #1a0f11 0%, #140b0f 40%, #0c060a 100%); }
     .touch-bar {
       position: absolute;
       inset: 0;
@@ -397,6 +415,10 @@
         <div class="hud-block hud-feed">
           <div class="hud-label">Live Feed</div>
           <div class="feed-list" id="powerups"></div>
+          <div class="tweet-box" id="live-feed-display">
+            <div class="tweet-header"><span class="user">@elonmusk</span> • Standby</div>
+            <div class="tweet-body">Awaiting market-moving tweet…</div>
+          </div>
         </div>
         <div class="hud-block">
           <div class="hud-label">Stage</div>
@@ -470,9 +492,10 @@
           <div class="hud-label">Score</div>
           <div class="hud-value" id="score">0</div>
         </div>
-        <div class="ticker lives">
-          <div class="hud-label">Lives</div>
-          <div class="hud-value" id="lives">3</div>
+        <div class="ticker stock">
+          <div class="hud-label">TSLA Price</div>
+          <div class="hud-value" id="stock-price-display">$420.00</div>
+          <div class="hud-meta" id="stock-meta">Volatility engine online</div>
         </div>
         <div class="ticker blaster">
           <div class="hud-label">Plasma blaster</div>
@@ -526,6 +549,107 @@
       b = Math.max(0, Math.min(255, b));
       return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
     }
+
+    class StockMarketHealth {
+      constructor(startPrice = 420) {
+        this.startPrice = startPrice;
+        this.stockPrice = startPrice;
+        this.volatility = 1;
+        this.history = [];
+        this.displayElement = document.getElementById('stock-price-display');
+        this.metaElement = document.getElementById('stock-meta');
+      }
+
+      reset(startPrice = 420) {
+        this.startPrice = startPrice;
+        this.stockPrice = startPrice;
+        this.history = [startPrice];
+        this.render();
+        if (this.metaElement) this.metaElement.textContent = 'Volatility engine online';
+      }
+
+      updatePrice(impactType) {
+        let change = 0;
+
+        switch (impactType) {
+          case 'hit_critic':
+            change = -69 * this.volatility;
+            this.triggerAlert('CRASH!', 'red');
+            break;
+          case 'collect_coin':
+            change = 4.2;
+            break;
+          case 'tweet_boost':
+            change = 100;
+            this.triggerAlert('TO THE MOON!', 'green');
+            break;
+          default:
+            change = -0.1;
+        }
+
+        this.stockPrice += change;
+        this.history.push(this.stockPrice);
+
+        if (this.metaElement) {
+          const direction = change >= 0 ? '▲' : '▼';
+          const descriptor = change >= 0 ? 'pumping' : 'sliding';
+          this.metaElement.textContent = `${direction} ${descriptor} ${Math.abs(change).toFixed(2)}`;
+        }
+
+        if (this.stockPrice <= 0) {
+          this.stockPrice = 0;
+          this.render();
+          return 'BANKRUPT';
+        }
+
+        this.render();
+        return 'ACTIVE';
+      }
+
+      triggerAlert(text, color) {
+        const alertBox = document.createElement('div');
+        alertBox.innerText = text;
+        alertBox.style.color = color;
+        alertBox.className = 'market-alert-float';
+        document.body.appendChild(alertBox);
+        setTimeout(() => alertBox.remove(), 1000);
+      }
+
+      render() {
+        if (this.displayElement) {
+          const color = this.stockPrice >= this.startPrice ? '#00ff00' : '#ff0000';
+          this.displayElement.style.color = color;
+          this.displayElement.innerText = `$${this.stockPrice.toFixed(2)}`;
+        }
+      }
+    }
+
+    const TWEET_EVENTS = [
+      {
+        text: 'Taking Tesla private at $420. Funding secured.',
+        effect: 'SPEED_BOOST',
+        duration: 5000,
+        color: '#00ff00',
+      },
+      {
+        text: 'Selling 10% of my holdings lol',
+        effect: 'GRAVITY_HEAVY',
+        duration: 8000,
+        color: '#ff0000',
+      },
+      {
+        text: 'Doge is the future currency of Earth.',
+        effect: 'COINS_TO_DOGE',
+        duration: 10000,
+        color: '#ffd700',
+      },
+      {
+        text: 'Comedy is now legal on X.',
+        effect: 'INVERT_CONTROLS',
+        duration: 4000,
+        color: '#ffffff',
+      },
+    ];
 
     function drawPixelSprite(sprite, palette, scale) {
       const width = sprite[0].length;
@@ -698,7 +822,7 @@
       distance: document.getElementById('distance'),
       stage: document.getElementById('stage'),
       streak: document.getElementById('streak'),
-      lives: document.getElementById('lives'),
+      stock: document.getElementById('stock-price-display'),
       high: document.getElementById('high'),
       powerups: document.getElementById('powerups'),
       stageBar: document.getElementById('stageBar'),
@@ -744,6 +868,16 @@
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     const backToStartBtn = document.getElementById('backToStartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
+    const marketHealth = new StockMarketHealth();
+    const envManager = new EnvironmentManager();
+    const tweetEffects = { speedMultiplier: 1, invertControls: false, gravity: 1, coinsToDoge: false };
+    const gameEngine = {
+      setSpeed(multiplier) {
+        tweetEffects.speedMultiplier = multiplier;
+      },
+      controls: tweetEffects,
+    };
+    let tweetEventTimer = 0;
 
     const lanes = 3;
     const roadProfile = { widthTop: 0.44, widthBottom: 1.08, horizon: 0.36 };
@@ -761,49 +895,34 @@
 
     const stages = [
       {
-        name: 'Launch Lane',
+        name: 'Earth Highway',
         threshold: 0,
         sky: ['#0f1629', '#0b0f1d', '#05060c'],
         road: ['#151a2b', '#0f1321', '#080a12'],
         accent: '#e82127',
-        note: 'Warm up the Roadster',
+        note: 'Dodge gas cars and SEC agents',
         speed: 1,
+        theme: 'earth',
       },
       {
-        name: 'Orbital Express',
-        threshold: 1200,
+        name: 'Low Earth Orbit',
+        threshold: 1000,
         sky: ['#0f1b2f', '#0b1326', '#050912'],
         road: ['#17243d', '#0f1c30', '#081320'],
         accent: '#6b9bff',
-        note: 'Heavier traffic, richer rewards',
+        note: 'Satellites + Bezos rockets crowd the lanes',
         speed: 1.08,
+        theme: 'space',
       },
       {
-        name: 'Mars Freightway',
-        threshold: 3200,
+        name: 'Mars Surface',
+        threshold: 3000,
         sky: ['#1a1b2f', '#181327', '#0f0a18'],
         road: ['#251c31', '#1c1227', '#120b1c'],
         accent: '#ff7b45',
-        note: 'Critics swarm with erratic swerves',
+        note: 'Aliens + dust storms whip across the road',
         speed: 1.16,
-      },
-      {
-        name: 'Solar Flare Speedway',
-        threshold: 6200,
-        sky: ['#221421', '#160f1c', '#090712'],
-        road: ['#361726', '#1f0f1b', '#120913'],
-        accent: '#ff3b6b',
-        note: 'Everything is faster – cash in the streaks',
-        speed: 1.28,
-      },
-      {
-        name: 'Deep Space Drift',
-        threshold: 9500,
-        sky: ['#0b0f1a', '#060812', '#04060c'],
-        road: ['#0e1522', '#0a101c', '#050811'],
-        accent: '#8ef0ff',
-        note: 'Endless mode with maxed aggression',
-        speed: 1.38,
+        theme: 'mars',
       },
     ];
 
@@ -816,6 +935,26 @@
       get roadBottom() { return stages[state.stageIndex].road[2]; },
       get accent() { return stages[state.stageIndex].accent; },
     };
+
+    class EnvironmentManager {
+      constructor() {
+        this.currentStage = null;
+      }
+
+      checkStage(distance) {
+        const nextStage = [...stages].reverse().find((stage) => distance >= stage.threshold) || stages[0];
+        this.transitionTo(nextStage.theme);
+        return nextStage;
+      }
+
+      transitionTo(stage) {
+        if (!stage || this.currentStage === stage) return;
+        this.currentStage = stage;
+        document.body.classList.remove('theme-earth', 'theme-space', 'theme-mars');
+        document.body.classList.add(`theme-${stage}`);
+        console.log(`Traveling to ${stage.toUpperCase()}...`);
+      }
+    }
 
     let meta;
     try {
@@ -875,6 +1014,8 @@
     };
     Object.keys(defaults).forEach((k) => { if (meta[k] === undefined) meta[k] = JSON.parse(JSON.stringify(defaults[k])); });
     if (meta.achievements?.fundingSecured === undefined) meta.achievements.fundingSecured = 0;
+    meta.campaign = Math.min(meta.campaign || 0, stages.length - 1);
+    meta.campaignProgress = meta.campaignProgress || 0;
 
     const urlParams = new URLSearchParams(location.search);
     const sharedChallenge = urlParams.get('seed')
@@ -890,7 +1031,7 @@
       { key: 'magnetDuration', label: 'Magnet duration', desc: '+10% magnet duration per level', baseCost: 18 },
       { key: 'turboDuration', label: 'Turbo burn', desc: '+8% turbo duration per level', baseCost: 18 },
       { key: 'startShield', label: 'Start shielded', desc: 'Spawn with a brief shield', baseCost: 26 },
-      { key: 'extraLife', label: 'Extra life', desc: '+1 permanent life (max +2)', baseCost: 40 },
+      { key: 'extraLife', label: 'Volatility cushion', desc: '+25 starting TSLA price per level (max +2)', baseCost: 40 },
       { key: 'autopilotCharge', label: 'Autopilot charge', desc: '+1 autopilot second each run', baseCost: 28 },
       { key: 'blasterDamage', label: 'Blaster damage', desc: '+25% plasma damage per level', baseCost: 16 },
       { key: 'blasterFireRate', label: 'Fire rate', desc: '-3% blaster cooldown per level', baseCost: 16 },
@@ -938,7 +1079,6 @@
       streak: 1,
       peakStreak: 1,
       streakProgress: 0,
-      lives: 3,
       lastSpawn: 0,
       lastGood: 0,
       lastTime: 0,
@@ -2060,7 +2200,8 @@
 
     function moveLane(dir) {
       if (!state.running || state.paused) return;
-      const effectiveDir = controlScramble > 0 ? -dir : dir;
+      const inversion = gameEngine.controls.invertControls ? -1 : 1;
+      const effectiveDir = (controlScramble > 0 ? -dir : dir) * inversion;
       player.targetLane = Math.max(0, Math.min(lanes - 1, player.targetLane + effectiveDir));
     }
 
@@ -2143,13 +2284,15 @@
       state.streak = 1;
       state.peakStreak = 1;
       state.streakProgress = 0;
-      state.lives = 3;
       state.lastSpawn = 0;
       state.lastGood = 0;
       state.lastTime = 0;
       state.elapsed = 0;
       state.difficulty = 1;
       state.stageIndex = 0;
+      const cushion = (meta.upgrades.extraLife || 0) * 25;
+      marketHealth.reset(420 + cushion);
+      envManager.transitionTo(stages[state.stageIndex].theme);
       player.lane = 1;
       player.targetLane = 1;
       player.tint = stages[state.stageIndex].accent;
@@ -2164,6 +2307,11 @@
       nearMissFlash = 0;
       controlScramble = 0;
       slowdownTimer = 0;
+      tweetEffects.speedMultiplier = 1;
+      tweetEffects.invertControls = false;
+      tweetEffects.gravity = 1;
+      tweetEffects.coinsToDoge = false;
+      tweetEventTimer = 0;
       lastStreakBanner = 1;
       hype = 0;
       hypeFlash = 0;
@@ -2171,7 +2319,6 @@
       questCooldown = 0.5;
       rngSeed = state.seed;
       if (meta.upgrades.startShield > 0) powerTimers.shield = 2 + meta.upgrades.startShield * 1.5;
-      state.lives += meta.upgrades.extraLife;
       uiMessages.length = 0;
       messageStack.innerHTML = '';
       updateHud();
@@ -2236,8 +2383,8 @@
       hud.distance.textContent = `${Math.round(state.distance)} m`;
       hud.stage.textContent = stages[state.stageIndex].name.toUpperCase();
       hud.streak.textContent = `X${state.streak.toFixed(1)}`;
-      hud.lives.textContent = state.lives;
       hud.high.textContent = state.high.toLocaleString();
+      marketHealth.render();
       const curStage = stages[state.stageIndex];
       const nextStage = stages[state.stageIndex + 1] || { threshold: state.distance + 1600, name: '∞' };
       const stageProgress = Math.min(1, Math.max(0, (state.distance - curStage.threshold) / (nextStage.threshold - curStage.threshold)));
@@ -2271,7 +2418,7 @@
       if (powerTimers.hype > 0) feedEntries.push('OVERDRIVE storm');
       else if (hype > 0.75) feedEntries.push('Hype almost ready');
       if (powerTimers.batteryBoost > 0) feedEntries.push('Battery values doubled');
-      if (meta.upgrades.extraLife > 0 || state.lives > 3) feedEntries.push('Extra life');
+      if (meta.upgrades.extraLife > 0) feedEntries.push('Volatility cushion active');
       if (powerTimers.shield > 0) feedEntries.push('Shield online');
       if (powerTimers.magnet > 0) feedEntries.push('Magnet engaged');
       if (powerTimers.turbo > 0) feedEntries.push('Turbo active');
@@ -2309,6 +2456,52 @@
         hypeHud.label.textContent = 'Idle';
         hypeHud.status.textContent = 'Stack streaks to wake up the hype meter';
       }
+    }
+
+    function triggerTweetEvent() {
+      const event = TWEET_EVENTS[Math.floor(Math.random() * TWEET_EVENTS.length)];
+      const tweetBox = document.getElementById('live-feed-display');
+      if (tweetBox) {
+        tweetBox.innerHTML = `
+        <div class="tweet-header">
+            <span class="user">@elonmusk</span> • Now
+        </div>
+        <div class="tweet-body">${event.text}</div>
+      `;
+        tweetBox.style.borderColor = event.color;
+        tweetBox.classList.add('tweet-popup-anim');
+      }
+
+      console.log(`Applying effect: ${event.effect}`);
+
+      if (event.effect === 'SPEED_BOOST') {
+        gameEngine.setSpeed(2.0);
+        addMessage('Tweet turbocharged speed!', '#8af7cd');
+        marketHealth.updatePrice('tweet_boost');
+      }
+      if (event.effect === 'GRAVITY_HEAVY') {
+        tweetEffects.gravity = 1.25;
+        addMessage('Gravity feels heavier…', '#ff7070');
+        marketHealth.updatePrice('hit_critic');
+      }
+      if (event.effect === 'COINS_TO_DOGE') {
+        tweetEffects.coinsToDoge = true;
+        addMessage('Coins morph into DOGE bonuses!', '#ffd700');
+        marketHealth.updatePrice('collect_coin');
+      }
+      if (event.effect === 'INVERT_CONTROLS') {
+        gameEngine.controls.invertControls = true;
+        addMessage('Controls inverted. Embrace the chaos!', '#ffffff');
+      }
+
+      setTimeout(() => {
+        tweetEffects.gravity = 1;
+        tweetEffects.coinsToDoge = false;
+        gameEngine.setSpeed(1.0);
+        gameEngine.controls.invertControls = false;
+        if (tweetBox) tweetBox.classList.remove('tweet-popup-anim');
+        console.log('Event ended');
+      }, event.duration);
     }
 
     function trimMessages(max = 3) {
@@ -2592,13 +2785,17 @@
     }
 
     function checkStageProgression() {
+      let transitioned = false;
       while (stages[state.stageIndex + 1] && state.distance >= stages[state.stageIndex + 1].threshold) {
         state.stageIndex += 1;
         player.tint = stages[state.stageIndex].accent;
         addMessage(`${stages[state.stageIndex].name} ✅`, stages[state.stageIndex].accent);
         addMessage(stages[state.stageIndex].note, '#dfe5ff');
         emitBurst(viewWidth / 2, horizonY() + 40, stages[state.stageIndex].accent);
+        envManager.transitionTo(stages[state.stageIndex].theme);
+        transitioned = true;
       }
+      if (!transitioned) envManager.checkStage(state.distance);
     }
 
     function loop(timestamp) {
@@ -2614,6 +2811,12 @@
       hypeFlash = Math.max(0, hypeFlash - delta);
       state.lastTime = timestamp;
       state.elapsed += delta;
+      tweetEventTimer += rawDelta;
+
+      if (tweetEventTimer >= 30) {
+        triggerTweetEvent();
+        tweetEventTimer = 0;
+      }
 
       updateBlasterState(delta, blasterStats);
 
@@ -2623,7 +2826,7 @@
       const easeIn = Math.min(1, state.elapsed / 30);
       const slowdownFactor = slowdownTimer > 0 ? 0.78 : 1;
       const hypeSpeed = powerTimers.hype > 0 ? 1.12 : 1;
-      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5) * slowdownFactor * hypeSpeed;
+      const baseSpeed = (powerTimers.turbo > 0 ? 180 : 120) * (0.7 + easeIn * 0.5) * slowdownFactor * hypeSpeed * tweetEffects.speedMultiplier;
       state.distance += baseSpeed * delta;
       state.lastSpawn += delta;
       state.lastGood += delta;
@@ -2637,7 +2840,7 @@
       if (state.lastGood > pickupGap) { spawnPickup(); state.lastGood = 0; }
 
       const magnetStrength = powerTimers.magnet > 0 ? laneWidth * 0.6 : 0;
-      const trafficSpeedMod = powerTimers.autopilot > 0 ? 0.7 : 1;
+      const trafficSpeedMod = (powerTimers.autopilot > 0 ? 0.7 : 1) * tweetEffects.speedMultiplier;
       const hypeScoreMultiplier = powerTimers.hype > 0 ? 1.35 : 1;
 
       for (const o of obstacles) {
@@ -2651,10 +2854,10 @@
           o.lane += (targetLane - o.lane) * 0.12;
         }
         const hoverOffset = o.hover ? Math.sin((state.elapsed + o.drift) * 2) * 8 : 0;
-        o.y += (o.speed * delta + hoverOffset * delta) * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
+        o.y += (o.speed * delta + hoverOffset * delta) * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod * tweetEffects.gravity;
       }
       for (const p of pickups) {
-        p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
+        p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod * tweetEffects.gravity;
         if (magnetStrength && Math.abs(laneX(p.lane, p.y) - player.x) < magnetStrength) {
           p.lane += (player.targetLane - p.lane) * 0.08;
         }
@@ -2719,12 +2922,12 @@
 
             state.streak = Math.min(state.streak, 10);
             state.streak = Math.max(state.streak, 1);
-            state.lives -= 1;
             const crashTint = '#ff5c8a';
             player.tint = crashTint;
             emitBurst(laneX(player.targetLane, player.y), player.y, crashTint);
             setTimeout(() => (player.tint = stages[state.stageIndex].accent), 180);
-            if (state.lives <= 0) {
+            const status = marketHealth.updatePrice('hit_critic');
+            if (status === 'BANKRUPT') {
               endGame();
               return;
             }
@@ -2747,6 +2950,11 @@
             emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
             if (p.currency) runCurrency[p.currency] += currencyMultiplier;
             addHype(0.08);
+            marketHealth.updatePrice('collect_coin');
+            if (tweetEffects.coinsToDoge) {
+              state.score += 120 * state.streak;
+              addMessage('DOGE meme tips boosted returns', '#ffd700');
+            }
           } else if (p.kind === 'shield') {
             const boost = 1 + meta.upgrades.shieldDuration * 0.1;
             powerTimers.shield = Math.min(8, powerTimers.shield + 3.5 * boost);
@@ -2781,19 +2989,16 @@
             screenShake = 0.5;
             clearObstacles();
           } else if (p.kind === 'life') {
-            if (state.lives < 6) {
-              state.lives += 1;
-              addMessage('Extra life banked', '#ff4fa4');
-            } else {
-              state.score += 300 * state.streak;
-              addMessage('Max lives – converted to score', '#ff4fa4');
-            }
+            marketHealth.updatePrice('tweet_boost');
+            state.score += 180 * state.streak;
+            addMessage('Stock buyback pumped the price', '#ff4fa4');
           } else if (p.kind === 'bonus_coins') {
             const bonus = 3;
             runCurrency.money += bonus;
             state.score += 260 * bonus * (powerTimers.turbo > 0 ? 1.5 : 1) * hypeScoreMultiplier;
             addMessage('EV tax credit windfall!', '#ffd166');
             addHype(0.08);
+            marketHealth.updatePrice('collect_coin');
           }
         }
         if (p.y > viewHeight + 100) pickups.splice(i, 1);
@@ -2878,6 +3083,8 @@
       updateHud();
     }
 
+    marketHealth.reset(420 + (meta.upgrades.extraLife || 0) * 25);
+    envManager.transitionTo(stages[state.stageIndex].theme);
     drawBackdrop(0);
     drawRoad(0);
     player.x = laneX(player.lane, player.y);

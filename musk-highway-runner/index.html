@@ -192,15 +192,16 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>Elon vs F$cking Everyone</h1>
-    <p class="lede">Dodge critics, collect batteries, government contracts, and bags of money as Elon Musk in a Tesla Roadster. Now with the full feature set from the Footy Run upgrade: power-ups, progression, and buttery smooth controls.</p>
-  </header>
+    <header>
+      <h1>Elon vs F$cking Everyone</h1>
+      <p class="lede">Dodge critics, collect batteries, government contracts, and bags of money as Elon Musk in a Tesla Roadster. Now with a five-stage campaign, new power-ups, and buttery smooth controls.</p>
+    </header>
 
   <div class="card" style="position: relative;">
     <div class="hud" id="hud">
       <div class="metric"><div class="label">Score</div><div class="value" id="score">0</div></div>
       <div class="metric"><div class="label">Distance</div><div class="value" id="distance">0 m</div></div>
+      <div class="metric"><div class="label">Stage</div><div class="value" id="stage">Launch Lane</div></div>
       <div class="metric"><div class="label">Streak</div><div class="value" id="streak">x1</div></div>
       <div class="metric"><div class="label">Lives</div><div class="value" id="lives">3</div></div>
       <div class="metric"><div class="label">High Score</div><div class="value" id="high">0</div></div>
@@ -215,11 +216,11 @@
       <div id="touchRight"></div>
     </div>
     <div class="overlay visible" id="startOverlay" aria-live="polite">
-      <div class="panel">
-        <h2>Ready to floor it?</h2>
-        <p>Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks, grab power-ups, and keep Elon on the road. Space or tap Start to begin.</p>
-        <button class="play" id="startBtn">Start Run</button>
-      </div>
+        <div class="panel">
+          <h2>Ready to floor it?</h2>
+          <p>Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks, grab power-ups (shield, magnet, turbo, autopilot, drone strike, extra life), and keep Elon on the road. Finish stages for new skies and faster payouts. Space or tap Start to begin.</p>
+          <button class="play" id="startBtn">Start Run</button>
+        </div>
     </div>
     <div class="overlay" id="gameOverOverlay" aria-live="polite">
       <div class="panel">
@@ -317,6 +318,7 @@
     const hud = {
       score: document.getElementById('score'),
       distance: document.getElementById('distance'),
+      stage: document.getElementById('stage'),
       streak: document.getElementById('streak'),
       lives: document.getElementById('lives'),
       high: document.getElementById('high'),
@@ -344,6 +346,64 @@
       tilt: 0,
     };
 
+    const stages = [
+      {
+        name: 'Launch Lane',
+        threshold: 0,
+        sky: ['#0f1629', '#0b0f1d', '#05060c'],
+        road: ['#151a2b', '#0f1321', '#080a12'],
+        accent: '#e82127',
+        note: 'Warm up the Roadster',
+        speed: 1,
+      },
+      {
+        name: 'Orbital Express',
+        threshold: 1200,
+        sky: ['#0f1b2f', '#0b1326', '#050912'],
+        road: ['#17243d', '#0f1c30', '#081320'],
+        accent: '#6b9bff',
+        note: 'Heavier traffic, richer rewards',
+        speed: 1.08,
+      },
+      {
+        name: 'Mars Freightway',
+        threshold: 3200,
+        sky: ['#1a1b2f', '#181327', '#0f0a18'],
+        road: ['#251c31', '#1c1227', '#120b1c'],
+        accent: '#ff7b45',
+        note: 'Critics swarm with erratic swerves',
+        speed: 1.16,
+      },
+      {
+        name: 'Solar Flare Speedway',
+        threshold: 6200,
+        sky: ['#221421', '#160f1c', '#090712'],
+        road: ['#361726', '#1f0f1b', '#120913'],
+        accent: '#ff3b6b',
+        note: 'Everything is faster – cash in the streaks',
+        speed: 1.28,
+      },
+      {
+        name: 'Deep Space Drift',
+        threshold: 9500,
+        sky: ['#0b0f1a', '#060812', '#04060c'],
+        road: ['#0e1522', '#0a101c', '#050811'],
+        accent: '#8ef0ff',
+        note: 'Endless mode with maxed aggression',
+        speed: 1.38,
+      },
+    ];
+
+    const colors = {
+      get skyTop() { return stages[state.stageIndex].sky[0]; },
+      get skyMid() { return stages[state.stageIndex].sky[1]; },
+      get skyBottom() { return stages[state.stageIndex].sky[2]; },
+      get roadTop() { return stages[state.stageIndex].road[0]; },
+      get roadMid() { return stages[state.stageIndex].road[1]; },
+      get roadBottom() { return stages[state.stageIndex].road[2]; },
+      get accent() { return stages[state.stageIndex].accent; },
+    };
+
     const state = {
       running: false,
       paused: false,
@@ -355,13 +415,14 @@
       lastGood: 0,
       lastTime: 0,
       difficulty: 1,
+      stageIndex: 0,
       high: Number(localStorage.getItem('elon_high_score') || 0),
     };
 
     const obstacles = [];
     const pickups = [];
     const particles = [];
-    const powerTimers = { shield: 0, magnet: 0, turbo: 0 };
+    const powerTimers = { shield: 0, magnet: 0, turbo: 0, autopilot: 0 };
     const uiMessages = [];
 
       function resize() {
@@ -402,9 +463,9 @@
 
     function drawBackdrop(time) {
       const gradient = ctx.createLinearGradient(0, 0, 0, viewHeight);
-      gradient.addColorStop(0, '#0f1629');
-      gradient.addColorStop(0.4, '#0b0f1d');
-      gradient.addColorStop(1, '#05060c');
+      gradient.addColorStop(0, colors.skyTop);
+      gradient.addColorStop(0.4, colors.skyMid);
+      gradient.addColorStop(1, colors.skyBottom);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, viewWidth, viewHeight);
 
@@ -446,9 +507,9 @@
       ctx.lineTo((viewWidth - roadWidthBottom) / 2, viewHeight);
       ctx.closePath();
       const roadGrad = ctx.createLinearGradient(0, horizon, 0, viewHeight);
-      roadGrad.addColorStop(0, '#151a2b');
-      roadGrad.addColorStop(0.55, '#0f1321');
-      roadGrad.addColorStop(1, '#080a12');
+      roadGrad.addColorStop(0, colors.roadTop);
+      roadGrad.addColorStop(0.55, colors.roadMid);
+      roadGrad.addColorStop(1, colors.roadBottom);
       ctx.fillStyle = roadGrad;
       ctx.fill();
 
@@ -464,7 +525,7 @@
         ctx.stroke();
       }
 
-      ctx.strokeStyle = 'rgba(232,33,39,0.8)';
+      ctx.strokeStyle = adjustColor(colors.accent, 10);
       ctx.lineWidth = 5;
       const dash = 24, gap = 20;
       let y = (time * 0.6) % (dash + gap) * -1;
@@ -528,6 +589,7 @@
 
     function spawnOpponent() {
       const lane = Math.floor(Math.random() * lanes);
+      const stage = stages[state.stageIndex];
       const tags = [
         { label: 'Politician', hue: '#e82127', sprite: 'car' },
         { label: 'Legacy OEM', hue: '#7ad966', sprite: 'dino' },
@@ -535,13 +597,16 @@
         { label: 'Short Seller', hue: '#67d7ff', sprite: 'car' },
         { label: 'Old Media', hue: '#f6c65b', sprite: 'car' },
         { label: 'Botnet', hue: '#b5a1ff', sprite: 'car' },
+        { label: 'Space Debris', hue: '#9fe8ff', sprite: 'car' },
+        { label: 'TikTok FUD', hue: '#ff7b45', sprite: 'car' },
       ];
       const pick = tags[Math.floor(Math.random() * tags.length)];
-      const type = Math.random() > 0.5 ? 'block' : 'swerve';
+      const type = Math.random() > 0.6 - state.stageIndex * 0.04 ? 'swerve' : 'block';
+      const baseSpeed = 240 + Math.random() * 120 * state.difficulty * stage.speed;
       obstacles.push({
         lane,
         y: -80,
-        speed: 240 + Math.random() * 120 * state.difficulty,
+        speed: baseSpeed,
         label: pick.label,
         hue: pick.hue,
         size: 72,
@@ -619,6 +684,62 @@
           S: '#2e9a42',
         },
       },
+      autopilot: {
+        sprite: [
+          '....bBb....',
+          '...bBBBb...',
+          '..bBBBBBb..',
+          '.bBBwwBBBb.',
+          'bBBwwwwBBb',
+          'bBBwTTwBBb',
+          'bBBwTTwBBb',
+          'bBBwwwwBBb',
+          '.bBBwwBBBb.',
+          '..bBBBBBb..',
+          '...bBBBb...',
+          '....bBb....',
+        ],
+        palette: {
+          b: '#0f1220',
+          B: '#101b36',
+          w: '#d0e8ff',
+          T: '#8ef0ff',
+        },
+      },
+      drone: {
+        sprite: [
+          '...pppp...',
+          '..pBBBBp..',
+          '.pBwwwwBp.',
+          'pBwwGGwwBp',
+          'pBwwGGwwBp',
+          '.pBwwwwBp.',
+          '..pBBBBp..',
+          '...pppp...',
+        ],
+        palette: {
+          p: '#1b0f22',
+          B: '#2c1f3d',
+          w: '#dfe5ff',
+          G: '#8af7cd',
+        },
+      },
+      life: {
+        sprite: [
+          '..rr..rr..',
+          '.rRRrrRRr.',
+          'rRRRRRRRRr',
+          'rRRRRRRRRr',
+          '.rRRRRRRr.',
+          '..rRRRRr..',
+          '...rRRr...',
+          '....rr....',
+        ],
+        palette: {
+          r: '#330715',
+          R: '#ff4fa4',
+        },
+      },
       shield: {
         sprite: [
           '....bbbb....',
@@ -689,6 +810,9 @@
         { label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield', art: 'shield' },
         { label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet', art: 'magnet' },
         { label: '🚀 Turbo', color: '#d0b7ff', points: 0, kind: 'turbo', art: 'turbo' },
+        { label: '🤖 Autopilot', color: '#8ef0ff', points: 0, kind: 'autopilot', art: 'autopilot' },
+        { label: '🛸 Drone Strike', color: '#8af7cd', points: 0, kind: 'drone', art: 'drone' },
+        { label: '❤️ Extra Life', color: '#ff4fa4', points: 0, kind: 'life', art: 'life' },
       ];
       const pick = types[Math.floor(Math.random() * types.length)];
       pickups.push({
@@ -787,6 +911,13 @@
       }
     }
 
+    function clearObstacles() {
+      for (const o of obstacles) {
+        emitBurst(laneX(o.lane, o.y), o.y, adjustColor(o.hue, 40));
+      }
+      obstacles.length = 0;
+    }
+
     function moveLane(dir) {
       if (!state.running || state.paused) return;
       player.targetLane = Math.max(0, Math.min(lanes - 1, player.targetLane + dir));
@@ -829,10 +960,12 @@
       state.lastGood = 0;
       state.lastTime = 0;
       state.difficulty = 1;
+      state.stageIndex = 0;
       player.lane = 1;
       player.targetLane = 1;
+      player.tint = stages[state.stageIndex].accent;
       player.x = laneX(1, player.y);
-      powerTimers.shield = powerTimers.magnet = powerTimers.turbo = 0;
+      powerTimers.shield = powerTimers.magnet = powerTimers.turbo = powerTimers.autopilot = 0;
       uiMessages.length = 0;
       updateHud();
     }
@@ -866,6 +999,7 @@
     function updateHud() {
       hud.score.textContent = Math.round(state.score).toLocaleString();
       hud.distance.textContent = `${Math.round(state.distance)} m`;
+      hud.stage.textContent = stages[state.stageIndex].name;
       hud.streak.textContent = `x${state.streak}`;
       hud.lives.textContent = state.lives;
       hud.high.textContent = state.high.toLocaleString();
@@ -878,6 +1012,7 @@
         ['🛡️', 'Shield', powerTimers.shield],
         ['🧲', 'Magnet', powerTimers.magnet],
         ['🚀', 'Turbo', powerTimers.turbo],
+        ['🤖', 'Autopilot', powerTimers.autopilot],
       ];
       entries.forEach(([icon, label, time]) => {
         if (time > 0) {
@@ -913,6 +1048,15 @@
       }
     }
 
+    function checkStageProgression() {
+      while (stages[state.stageIndex + 1] && state.distance >= stages[state.stageIndex + 1].threshold) {
+        state.stageIndex += 1;
+        player.tint = stages[state.stageIndex].accent;
+        addMessage(`${stages[state.stageIndex].name} ✅`, stages[state.stageIndex].accent);
+        addMessage(stages[state.stageIndex].note, '#dfe5ff');
+      }
+    }
+
     function loop(timestamp) {
       if (!state.running || state.paused) return;
       if (!state.lastTime) state.lastTime = timestamp;
@@ -922,7 +1066,8 @@
       state.distance += (powerTimers.turbo > 0 ? 180 : 120) * delta;
       state.lastSpawn += delta;
       state.lastGood += delta;
-      state.difficulty = 1 + state.distance / 6000;
+      state.difficulty = stages[state.stageIndex].speed + state.distance / 6000;
+      checkStageProgression();
 
       const spawnGap = Math.max(0.55, 1 - state.difficulty * 0.08);
       const pickupGap = Math.max(0.5, 0.9 - state.difficulty * 0.06);
@@ -930,10 +1075,11 @@
       if (state.lastGood > pickupGap) { spawnPickup(); state.lastGood = 0; }
 
       const magnetStrength = powerTimers.magnet > 0 ? laneWidth * 0.6 : 0;
+      const trafficSpeedMod = powerTimers.autopilot > 0 ? 0.7 : 1;
 
-      for (const o of obstacles) o.y += o.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1);
+      for (const o of obstacles) o.y += o.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
       for (const p of pickups) {
-        p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1);
+        p.y += p.speed * delta * (powerTimers.turbo > 0 ? 1.25 : 1) * trafficSpeedMod;
         if (magnetStrength && Math.abs(laneX(p.lane, p.y) - player.x) < magnetStrength) {
           p.lane += (player.targetLane - p.lane) * 0.08;
         }
@@ -979,6 +1125,21 @@
           } else if (p.kind === 'turbo') {
             powerTimers.turbo = Math.min(6, powerTimers.turbo + 3);
             addMessage('Turbo boost!', '#c18bff');
+          } else if (p.kind === 'autopilot') {
+            powerTimers.autopilot = Math.min(7, powerTimers.autopilot + 4);
+            addMessage('Autopilot smoothing traffic', '#8ef0ff');
+          } else if (p.kind === 'drone') {
+            emitBurst(laneX(player.targetLane, p.y), p.y, p.color);
+            addMessage('Drone strike clears the lane', '#8af7cd');
+            clearObstacles();
+          } else if (p.kind === 'life') {
+            if (state.lives < 6) {
+              state.lives += 1;
+              addMessage('Extra life banked', '#ff4fa4');
+            } else {
+              state.score += 300 * state.streak;
+              addMessage('Max lives – converted to score', '#ff4fa4');
+            }
           }
         }
         if (p.y > viewHeight + 100) pickups.splice(i, 1);
@@ -987,6 +1148,7 @@
       powerTimers.shield = Math.max(0, powerTimers.shield - delta);
       powerTimers.magnet = Math.max(0, powerTimers.magnet - delta);
       powerTimers.turbo = Math.max(0, powerTimers.turbo - delta);
+      powerTimers.autopilot = Math.max(0, powerTimers.autopilot - delta);
 
       ctx.clearRect(0, 0, viewWidth, viewHeight);
       drawBackdrop(timestamp);
@@ -1010,7 +1172,7 @@
         state.high = Math.round(state.score);
         localStorage.setItem('elon_high_score', state.high);
       }
-      summary.textContent = `You drove ${Math.round(state.distance)} m and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak}x streak.`;
+      summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak}x streak.`;
       gameOverOverlay.classList.add('visible');
       updateHud();
     }

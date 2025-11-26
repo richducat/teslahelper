@@ -361,7 +361,7 @@
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       opacity: 0;
       touch-action: none;
     }
@@ -421,15 +421,16 @@
       <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
     </div>
     <div class="message-stack" id="messageStack" aria-live="polite"></div>
-    <canvas id="game" width="960" height="540" aria-label="Elon Highway Runner game"></canvas>
-    <div class="touch-bar" id="touchBar">
-      <div id="touchLeft"></div>
-      <div id="touchRight"></div>
-    </div>
+      <canvas id="game" width="960" height="540" aria-label="Elon Highway Runner game"></canvas>
+      <div class="touch-bar" id="touchBar">
+        <div id="touchLeft"></div>
+        <div id="touchShoot"></div>
+        <div id="touchRight"></div>
+      </div>
     <div class="overlay visible" id="startOverlay" aria-live="polite">
         <div class="panel">
           <h2 id="startTitle">Ready to floor it?</h2>
-          <p id="startCopy">Swipe or tap left/right (or use arrow keys) to change lanes. Space or tap Start to begin.</p>
+          <p id="startCopy">Tap left/right to change lanes, tap the center to fire the blaster (or use arrow keys/space). Tap Start to begin.</p>
           <div class="powerups" id="startNotes"></div>
           <button class="play" id="startBtn">Start Run</button>
         </div>
@@ -1151,9 +1152,9 @@
       activeArcStep = arcStep;
       const startNotesContent = [];
 
-      if (arcStep === 0) {
-        startTitle.textContent = 'Run 1: Power fantasy & clarity';
-        startCopy.textContent = 'Swipe left/right (or arrow keys) to change lanes. A shield and magnet drop immediately so you can feel unstoppable.';
+        if (arcStep === 0) {
+          startTitle.textContent = 'Run 1: Power fantasy & clarity';
+          startCopy.textContent = 'Tap left/right (or arrow keys) to change lanes. A shield and magnet drop immediately so you can feel unstoppable. Tap the center to fire the blaster.';
         startNotesContent.push('🛡️ Guaranteed shield appears first.');
         startNotesContent.push('🧲 Magnet spawns right after — pull goodies into your lane.');
         startNotesContent.push('🎯 Goal: survive your first PR storm.');
@@ -1167,12 +1168,12 @@
         startCopy.textContent = 'Bank enough ⚡ credits to unlock your first upgrade right after this drive.';
         startNotesContent.push('💰 Grab batteries/contracts/money for ⚡ credits.');
         startNotesContent.push('🎁 A perk choice awaits after this run.');
-      } else {
-        startTitle.textContent = 'Ready to floor it?';
-        startCopy.textContent = 'Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks and grab power-ups to climb the stages.';
-      }
+        } else {
+          startTitle.textContent = 'Ready to floor it?';
+          startCopy.textContent = 'Tap left/right (or use arrow keys) to change lanes. Tap the center to fire the blaster. Stack streaks and grab power-ups to climb the stages.';
+        }
 
-      startNotesContent.unshift('🔫 Plasma blaster: tap the screen or press F/Space mid-run to vaporize blockers. Upgrades make it absurd.');
+        startNotesContent.unshift('🔫 Plasma blaster: tap the center control or press F/Space mid-run to vaporize blockers. Upgrades make it absurd.');
 
       startNotes.innerHTML = '';
       if (startNotesContent.length) {
@@ -1191,8 +1192,8 @@
     }
 
     function applyArcPrompts() {
-      if (activeArcStep === 0) {
-        addMessage('Swipe left/right (or arrow keys) to change lanes.', '#dfe5ff', 22, 2.6);
+        if (activeArcStep === 0) {
+          addMessage('Tap left/right (or arrow keys) to change lanes. Tap center to fire.', '#dfe5ff', 22, 2.6);
         addMessage('Shield then magnet drop in early — feel invincible.', '#8ef0ff', 18, 2.4);
       } else if (activeArcStep === 1) {
         addMessage('Streak x2 → x3: weave for near misses.', '#f6c65b', 26, 2.8);
@@ -2075,27 +2076,22 @@
     });
 
     const touchBar = document.getElementById('touchBar');
-    canvas.addEventListener(
-      'touchstart',
-      (e) => {
-        e.preventDefault();
-        if (!state.running) return;
-        fireBlaster();
-      },
-      { passive: false }
-    );
-    function bindTouch(id, dir) {
+    function bindTouch(id, handler) {
       document.getElementById(id).addEventListener(
         'touchstart',
         (e) => {
           e.preventDefault();
-          moveLane(dir);
+          handler();
         },
         { passive: false }
       );
     }
-    bindTouch('touchLeft', -1);
-    bindTouch('touchRight', 1);
+    bindTouch('touchLeft', () => moveLane(-1));
+    bindTouch('touchRight', () => moveLane(1));
+    bindTouch('touchShoot', () => {
+      if (!state.running) return;
+      fireBlaster();
+    });
 
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);

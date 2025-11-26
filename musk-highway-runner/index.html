@@ -816,7 +816,14 @@
       get accent() { return stages[state.stageIndex].accent; },
     };
 
-    const meta = JSON.parse(localStorage.getItem('elon_meta') || '{}');
+    let meta;
+    try {
+      meta = JSON.parse(localStorage.getItem('elon_meta') || '{}');
+    } catch (err) {
+      console.warn('Corrupt progress data detected, resetting meta', err);
+      localStorage.removeItem('elon_meta');
+      meta = {};
+    }
     const defaults = {
       credits: 0,
       runs: 0,

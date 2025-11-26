@@ -2030,6 +2030,16 @@
       }
     }
 
+    function trimMessages(max = 3) {
+      while (uiMessages.length > max) {
+        const removed = uiMessages.shift();
+        removed?.el?.remove();
+      }
+      while (messageStack.childElementCount > max) {
+        messageStack.firstChild?.remove();
+      }
+    }
+
     function addMessage(text, color = '#fff', size = 24, life = 1.8) {
       trimMessages(1);
       const card = document.createElement('div');

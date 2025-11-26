@@ -216,6 +216,45 @@
     }
     .overlay h2 { margin: 0 0 12px; }
     .overlay p { margin: 0 0 16px; opacity: 0.9; }
+    .leaderboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .leaderboard-card {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+    }
+    .leaderboard-card h4 { margin: 0 0 6px; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; opacity: 0.82; }
+    .leaderboard-card ol { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+    .leaderboard-card .empty { opacity: 0.68; font-size: 13px; }
+    .rank-callout {
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08));
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 10px 32px rgba(0,0,0,0.35);
+    }
+    .share-card {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 10px;
+      align-items: center;
+      background: radial-gradient(circle at 10% 10%, rgba(232,33,39,0.12), transparent 40%), rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .share-card .pose { font-size: 36px; text-align: center; }
+    .share-card .meta { display: grid; gap: 6px; }
+    .share-card .title { font-weight: 800; font-size: 16px; }
+    .share-card .caption { opacity: 0.85; }
+    .share-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .share-card button { min-width: 120px; }
     .touch-bar {
       position: absolute;
       inset: 0;
@@ -286,8 +325,10 @@
           <div id="postProgress"></div>
           <div id="currencySummary"></div>
           <div id="upgradeShop"></div>
+          <div id="challengeResult"></div>
           <div id="leaderboards"></div>
           <div id="challengeLink"></div>
+          <div id="shareCard"></div>
         </div>
         <div class="panel-actions">
           <button class="play" id="restartBtn">One more rage drive</button>
@@ -525,8 +566,10 @@
     const postProgress = document.getElementById('postProgress');
     const currencySummary = document.getElementById('currencySummary');
     const upgradeShop = document.getElementById('upgradeShop');
+    const challengeResult = document.getElementById('challengeResult');
     const leaderboards = document.getElementById('leaderboards');
     const challengeLink = document.getElementById('challengeLink');
+    const shareCard = document.getElementById('shareCard');
     const startBtn = document.getElementById('startBtn');
     const restartBtn = document.getElementById('restartBtn');
     const closeStatsBtn = document.getElementById('closeStatsBtn');
@@ -613,8 +656,19 @@
       campaign: 0,
       upgrades: { shieldDuration: 0, magnetDuration: 0, turboDuration: 0, startShield: 0, extraLife: 0, autopilotCharge: 0 },
       weekly: [],
+      daily: [],
+      allTime: [],
     };
     Object.keys(defaults).forEach((k) => { if (meta[k] === undefined) meta[k] = JSON.parse(JSON.stringify(defaults[k])); });
+
+    const urlParams = new URLSearchParams(location.search);
+    const sharedChallenge = urlParams.get('seed')
+      ? {
+          seed: Number(urlParams.get('seed')),
+          score: Number(urlParams.get('score') || 0),
+          stage: urlParams.get('stage') || 'Unknown run',
+        }
+      : null;
 
     const upgradeDefs = [
       { key: 'shieldDuration', label: 'Shield longevity', desc: '+10% shield duration per level', baseCost: 18 },
@@ -1426,8 +1480,7 @@
 
     function startGame() {
       if (state.running) return;
-      const params = new URLSearchParams(location.search);
-      state.seed = params.get('seed') ? Number(params.get('seed')) : Date.now();
+      state.seed = sharedChallenge?.seed ?? Date.now();
       rngSeed = state.seed % 2147483647;
       reset();
       state.running = true;
@@ -1569,22 +1622,67 @@
         <p>Total bank: ${meta.credits} ⚡</p>`;
     }
 
-    function renderLeaderboards() {
-      meta.weekly = (meta.weekly || []).slice(0, 10);
-      const sorted = [...meta.weekly].sort((a, b) => b.score - a.score).slice(0, 5);
-      leaderboards.innerHTML = '<h3>Weekly brag board</h3>';
-      const list = document.createElement('ol');
-      sorted.forEach((entry, idx) => {
-        const li = document.createElement('li');
-        li.textContent = `${idx + 1}. ${entry.score.toLocaleString()} pts (seed ${entry.seed})`;
-        list.appendChild(li);
+    function pruneLeaderboards() {
+      const now = Date.now();
+      const dayAgo = now - 24 * 60 * 60 * 1000;
+      const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+      meta.weekly = (meta.weekly || []).filter((entry) => entry.date > weekAgo);
+      meta.daily = (meta.daily || []).filter((entry) => entry.date > dayAgo);
+      meta.allTime = (meta.allTime || []).slice(0, 50);
+    }
+
+    function renderLeaderboards(latestRun) {
+      pruneLeaderboards();
+      const sections = [
+        { title: 'All-time leaderboard', data: meta.allTime },
+        { title: "This week's leaderboard", data: meta.weekly },
+        { title: 'Today\'s leaderboard', data: meta.daily },
+      ];
+      leaderboards.innerHTML = '<h3>Leaderboards</h3>';
+      const grid = document.createElement('div');
+      grid.className = 'leaderboard-grid';
+      sections.forEach((section) => {
+        const card = document.createElement('div');
+        card.className = 'leaderboard-card';
+        const title = document.createElement('h4');
+        title.textContent = section.title;
+        card.appendChild(title);
+        const sorted = [...section.data].sort((a, b) => b.score - a.score).slice(0, 8);
+        if (!sorted.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Finish a run to seed the board.';
+          card.appendChild(empty);
+        } else {
+          const list = document.createElement('ol');
+          sorted.forEach((entry, idx) => {
+            const li = document.createElement('li');
+            const badge = entry.seed === latestRun?.seed && entry.date === latestRun?.date ? ' • (this run)' : '';
+            li.textContent = `${idx + 1}. ${entry.score.toLocaleString()} pts ${entry.stage || ''} (seed ${entry.seed})${badge}`;
+            list.appendChild(li);
+          });
+          card.appendChild(list);
+        }
+        grid.appendChild(card);
       });
-      if (!sorted.length) {
-        const li = document.createElement('p');
-        li.textContent = 'Finish a run to seed the board.';
-        leaderboards.appendChild(li);
+      leaderboards.appendChild(grid);
+
+      if (latestRun) {
+        const sortedAll = [...meta.allTime].sort((a, b) => b.score - a.score);
+        const rankIndex = sortedAll.findIndex((r) => r.seed === latestRun.seed && r.date === latestRun.date);
+        if (rankIndex !== -1) {
+          const milestones = [10, 25, 50, 100];
+          const currentRank = rankIndex + 1;
+          const nextMilestone = [...milestones].reverse().find((m) => currentRank > m);
+          const targetScore = nextMilestone && sortedAll[nextMilestone - 1]?.score;
+          const callout = document.createElement('div');
+          callout.className = 'rank-callout';
+          callout.textContent = nextMilestone
+            ? `You're #${currentRank}. Next jump: beat ${targetScore.toLocaleString()} to crack Top ${nextMilestone}.`
+            : `You're #${currentRank}! Keep flooring it to hold the crown.`;
+          leaderboards.appendChild(callout);
+        }
       }
-      leaderboards.appendChild(list);
     }
 
     function renderProgress() {
@@ -1601,11 +1699,70 @@
     function renderChallengeLink() {
       const url = new URL(location.href);
       url.searchParams.set('seed', state.seed);
-      const text = `Beat my Elon Highway score: ${Math.round(state.score)} (Stage ${stages[state.stageIndex].name})`;
-      challengeLink.innerHTML = `<h3>Challenge this run</h3><p>${text}</p><div class="chip" role="button" tabindex="0">Copy seed link</div>`;
+      url.searchParams.set('score', Math.round(state.score));
+      url.searchParams.set('stage', stages[state.stageIndex].name);
+      const text = `Beat my Elon Highway score: ${Math.round(state.score).toLocaleString()}`;
+      const caption = `Same seed, same obstacles. Stage: ${stages[state.stageIndex].name}.`;
+      challengeLink.innerHTML = `<h3>Challenge this run</h3><p>${caption}</p><div class="chip" role="button" tabindex="0">Copy seed link</div>`;
       challengeLink.querySelector('.chip').onclick = () => {
         navigator.clipboard.writeText(`${text} – ${url.toString()}`);
         challengeLink.querySelector('.chip').textContent = 'Copied! Share it.';
+      };
+    }
+
+    function renderChallengeOutcome(latestRun) {
+      if (!sharedChallenge || sharedChallenge.seed !== latestRun.seed) {
+        challengeResult.innerHTML = '';
+        return;
+      }
+      const delta = Math.round(latestRun.score - sharedChallenge.score);
+      const headline = delta >= 0
+        ? `You beat that shared run by ${delta.toLocaleString()} points!`
+        : `You need ${(Math.abs(delta)).toLocaleString()} more points to overtake that run.`;
+      challengeResult.innerHTML = `
+        <h3>Shared seed showdown</h3>
+        <div class="metric">
+          <div class="label">Seed ${sharedChallenge.seed}</div>
+          <div class="value" style="font-size:18px;">${headline}</div>
+          <small>Original: ${sharedChallenge.stage} at ${sharedChallenge.score.toLocaleString()} pts</small>
+        </div>`;
+    }
+
+    function renderShareCard(latestRun) {
+      const poses = ['🚗💨', '🛞⚡', '🛰️🚀', '🚦🤖'];
+      const captions = [
+        `Elon rage-quit in the ${stages[state.stageIndex].name}.`,
+        `SEC just sent another letter. Distance: ${Math.round(state.distance)}m.`,
+        `Media Minefield chewed the tires. Score: ${latestRun.score.toLocaleString()}.`,
+      ];
+      const pose = poses[Math.floor(rand() * poses.length)];
+      const caption = captions[Math.floor(rand() * captions.length)];
+      const link = new URL(location.href);
+      link.searchParams.set('seed', latestRun.seed);
+      link.searchParams.set('score', latestRun.score);
+      link.searchParams.set('stage', stages[state.stageIndex].name);
+      const shareText = `${caption} Try this exact run: ${link.toString()}`;
+      shareCard.innerHTML = `
+        <h3>Share a meme-able card</h3>
+        <div class="share-card">
+          <div class="pose">${pose}</div>
+          <div class="meta">
+            <div class="title">Stage ${stages[state.stageIndex].name}</div>
+            <div class="caption">${caption}</div>
+            <div class="caption">Score: ${latestRun.score.toLocaleString()} • Distance: ${latestRun.distance.toLocaleString()} m</div>
+            <div class="actions">
+              <button class="play" id="copyShareText">Copy text + link</button>
+              <button class="ghost" id="copySeedOnly">Copy seed only</button>
+            </div>
+          </div>
+        </div>`;
+      document.getElementById('copyShareText').onclick = () => {
+        navigator.clipboard.writeText(shareText);
+        document.getElementById('copyShareText').textContent = 'Copied!';
+      };
+      document.getElementById('copySeedOnly').onclick = () => {
+        navigator.clipboard.writeText(link.toString());
+        document.getElementById('copySeedOnly').textContent = 'Seed copied';
       };
     }
 
@@ -1832,16 +1989,24 @@
       summary.textContent = `You drove ${Math.round(state.distance)} m, reached ${stages[state.stageIndex].name}, and banked ${Math.round(state.score).toLocaleString()} points with a ${state.streak.toFixed(1)}x streak. ${highLine}`;
 
       const runCredits = creditsFromRun();
+      const now = Date.now();
+      const runEntry = { score: Math.round(state.score), seed: state.seed, date: now, distance: Math.round(state.distance), stage: stages[state.stageIndex].name };
       meta.credits += runCredits;
       meta.runs += 1;
       meta.campaign = Math.max(meta.campaign, state.stageIndex);
-      meta.weekly = [{ score: Math.round(state.score), seed: state.seed, date: Date.now() }, ...(meta.weekly || [])].slice(0, 8);
+      const dayAgo = now - 24 * 60 * 60 * 1000;
+      const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+      meta.weekly = [...(meta.weekly || []).filter((entry) => entry.date > weekAgo), runEntry];
+      meta.daily = [...(meta.daily || []).filter((entry) => entry.date > dayAgo), runEntry];
+      meta.allTime = [...(meta.allTime || []), runEntry].sort((a, b) => b.score - a.score).slice(0, 50);
       saveMeta();
       renderCurrencies(runCredits);
       renderUpgradeShop();
-      renderLeaderboards();
+      renderLeaderboards(runEntry);
       renderProgress();
+      renderChallengeOutcome(runEntry);
       renderChallengeLink();
+      renderShareCard(runEntry);
       gameOverOverlay.classList.add('visible');
       updateHud();
     }

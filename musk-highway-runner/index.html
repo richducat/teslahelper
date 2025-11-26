@@ -24,6 +24,80 @@
       --panel: #0c1d2f;
       --panel-strong: #0b1726;
     }
+
+    function applyBlasterHit(bolt, obstacle, profile, hypeScoreMultiplier) {
+      const crit = rand() < bolt.critChance;
+      const damage = bolt.damage * (crit ? bolt.critMult : 1);
+      obstacle.health = (obstacle.health || 1) - damage;
+      const score = 90 * (1 + profile.scoreBonus) * state.streak * hypeScoreMultiplier * (crit ? 1.6 : 1);
+      state.score += score;
+      if (profile.slow) obstacle.speed *= Math.max(0.6, 1 - profile.slow);
+      if (profile.knockback) obstacle.y -= 6 * profile.knockback;
+      if (profile.shieldTrickle) powerTimers.shield = Math.min(10, powerTimers.shield + 0.12 + profile.shieldTrickle);
+      if (crit && profile.cooldownRefund) blasterState.cooldown = Math.max(0, blasterState.cooldown - profile.cooldownRefund);
+      if (profile.dropLuck && rand() < profile.dropLuck) runCurrency.money += 1;
+      addHype(profile.hypeGain * 0.6);
+      return obstacle.health <= 0;
+    }
+
+    function updateProjectiles(delta, profile, hypeScoreMultiplier) {
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const bolt = projectiles[i];
+        bolt.y -= bolt.speed * delta;
+        let pierced = false;
+        for (let j = obstacles.length - 1; j >= 0; j--) {
+          const o = obstacles[j];
+          if (collide(bolt, o, 46 * bolt.beamWidth)) {
+            const destroyed = applyBlasterHit(bolt, o, profile, hypeScoreMultiplier);
+            emitBurst(laneX(o.lane, o.y), o.y, bolt.tint);
+            if (destroyed) {
+              obstacles.splice(j, 1);
+              state.score += 140 * state.streak * hypeScoreMultiplier * (1 + profile.scoreBonus);
+              if (profile.chain) {
+                const nearbyLane = Math.min(lanes - 1, Math.max(0, o.lane + (rand() > 0.5 ? 1 : -1)));
+                spawnProjectile(nearbyLane, profile, true);
+              }
+            } else if (profile.knockback) {
+              o.y -= 14 * profile.knockback;
+            }
+            bolt.pierce -= 1;
+            if (bolt.pierce <= 0) { pierced = true; break; }
+          }
+        }
+        if (pierced || bolt.y < -120) projectiles.splice(i, 1);
+      }
+    }
+
+    function drawProjectiles() {
+      for (const bolt of projectiles) {
+        ctx.save();
+        ctx.translate(laneX(bolt.lane, bolt.y), bolt.y);
+        ctx.fillStyle = bolt.tint;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = bolt.tint;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 10 * bolt.beamWidth, 24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function updateBlasterState(delta, profile = blasterProfile()) {
+      const ventRate = 1.6 + meta.upgrades.blasterHeatSink * 0.14 + meta.upgrades.blasterReloadBoost * 0.08;
+      blasterState.cooldown = Math.max(0, blasterState.cooldown - delta);
+      blasterState.overheat = Math.max(0, blasterState.overheat - delta);
+      blasterState.heat = Math.max(0, blasterState.heat - delta * ventRate);
+      blasterState.droneTimer += delta;
+      const droneInterval = Math.max(4.5, 12 - meta.upgrades.blasterDroneAssist * 0.6);
+      if (meta.upgrades.blasterDroneAssist > 0 && blasterState.droneTimer > droneInterval && obstacles.length) {
+        blasterState.droneTimer = 0;
+        const first = obstacles[0];
+        emitBurst(laneX(first.lane, first.y), first.y, '#8af7cd');
+        obstacles.splice(0, 1);
+        addMessage('Drone assist cleared a lane', '#8af7cd');
+      }
+      renderBlasterHud(profile);
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -353,6 +427,9 @@
     .quest-progress { margin-top: 6px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
     .quest-progress span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffd166, #ff9d5c); transition: width 0.2s ease; box-shadow: 0 8px 16px rgba(255,209,102,0.28); }
     .ticker.quest { border-color: #ffb45c55; background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); }
+    .ticker.blaster { border-color: #8ef0ff55; background: linear-gradient(180deg, rgba(142, 240, 255, 0.08) 0%, rgba(142, 240, 255, 0.02) 100%); }
+    .ticker.blaster .hud-value { color: #8ef0ff; }
+    .ticker.blaster small { color: #c8e7ff; font-weight: 700; letter-spacing: 0.04em; }
     .touch-bar {
       position: absolute;
       inset: 0;
@@ -468,6 +545,12 @@
         <div class="ticker lives">
           <div class="hud-label">Lives</div>
           <div class="hud-value" id="lives">3</div>
+        </div>
+        <div class="ticker blaster">
+          <div class="hud-label">Plasma blaster</div>
+          <div class="hud-value" id="blasterStatus">Armed</div>
+          <div class="bar"><span id="blasterBar"></span></div>
+          <small id="blasterMeta">Press F/Space while driving to fire.</small>
         </div>
         <div class="ticker quest" id="questCard">
           <div class="hud-label">Side quest</div>
@@ -696,6 +779,9 @@
       stageNote: document.getElementById('stageNote'),
       tierLabel: document.getElementById('tierLabel'),
       streakHint: document.getElementById('streakHint'),
+      blasterStatus: document.getElementById('blasterStatus'),
+      blasterMeta: document.getElementById('blasterMeta'),
+      blasterBar: document.getElementById('blasterBar'),
     };
     const hypeHud = {
       label: document.getElementById('hype'),
@@ -810,7 +896,44 @@
       achievements: { fundingSecured: 0 },
       campaign: 0,
       campaignProgress: 0,
-      upgrades: { shieldDuration: 0, magnetDuration: 0, turboDuration: 0, startShield: 0, extraLife: 0, autopilotCharge: 0 },
+      upgrades: {
+        shieldDuration: 0,
+        magnetDuration: 0,
+        turboDuration: 0,
+        startShield: 0,
+        extraLife: 0,
+        autopilotCharge: 0,
+        blasterDamage: 0,
+        blasterFireRate: 0,
+        blasterPierce: 0,
+        blasterSpreadControl: 0,
+        blasterVolley: 0,
+        blasterCritChance: 0,
+        blasterCritDamage: 0,
+        blasterHeatSink: 0,
+        blasterReloadBoost: 0,
+        blasterScoreSiphon: 0,
+        blasterHypeGain: 0,
+        blasterKnockback: 0,
+        blasterSlow: 0,
+        blasterShieldOnHit: 0,
+        blasterCurrencyFind: 0,
+        blasterAutoAim: 0,
+        blasterSidekick: 0,
+        blasterChain: 0,
+        blasterBeam: 0,
+        blasterStreakProtect: 0,
+        blasterOverdriveSync: 0,
+        blasterStabilizer: 0,
+        blasterLanePierce: 0,
+        blasterDroneAssist: 0,
+        blasterCritRefund: 0,
+        blasterBatteryReturn: 0,
+        blasterSupercapacitor: 0,
+        blasterImpactShock: 0,
+        blasterArmorBreak: 0,
+        blasterFocusShot: 0,
+      },
       weekly: [],
       daily: [],
       allTime: [],
@@ -834,6 +957,36 @@
       { key: 'startShield', label: 'Start shielded', desc: 'Spawn with a brief shield', baseCost: 26 },
       { key: 'extraLife', label: 'Extra life', desc: '+1 permanent life (max +2)', baseCost: 40 },
       { key: 'autopilotCharge', label: 'Autopilot charge', desc: '+1 autopilot second each run', baseCost: 28 },
+      { key: 'blasterDamage', label: 'Blaster damage', desc: '+25% plasma damage per level', baseCost: 16 },
+      { key: 'blasterFireRate', label: 'Fire rate', desc: '-3% blaster cooldown per level', baseCost: 16 },
+      { key: 'blasterPierce', label: 'Piercing rounds', desc: '+0.5 lane pierce per level', baseCost: 18 },
+      { key: 'blasterSpreadControl', label: 'Stability gyro', desc: 'Tighter spread and higher precision', baseCost: 14 },
+      { key: 'blasterVolley', label: 'Volley launcher', desc: 'Adds extra bolts to every burst', baseCost: 20 },
+      { key: 'blasterCritChance', label: 'Crit chance', desc: '+2% crit chance per level', baseCost: 18 },
+      { key: 'blasterCritDamage', label: 'Crit damage', desc: '+10% crit bonus per level', baseCost: 18 },
+      { key: 'blasterHeatSink', label: 'Heat sink', desc: 'Higher heat cap + faster cooling', baseCost: 20 },
+      { key: 'blasterReloadBoost', label: 'Cooling cycle', desc: '-8% overheat downtime per level', baseCost: 18 },
+      { key: 'blasterScoreSiphon', label: 'Score siphon', desc: '+5% score per blaster hit', baseCost: 20 },
+      { key: 'blasterHypeGain', label: 'Hype injector', desc: 'Shots feed the hype meter', baseCost: 20 },
+      { key: 'blasterKnockback', label: 'Knockback coil', desc: 'Shots shove critics away', baseCost: 16 },
+      { key: 'blasterSlow', label: 'Cryo charge', desc: 'Shots slow opponents briefly', baseCost: 18 },
+      { key: 'blasterShieldOnHit', label: 'Shield trickle', desc: 'Hits trickle shield energy', baseCost: 22 },
+      { key: 'blasterCurrencyFind', label: 'Loot finder', desc: 'Higher chance of currency drops', baseCost: 18 },
+      { key: 'blasterAutoAim', label: 'Auto-aim assist', desc: 'Shots bend toward the nearest lane', baseCost: 22 },
+      { key: 'blasterSidekick', label: 'Sidekick drone', desc: 'Drone mirrors every third shot', baseCost: 24 },
+      { key: 'blasterChain', label: 'Chain lightning', desc: 'Hits can jump to nearby lanes', baseCost: 24 },
+      { key: 'blasterBeam', label: 'Beam width', desc: 'Wider beams make hits easier', baseCost: 18 },
+      { key: 'blasterStreakProtect', label: 'Streak guard', desc: 'Shots cushion streak loss on crashes', baseCost: 26 },
+      { key: 'blasterOverdriveSync', label: 'Overdrive sync', desc: 'Longer hype from blaster pressure', baseCost: 24 },
+      { key: 'blasterStabilizer', label: 'Lane stabilizer', desc: 'Reduces wobble while firing', baseCost: 14 },
+      { key: 'blasterLanePierce', label: 'Lane piercer', desc: 'Bolts cut through blockers in a row', baseCost: 22 },
+      { key: 'blasterDroneAssist', label: 'Drone assist', desc: 'Random drone clears a lane every so often', baseCost: 26 },
+      { key: 'blasterCritRefund', label: 'Crit refund', desc: 'Crits shave cooldown time', baseCost: 20 },
+      { key: 'blasterBatteryReturn', label: 'Battery return', desc: 'Hits sometimes pay ⚡ currency', baseCost: 22 },
+      { key: 'blasterSupercapacitor', label: 'Supercapacitor', desc: 'Huge heat cap for longer sprays', baseCost: 28 },
+      { key: 'blasterImpactShock', label: 'Impact shock', desc: 'Extra stagger + particles on hit', baseCost: 16 },
+      { key: 'blasterArmorBreak', label: 'Armor break', desc: 'Bonus damage to tougher trucks', baseCost: 22 },
+      { key: 'blasterFocusShot', label: 'Focus shot', desc: 'Single-lane bolts hit even harder', baseCost: 18 },
     ];
 
     let rngSeed = Date.now() % 2147483647;
@@ -872,6 +1025,8 @@
     let hypeFlash = 0;
     let sideQuest = null;
     let questCooldown = 0;
+    const projectiles = [];
+    const blasterState = { cooldown: 0, heat: 0, overheat: 0, combo: 0, lastFired: 0, droneTimer: 0 };
 
     function saveMeta() {
       localStorage.setItem('elon_meta', JSON.stringify(meta));
@@ -879,6 +1034,108 @@
 
     function creditsFromRun() {
       return runCurrency.battery + runCurrency.contract * 2 + runCurrency.money * 3;
+    }
+
+    function blasterProfile() {
+      const u = meta.upgrades;
+      const heatCap = 8 + u.blasterHeatSink * 1.5 + u.blasterSupercapacitor * 2;
+      const cooldown = Math.max(0.14, 0.58 - u.blasterFireRate * 0.03 - u.blasterStabilizer * 0.005);
+      const pierce = 1 + u.blasterPierce * 0.5 + (u.blasterLanePierce > 0 ? 1 : 0);
+      const shots = 1 + Math.min(3, Math.floor(u.blasterVolley / 1.5));
+      const beamWidth = 0.9 + u.blasterBeam * 0.08;
+      const baseDamage = 1 + u.blasterDamage * 0.25 + u.blasterArmorBreak * 0.2 + u.blasterFocusShot * 0.18;
+      const critChance = 0.05 + u.blasterCritChance * 0.02;
+      const critMult = 1.5 + u.blasterCritDamage * 0.1;
+      return {
+        cooldown,
+        heatCap,
+        heatCost: 1 + Math.max(0, shots - 1) * 0.6,
+        pierce,
+        shots,
+        spread: Math.max(0.08, 0.5 - u.blasterSpreadControl * 0.04),
+        damage: baseDamage,
+        critChance,
+        critMult,
+        hypeGain: u.blasterHypeGain * 0.012,
+        knockback: u.blasterKnockback * 0.15 + u.blasterImpactShock * 0.08,
+        slow: u.blasterSlow * 0.06,
+        shieldTrickle: u.blasterShieldOnHit * 0.12,
+        scoreBonus: u.blasterScoreSiphon * 0.05,
+        autoAim: u.blasterAutoAim > 0,
+        beamWidth,
+        chain: u.blasterChain > 0,
+        sidekickEvery: u.blasterSidekick > 0 ? Math.max(2, 5 - u.blasterSidekick) : 0,
+        overdriveExtend: u.blasterOverdriveSync * 0.2,
+        cooldownRefund: u.blasterCritRefund * 0.04,
+        dropLuck: u.blasterCurrencyFind * 0.02 + u.blasterBatteryReturn * 0.02,
+        stability: 1 - u.blasterStabilizer * 0.02,
+      };
+    }
+
+    function spawnProjectile(lane, profile, altHue = false) {
+      const wobble = (rand() - 0.5) * profile.spread;
+      let clampedLane = Math.max(0, Math.min(lanes - 1, lane + wobble));
+      if (profile.autoAim && obstacles.length) {
+        const closest = obstacles.reduce((acc, cur) => (!acc || cur.y > acc.y ? cur : acc), null);
+        if (closest) clampedLane = Math.max(0, Math.min(lanes - 1, closest.lane));
+      }
+      const tint = altHue ? adjustColor(stages[state.stageIndex].accent, -12) : stages[state.stageIndex].accent;
+      projectiles.push({
+        lane: clampedLane,
+        y: player.y - 30,
+        speed: 860 + meta.upgrades.blasterStabilizer * 10,
+        pierce: profile.pierce,
+        damage: profile.damage,
+        critChance: profile.critChance,
+        critMult: profile.critMult,
+        beamWidth: profile.beamWidth,
+        tint,
+        chain: profile.chain,
+      });
+    }
+
+    function fireBlaster() {
+      if (!state.running || state.paused) return;
+      const profile = blasterProfile();
+      if (blasterState.overheat > 0 || blasterState.cooldown > 0) return;
+
+      for (let i = 0; i < profile.shots; i++) {
+        const offset = i - (profile.shots - 1) / 2;
+        spawnProjectile(player.targetLane + offset * 0.3, profile, i % 2 === 0);
+      }
+
+      if (profile.sidekickEvery && blasterState.combo % profile.sidekickEvery === 0) {
+        spawnProjectile(Math.min(lanes - 1, player.targetLane + 1), profile, true);
+        spawnProjectile(Math.max(0, player.targetLane - 1), profile, true);
+      }
+
+      blasterState.cooldown = profile.cooldown * profile.stability;
+      blasterState.heat += profile.heatCost;
+      blasterState.combo += 1;
+      blasterState.lastFired = state.elapsed;
+      if (profile.overdriveExtend && powerTimers.hype > 0) powerTimers.hype += profile.overdriveExtend;
+      addHype(profile.hypeGain);
+      if (blasterState.heat > profile.heatCap) {
+        blasterState.overheat = Math.max(0.5, 1.2 - meta.upgrades.blasterReloadBoost * 0.08);
+        blasterState.heat = profile.heatCap;
+        addMessage('Blaster cooling…', '#8ef0ff', 18, 1.4);
+      }
+    }
+
+    function renderBlasterHud(profile) {
+      const heatPct = Math.min(1, blasterState.heat / profile.heatCap);
+      hud.blasterBar.style.width = `${heatPct * 100}%`;
+      hud.blasterBar.style.background = `linear-gradient(90deg, #8ef0ff, ${stages[state.stageIndex].accent})`;
+      if (blasterState.overheat > 0) {
+        hud.blasterStatus.textContent = 'Cooling';
+        hud.blasterMeta.textContent = `Overheated • ${blasterState.overheat.toFixed(1)}s`;
+      } else if (blasterState.cooldown > 0) {
+        hud.blasterStatus.textContent = 'Vent';
+        hud.blasterMeta.textContent = `Next shot in ${blasterState.cooldown.toFixed(2)}s`;
+      } else {
+        hud.blasterStatus.textContent = 'Armed';
+        hud.blasterMeta.textContent = `Pierce ${profile.pierce.toFixed(1)} • ${profile.shots} bolt${profile.shots > 1 ? 's' : ''}`;
+      }
     }
 
     function renderStartOverlay() {
@@ -906,6 +1163,8 @@
         startTitle.textContent = 'Ready to floor it?';
         startCopy.textContent = 'Swipe or tap left/right (or use arrow keys) to change lanes. Stack streaks and grab power-ups to climb the stages.';
       }
+
+      startNotesContent.unshift('🔫 Plasma blaster: press F/Space mid-run to vaporize blockers. Upgrades make it absurd.');
 
       startNotes.innerHTML = '';
       if (startNotesContent.length) {
@@ -1799,8 +2058,12 @@
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') moveLane(-1);
       if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') moveLane(1);
-      if (e.key === ' ' && !state.running) startGame();
+      if (e.key === ' ') {
+        if (!state.running) startGame();
+        else fireBlaster();
+      }
       if (e.key.toLowerCase() === 'p' && state.running) togglePause();
+      if (e.key.toLowerCase() === 'f') fireBlaster();
     });
 
     const touchBar = document.getElementById('touchBar');
@@ -1861,6 +2124,7 @@
       obstacles.length = 0;
       pickups.length = 0;
       particles.length = 0;
+      projectiles.length = 0;
       state.score = 0;
       state.distance = 0;
       state.streak = 1;
@@ -1880,6 +2144,9 @@
       powerTimers.shield = powerTimers.magnet = powerTimers.turbo = powerTimers.autopilot = 0;
       powerTimers.batteryBoost = powerTimers.streakBoost = powerTimers.hype = 0;
       runCurrency.battery = runCurrency.contract = runCurrency.money = 0;
+      blasterState.heat = blasterState.cooldown = blasterState.overheat = 0;
+      blasterState.combo = 0;
+      blasterState.droneTimer = 0;
       slowMo = 0;
       nearMissFlash = 0;
       controlScramble = 0;
@@ -1979,6 +2246,7 @@
       } else {
         hud.streakHint.textContent = state.streak >= 5 ? 'KEEP THE HEAT: STREAK TURBOCHARGES SCORE' : 'NEAR MISSES NUDGE STREAK FORWARD';
       }
+      renderBlasterHud(blasterProfile());
       renderPowerups();
       renderHypeHud();
       renderQuest();
@@ -2327,11 +2595,14 @@
       const rawDelta = Math.min(32, timestamp - state.lastTime) / 1000;
       const timeScale = slowMo > 0 ? 0.45 : 1;
       const delta = rawDelta * timeScale;
+      const blasterStats = blasterProfile();
       slowMo = Math.max(0, slowMo - rawDelta);
       nearMissFlash = Math.max(0, nearMissFlash - rawDelta);
       hypeFlash = Math.max(0, hypeFlash - delta);
       state.lastTime = timestamp;
       state.elapsed += delta;
+
+      updateBlasterState(delta, blasterStats);
 
       controlScramble = Math.max(0, controlScramble - delta);
       slowdownTimer = Math.max(0, slowdownTimer - delta);
@@ -2375,6 +2646,8 @@
           p.lane += (player.targetLane - p.lane) * 0.08;
         }
       }
+
+      updateProjectiles(delta, blasterStats, hypeScoreMultiplier);
 
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
@@ -2421,7 +2694,15 @@
               addMessage('Earnings miss reset your streak', '#ff6b6f');
             }
             if (o.effect === 'lane_block') addMessage('Regulatory roadblock!', '#d34b4b');
-            if (o.effect !== 'drop_multiplier' && o.effect !== 'reset_multiplier') state.streak = 1;
+            if (o.effect !== 'drop_multiplier' && o.effect !== 'reset_multiplier') {
+              const streakSaver = meta.upgrades.blasterStreakProtect * 0.06;
+              if (streakSaver) {
+                state.streak = Math.max(1, state.streak * (1 - streakSaver));
+                addMessage('Streak guard softened the hit', '#8ef0ff');
+              } else {
+                state.streak = 1;
+              }
+            }
 
             state.streak = Math.min(state.streak, 10);
             state.streak = Math.max(state.streak, 1);
@@ -2524,6 +2805,7 @@
       drawBackdrop(timestamp);
       drawRoad(timestamp);
       drawPowerFx(timestamp);
+      drawProjectiles();
       updateMessages(delta);
       drawPlayer(delta);
 

@@ -288,77 +288,76 @@
       transition: opacity 0.24s ease, transform 0.24s ease;
     }
     .message-card small { opacity: 0.78; font-weight: 600; }
-    /* --- UI Overlay Logic --- */
+    /* --- LAYOUT & Z-INDEX FIXES --- */
+
+    /* 1. The Game Container */
+    #game-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        background: #000;
+    }
+
+    /* 2. The Canvas (Bottom Layer) */
+    canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+    }
+
+    /* 3. The HUD / Stats Layer (Middle Layer) */
     #game-ui-layer {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        pointer-events: none;
+        pointer-events: none; /* CRITICAL: Lets clicks pass through to the game/buttons */
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 10px;
+        padding: 15px;
         box-sizing: border-box;
-        z-index: 10;
+        z-index: 10; /* Above canvas, below Start Screen */
     }
 
-    /* Top and Bottom Rows */
+    /* 4. Start Screen & Game Over Modal (Top Layer) */
+    #start-screen, #game-over-screen, .modal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 100; /* CRITICAL: Must be higher than game-ui-layer */
+        pointer-events: auto; /* Re-enable clicking for buttons */
+        
+        /* Styling for the modal */
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #0f0;
+        padding: 20px;
+        text-align: center;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 400px;
+    }
+
+    /* --- HUD TYPOGRAPHY (From previous step) --- */
     .top-row, .bottom-row {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         width: 100%;
     }
-
-    .bottom-row {
-        align-items: flex-end;
-        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-        padding-bottom: 5px;
-    }
-
-    /* Column Alignment */
-    .ui-group {
-        flex: 1;
-    }
+    .bottom-row { align-items: flex-end; }
+    .ui-group { flex: 1; }
     .left-align { text-align: left; }
     .center-align { text-align: center; }
     .right-align { text-align: right; }
-
-    /* Typography */
-    .ui-label {
-        font-family: sans-serif;
-        font-weight: bold;
-        color: #fff;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-    }
-
-    .ui-value {
-        font-family: monospace;
-        font-weight: bold;
-        color: #0f0;
-        font-size: 1rem;
-    }
-
-    .big-score {
-        font-size: 1.4rem;
-    }
-
-    .stat-sub {
-        font-size: 0.7rem;
-        color: #ccc;
-        margin-top: 2px;
-    }
-
-    /* Feed Specifics */
-    #feed-content p {
-        font-size: 0.7rem;
-        color: #0f0;
-        margin: 2px 0;
-        font-style: italic;
-    }
+    .ui-label { color: #fff; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+    .ui-value { color: #0f0; font-size: 1.1rem; font-weight: bold; font-family: monospace; }
+    .big-score { font-size: 1.5rem; }
     .overlay {
       position: absolute;
       inset: 0;
@@ -514,131 +513,105 @@
     </header>
 
   <div class="card" style="position: relative;">
-    <div id="game-ui-layer">
+    <div id="game-wrapper">
+        <!-- 1. The Game Canvas -->
+        <canvas id="game-canvas" width="960" height="540"></canvas>
 
-        <div class="top-row">
-            <div class="ui-group left-align">
-                <h2 class="ui-label">LIVE FEED</h2>
-                <div id="feed-content">
-                    <div id="powerups"></div>
-                    <div class="tweet-box" id="live-feed-display">
-                      <div class="tweet-header"><span class="user">@elonmusk</span> • Standby</div>
-                      <div class="tweet-body">Awaiting market-moving tweet…</div>
+        <!-- 2. The Heads-Up Display (HUD) -->
+        <div id="game-ui-layer">
+            
+            <!-- TOP ROW: Feed | Stage | Streak -->
+            <div class="top-row">
+                <div class="ui-group left-align">
+                    <div class="ui-label">LIVE FEED</div>
+                    <div id="feed-content" style="font-size: 0.7rem; color: #0f0; font-style: italic;">
+                        @elonmusk: Awaiting input...
+                        <div id="powerups"></div>
+                        <div class="tweet-box" id="live-feed-display">
+                          <div class="tweet-header"><span class="user">@elonmusk</span> • Standby</div>
+                          <div class="tweet-body">Awaiting market-moving tweet…</div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="ui-group center-align">
+                    <div><span class="ui-label">STAGE:</span> <span class="ui-value" id="stage">1</span></div>
+                    <div style="font-size: 0.7rem; color: #ccc;">NEXT: ORBITAL</div>
+                </div>
+
+                <div class="ui-group right-align">
+                    <div><span class="ui-label">STREAK:</span> <span class="ui-value" id="streak">0</span></div>
+                    <div style="font-size: 0.7rem; color: #ccc;">HIGH: <span id="highscore">0</span></div>
+                </div>
             </div>
 
-            <div class="ui-group center-align">
-                <div class="stat-block">
-                    <span class="ui-label">STAGE:</span> <span class="ui-value" id="stage-val">LAUNCH LANE</span>
+            <!-- BOTTOM ROW: Distance | Score | Lives -->
+            <div class="bottom-row">
+                <div class="ui-group left-align">
+                    <span class="ui-label">DIST:</span> <span class="ui-value" id="distance">0m</span>
                 </div>
-                <div class="stat-sub">NEXT STAGE: <span id="tierLabel">ORBITAL EXPRESS</span></div>
-                <div class="stat-sub" id="stageNote">WARM UP</div>
-                <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
-            </div>
 
-            <div class="ui-group right-align">
-                <div class="stat-block">
-                    <span class="ui-label">STREAK:</span> <span class="ui-value" id="streak-val">X10</span>
+                <div class="ui-group center-align">
+                    <span class="ui-label">SCORE</span><br>
+                    <span class="ui-value big-score" id="score">0</span>
                 </div>
-                <div class="stat-sub">High Score: <span id="high">9,933</span></div>
-                <div class="stat-sub" id="streakHint"></div>
-                <div class="hype-bar"><span id="hypeBar"></span></div>
-                <div class="stat-sub hype-note" id="hypeStatus">Stack streaks + pickups to trigger Overdrive.</div>
-                <div class="stat-sub" id="hype">Idle</div>
-                <div class="hidden bar"><span id="streakBar"></span></div>
+
+                <div class="ui-group right-align">
+                    <span class="ui-label">LIVES:</span> <span class="ui-value" id="lives">3</span>
+                </div>
             </div>
         </div>
 
-        <div class="bottom-row">
-            <div class="ui-group left-align">
-                <span class="ui-label">Distance:</span> <span class="ui-value" id="dist-val">106m</span>
-            </div>
+        <div class="message-stack" id="messageStack" aria-live="polite"></div>
 
-            <div class="ui-group center-align">
-                <span class="ui-label">SCORE:</span> <span class="ui-value big-score" id="score-val">4,343</span>
-            </div>
-
-            <div class="ui-group right-align">
-                <span class="ui-label">Lives:</span> <span class="ui-value" id="lives-val">3</span>
-            </div>
+        <!-- 3. The Start Screen Modal (Restored) -->
+        <div id="start-screen">
+            <h1 id="startTitle" style="color:white; margin-top:0;">READY TO RUN?</h1>
+            <p id="startCopy" style="color:#ccc; font-size: 0.9rem;">
+                Tap Left/Right to steer.<br>Tap Center to blast.
+            </p>
+            <div class="powerups" id="startNotes"></div>
+            <button id="start-btn" style="
+                background: #0f0; 
+                color: black; 
+                font-weight: bold; 
+                padding: 15px 30px; 
+                border: none; 
+                font-size: 1.2rem; 
+                cursor: pointer; 
+                margin-top: 10px;
+                width: 100%;">
+                START RUN
+            </button>
         </div>
 
+        <!-- 4. Game Over Screen (Hidden by default) -->
+        <div id="game-over-screen" style="display: none;">
+            <h2 style="color:red;">Wasted!</h2>
+            <p style="color:white;">Score: <span id="final-score">0</span></p>
+            <div id="bestHook" class="best-hook"></div>
+            <p id="summary" class="summary-copy"></p>
+            <div id="arcCallout"></div>
+            <div id="postProgress" class="progress-stack"></div>
+            <div id="currencySummary"></div>
+            <div id="quickUpgrade"></div>
+            <div id="upgradeShop"></div>
+            <div id="challengeResult"></div>
+            <div id="leaderboards"></div>
+            <div id="challengeLink"></div>
+            <div id="shareCard"></div>
+            <button id="restart-btn" style="padding: 10px 20px; background: white;">TRY AGAIN</button>
+        </div>
     </div>
-    <div class="message-stack" id="messageStack" aria-live="polite"></div>
-      <canvas id="game" width="960" height="540" aria-label="Elon Highway Runner game"></canvas>
-      <div class="touch-bar" id="touchBar">
+    <div class="touch-bar" id="touchBar">
         <div id="touchLeft"></div>
         <div id="touchShoot"></div>
         <div id="touchRight"></div>
       </div>
-    <div class="overlay visible" id="startOverlay" aria-live="polite">
-        <div class="panel">
-          <h2 id="startTitle">Ready to floor it?</h2>
-          <p id="startCopy">Tap left/right to change lanes, tap the center to fire the blaster (or use arrow keys/space). Tap Start to begin.</p>
-          <div class="powerups" id="startNotes"></div>
-          <button class="play" id="startBtn">Start Run</button>
-        </div>
-    </div>
-    <div class="overlay" id="gameOverOverlay" aria-live="polite">
-      <div class="panel">
-        <div class="panel-header">
-          <h2>Run Over</h2>
-          <button class="ghost" id="closeStatsBtn" aria-label="Close stats and return">✕ Close</button>
-        </div>
-        <div class="grid">
-          <div id="bestHook" class="best-hook"></div>
-          <p id="summary" class="summary-copy"></p>
-          <div id="postProgress" class="progress-stack"></div>
-          <div id="currencySummary"></div>
-          <div id="quickUpgrade"></div>
-          <div id="upgradeShop"></div>
-          <div id="challengeResult"></div>
-          <div id="leaderboards"></div>
-          <div id="challengeLink"></div>
-          <div id="shareCard"></div>
-        </div>
-        <div class="panel-actions">
-          <button class="play replay-cta" id="restartBtn">One more rage drive</button>
-          <button class="ghost" id="backToStartBtn">Back to launch screen</button>
-        </div>
-      </div>
-    </div>
-    <div class="controls">
-      <div class="control-tickers">
-        <div class="ticker distance">
-          <div class="hud-label">Distance</div>
-          <div class="hud-value" id="distance">0 m</div>
-          <div class="hidden bar"><span id="distanceBar"></span></div>
-        </div>
-        <div class="ticker score">
-          <div class="hud-label">Score</div>
-          <div class="hud-value" id="score">0</div>
-        </div>
-        <div class="ticker stock">
-          <div class="hud-label">TSLA Price</div>
-          <div class="hud-value" id="stock-price-display">$420.00</div>
-          <div class="hud-meta" id="stock-meta">Volatility engine online</div>
-        </div>
-        <div class="ticker blaster">
-          <div class="hud-label">Plasma blaster</div>
-          <div class="hud-value" id="blasterStatus">Armed</div>
-          <div class="bar"><span id="blasterBar"></span></div>
-          <small id="blasterMeta">Tap the screen or press F/Space while driving to fire.</small>
-        </div>
-        <div class="ticker quest" id="questCard">
-          <div class="hud-label">Side quest</div>
-          <div class="quest-title" id="questTitle">Calibrating new mission…</div>
-          <div class="quest-progress"><span id="questProgress"></span></div>
-          <div class="quest-meta" id="questMeta">Finish runs to unlock bolder dares.</div>
-        </div>
-      </div>
-      <button class="pause" id="pauseBtn">Pause</button>
-    </div>
   </div>
 
   <script>
-    const canvas = document.getElementById('game');
+    const canvas = document.getElementById('game-canvas');
     const touchBar = document.getElementById('touchBar');
 
     [canvas, touchBar].forEach((el) => {
@@ -955,14 +928,14 @@
     };
     const hud = {
       score: document.getElementById('score'),
-      overlayScore: document.getElementById('score-val'),
+      overlayScore: document.getElementById('score'),
       distance: document.getElementById('distance'),
-      overlayDistance: document.getElementById('dist-val'),
-      stage: document.getElementById('stage-val'),
-      streak: document.getElementById('streak-val'),
+      overlayDistance: document.getElementById('distance'),
+      stage: document.getElementById('stage'),
+      streak: document.getElementById('streak'),
       stock: document.getElementById('stock-price-display'),
-      high: document.getElementById('high'),
-      lives: document.getElementById('lives-val'),
+      high: document.getElementById('highscore'),
+      lives: document.getElementById('lives'),
       powerups: document.getElementById('powerups'),
       stageBar: document.getElementById('stageBar'),
       distanceBar: document.getElementById('distanceBar'),
@@ -986,11 +959,11 @@
       meta: document.getElementById('questMeta'),
     };
 
-    const startOverlay = document.getElementById('startOverlay');
+    const startScreen = document.getElementById('start-screen');
     const startTitle = document.getElementById('startTitle');
     const startCopy = document.getElementById('startCopy');
     const startNotes = document.getElementById('startNotes');
-    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const gameOverScreen = document.getElementById('game-over-screen');
     const bestHook = document.getElementById('bestHook');
     const summary = document.getElementById('summary');
     const arcCallout = document.getElementById('arcCallout');
@@ -1002,8 +975,9 @@
     const leaderboards = document.getElementById('leaderboards');
     const challengeLink = document.getElementById('challengeLink');
     const shareCard = document.getElementById('shareCard');
-    const startBtn = document.getElementById('startBtn');
-    const restartBtn = document.getElementById('restartBtn');
+    const finalScore = document.getElementById('final-score');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     const backToStartBtn = document.getElementById('backToStartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
@@ -1582,7 +1556,7 @@
     }
 
     function renderQuest() {
-      if (!questHud.title) return;
+      if (!questHud.title || !questHud.progress || !questHud.meta) return;
       if (!sideQuest) {
         questHud.title.textContent = 'Next mission incoming';
         questHud.meta.textContent = questCooldown > 0 ? `New dare in ${Math.ceil(questCooldown)}s` : 'Rolling a dare now…';
@@ -2390,11 +2364,11 @@
       fireBlaster();
     });
 
-    startBtn.addEventListener('click', startGame);
-    restartBtn.addEventListener('click', startGame);
-    closeStatsBtn.addEventListener('click', showStartScreen);
-    backToStartBtn.addEventListener('click', showStartScreen);
-    pauseBtn.addEventListener('click', togglePause);
+    if (startBtn) startBtn.addEventListener('click', startGame);
+    if (restartBtn) restartBtn.addEventListener('click', startGame);
+    if (closeStatsBtn) closeStatsBtn.addEventListener('click', showStartScreen);
+    if (backToStartBtn) backToStartBtn.addEventListener('click', showStartScreen);
+    if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
     upgradeShop.addEventListener('click', (e) => {
       const key = e.target.dataset?.key;
       if (!key) return;
@@ -2476,7 +2450,7 @@
       rngSeed = state.seed;
       if (meta.upgrades.startShield > 0) powerTimers.shield = 2 + meta.upgrades.startShield * 1.5;
       uiMessages.length = 0;
-      messageStack.innerHTML = '';
+      if (messageStack) messageStack.innerHTML = '';
       updateHud();
     }
 
@@ -2487,11 +2461,11 @@
       }
       state.running = false;
       state.paused = false;
-      pauseBtn.textContent = 'Pause';
-      touchBar.style.opacity = 0;
-      gameOverOverlay.classList.remove('visible');
+      if (pauseBtn) pauseBtn.textContent = 'Pause';
+      if (touchBar) touchBar.style.opacity = 0;
+      if (gameOverScreen) gameOverScreen.style.display = 'none';
       renderStartOverlay();
-      startOverlay.classList.add('visible');
+      if (startScreen) startScreen.style.display = 'block';
     }
 
     function startGame() {
@@ -2506,9 +2480,9 @@
       reset();
       state.running = true;
       state.paused = false;
-      startOverlay.classList.remove('visible');
-      gameOverOverlay.classList.remove('visible');
-      touchBar.style.opacity = 1;
+      if (startScreen) startScreen.style.display = 'none';
+      if (gameOverScreen) gameOverScreen.style.display = 'none';
+      if (touchBar) touchBar.style.opacity = 1;
       applyArcPrompts();
       setTimeout(() => spawnPickup({ label: '🛡️ Shield', color: '#9fe8ff', points: 0, kind: 'shield', art: 'shield' }), 400);
       setTimeout(() => spawnPickup({ label: '🧲 Magnet', color: '#ff9d5c', points: 0, kind: 'magnet', art: 'magnet' }), 900);
@@ -2518,7 +2492,7 @@
     function togglePause() {
       if (!state.running) return;
       state.paused = !state.paused;
-      pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
+      if (pauseBtn) pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
       if (!state.paused) {
         state.lastTime = 0;
         rafId = window.requestAnimationFrame(loop);
@@ -2535,35 +2509,39 @@
     }
 
     function updateHud() {
-      hud.score.textContent = Math.round(state.score).toLocaleString();
+      if (hud.score) hud.score.textContent = Math.round(state.score).toLocaleString();
       if (hud.overlayScore) hud.overlayScore.textContent = Math.round(state.score).toLocaleString();
-      hud.distance.textContent = `${Math.round(state.distance)} m`;
+      if (hud.distance) hud.distance.textContent = `${Math.round(state.distance)} m`;
       if (hud.overlayDistance) hud.overlayDistance.textContent = `${Math.round(state.distance)}m`;
-      hud.stage.textContent = stages[state.stageIndex].name.toUpperCase();
-      hud.streak.textContent = `X${state.streak.toFixed(1)}`;
-      hud.high.textContent = state.high.toLocaleString();
+      if (hud.stage) hud.stage.textContent = stages[state.stageIndex].name.toUpperCase();
+      if (hud.streak) hud.streak.textContent = `X${state.streak.toFixed(1)}`;
+      if (hud.high) hud.high.textContent = state.high.toLocaleString();
       if (hud.lives) hud.lives.textContent = `${Math.max(1, (meta.upgrades.extraLife || 0) + 1)}`;
       marketHealth.render();
       const curStage = stages[state.stageIndex];
       const nextStage = stages[state.stageIndex + 1] || { threshold: state.distance + 1600, name: '∞' };
       const stageProgress = Math.min(1, Math.max(0, (state.distance - curStage.threshold) / (nextStage.threshold - curStage.threshold)));
-      hud.stageBar.style.width = `${stageProgress * 100}%`;
-      hud.stageBar.style.background = `linear-gradient(90deg, ${curStage.accent}, ${nextStage.accent || curStage.accent})`;
-      hud.stageNote.textContent = `${curStage.note || ''}`.toUpperCase();
+      if (hud.stageBar) {
+        hud.stageBar.style.width = `${stageProgress * 100}%`;
+        hud.stageBar.style.background = `linear-gradient(90deg, ${curStage.accent}, ${nextStage.accent || curStage.accent})`;
+      }
+      if (hud.stageNote) hud.stageNote.textContent = `${curStage.note || ''}`.toUpperCase();
 
       const tierDistance = nextStage.threshold - curStage.threshold;
       const tierProgress = Math.min(1, (state.distance - curStage.threshold) / tierDistance);
-      hud.distanceBar.style.width = `${tierProgress * 100}%`;
-      hud.tierLabel.textContent = nextStage.name ? `${nextStage.name}`.toUpperCase() : 'DEEP SPACE';
+      if (hud.distanceBar) hud.distanceBar.style.width = `${tierProgress * 100}%`;
+      if (hud.tierLabel) hud.tierLabel.textContent = nextStage.name ? `${nextStage.name}`.toUpperCase() : 'DEEP SPACE';
 
       const streakFrac = state.streak - Math.floor(state.streak);
-      hud.streakBar.style.width = `${Math.min(1, streakFrac + 0.05) * 100}%`;
-      if (activeArcStep === 1) {
-        hud.streakHint.textContent = 'ARC 2: STREAK X2 → X3 = CRAZY SCORE MULTIPLIERS';
-      } else if (activeArcStep === 2) {
-        hud.streakHint.textContent = 'ARC 3: BUILD STREAKS, THEN SPEND ⚡ ON UPGRADES';
-      } else {
-        hud.streakHint.textContent = state.streak >= 5 ? 'KEEP THE HEAT: STREAK TURBOCHARGES SCORE' : 'NEAR MISSES NUDGE STREAK FORWARD';
+      if (hud.streakBar) hud.streakBar.style.width = `${Math.min(1, streakFrac + 0.05) * 100}%`;
+      if (hud.streakHint) {
+        if (activeArcStep === 1) {
+          hud.streakHint.textContent = 'ARC 2: STREAK X2 → X3 = CRAZY SCORE MULTIPLIERS';
+        } else if (activeArcStep === 2) {
+          hud.streakHint.textContent = 'ARC 3: BUILD STREAKS, THEN SPEND ⚡ ON UPGRADES';
+        } else {
+          hud.streakHint.textContent = state.streak >= 5 ? 'KEEP THE HEAT: STREAK TURBOCHARGES SCORE' : 'NEAR MISSES NUDGE STREAK FORWARD';
+        }
       }
       renderBlasterHud(blasterProfile());
       renderPowerups();
@@ -2598,6 +2576,7 @@
     }
 
     function renderHypeHud() {
+      if (!hypeHud.bar || !hypeHud.label || !hypeHud.status) return;
       const pct = powerTimers.hype > 0 ? 1 : hype;
       hypeHud.bar.style.width = `${Math.min(1, pct) * 100}%`;
       if (powerTimers.hype > 0) {
@@ -2666,6 +2645,7 @@
         const removed = uiMessages.shift();
         removed?.el?.remove();
       }
+      if (!messageStack) return;
       while (messageStack.childElementCount > max) {
         messageStack.firstChild?.remove();
       }
@@ -2673,6 +2653,7 @@
 
     function addMessage(text, color = '#fff', size = 24, life = 1.8) {
       trimMessages(1);
+      if (!messageStack) return;
       const card = document.createElement('div');
       card.className = 'message-card';
       card.style.color = color;
@@ -3236,7 +3217,8 @@
       renderChallengeOutcome(runEntry);
       renderChallengeLink();
       renderShareCard(runEntry);
-      gameOverOverlay.classList.add('visible');
+      if (finalScore) finalScore.textContent = Math.round(state.score).toLocaleString();
+      if (gameOverScreen) gameOverScreen.style.display = 'block';
       updateHud();
     }
 

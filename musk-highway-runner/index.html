@@ -559,6 +559,13 @@
                 <div class="ui-group right-align">
                     <span class="ui-label">LIVES:</span> <span class="ui-value" id="lives">3</span>
                 </div>
+
+                <div class="ui-group right-align">
+                    <div class="ui-label">BLASTER</div>
+                    <div class="bar"><span id="blasterBar"></span></div>
+                    <div class="subtle" id="blasterStatus">Armed</div>
+                    <div class="subtle" id="blasterMeta">Pierce 1.0 • 1 bolt</div>
+                </div>
             </div>
         </div>
 
@@ -2346,7 +2353,6 @@
       if (e.key.toLowerCase() === 'f') fireBlaster();
     });
 
-    const touchBar = document.getElementById('touchBar');
     function bindTouch(id, handler) {
       document.getElementById(id).addEventListener(
         'touchstart',

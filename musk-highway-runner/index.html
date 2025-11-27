@@ -93,7 +93,7 @@
     }
     .hud-block {
       flex: 1;
-      min-width: 210px;
+      min-width: 0;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
       border: 1px solid #1c3b59;
       border-radius: 12px;
@@ -167,7 +167,7 @@
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
       flex: 1;
-      min-width: 420px;
+      min-width: 0;
       align-items: stretch;
     }
     .pill {
@@ -292,7 +292,7 @@
       padding: 22px 26px;
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.12);
-      max-width: 520px;
+      width: min(520px, calc(100vw - 32px));
       box-shadow: 0 20px 44px rgba(0,0,0,0.4);
       backdrop-filter: blur(14px);
     }
@@ -401,8 +401,8 @@
       @media (max-width: 720px) {
         body { padding: 12px 12px 54px; }
         header { text-align: left; }
-        .hud-row { flex-direction: column; }
-        .hud-block { min-width: 100%; }
+        .hud-row { flex-direction: column; gap: 8px; }
+        .hud-block { min-width: 0; width: 100%; }
         .controls {
           flex-direction: column;
           align-items: stretch;

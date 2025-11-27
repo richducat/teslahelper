@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
   />
   <title>Elon Highway Run</title>
   <meta
@@ -23,6 +23,16 @@
       overflow-y: auto;
       background-color: #000;
       touch-action: manipulation;
+    }
+    /* Prevent pull-to-refresh and scroll on the game container */
+    body,
+    canvas,
+    #game-container {
+      touch-action: none;
+      overscroll-behavior: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     :root {
       color-scheme: dark;
@@ -141,8 +151,10 @@
     .hidden { display: none; }
     canvas {
       width: 100%;
-      height: 100%;
+      max-width: 100%;
+      height: auto;
       display: block;
+      margin: 0 auto;
       background: linear-gradient(180deg, #0b1625 0%, #060e1c 100%);
       border-bottom-left-radius: 20px;
       border-bottom-right-radius: 20px;
@@ -3143,6 +3155,78 @@
     ctx.textAlign = 'center';
     ctx.fillText('Tap Start to drive the Roadster. Avoid critics. Collect the good stuff.', viewWidth / 2, viewHeight / 2);
     updateHud();
+  </script>
+  <script>
+    /**
+     * Mobile Compatibility Patch for Musk Highway Runner
+     * Maps touch zones to Keyboard Events (Left, Right, Space)
+     */
+    (function setupMobileControls() {
+      const touchTarget = document.querySelector('canvas') || document.body;
+
+      touchTarget.addEventListener('touchstart', handleTouch, { passive: false });
+
+      function handleTouch(e) {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const width = window.innerWidth;
+        const x = touch.clientX;
+
+        if (x < width * 0.33) {
+          simulateKey('ArrowLeft');
+          showFeedback(touch.clientX, touch.clientY, '⬅️');
+        } else if (x > width * 0.66) {
+          simulateKey('ArrowRight');
+          showFeedback(touch.clientX, touch.clientY, '➡️');
+        } else {
+          simulateKey(' ');
+          showFeedback(touch.clientX, touch.clientY, '💥');
+        }
+      }
+
+      function simulateKey(keyName) {
+        const code = keyName === ' ' ? 'Space' : keyName;
+        const eventDown = new KeyboardEvent('keydown', {
+          key: keyName,
+          code,
+          bubbles: true,
+          cancelable: true,
+        });
+        document.dispatchEvent(eventDown);
+
+        setTimeout(() => {
+          const eventUp = new KeyboardEvent('keyup', {
+            key: keyName,
+            code,
+            bubbles: true,
+            cancelable: true,
+          });
+          document.dispatchEvent(eventUp);
+        }, 50);
+      }
+
+      function showFeedback(x, y, char) {
+        const el = document.createElement('div');
+        el.textContent = char;
+        el.style.position = 'fixed';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.color = 'white';
+        el.style.fontSize = '24px';
+        el.style.pointerEvents = 'none';
+        el.style.opacity = '1';
+        el.style.transition = 'opacity 0.5s, transform 0.5s';
+        el.style.zIndex = '9999';
+        document.body.appendChild(el);
+
+        requestAnimationFrame(() => {
+          el.style.opacity = '0';
+          el.style.transform = 'translate(-50%, -100px)';
+        });
+
+        setTimeout(() => el.remove(), 500);
+      }
+    })();
   </script>
 </body>
 </html>

@@ -270,6 +270,8 @@
       max-height: 150px;
       overflow: hidden;
       pointer-events: none;
+      position: relative;
+      z-index: 12;
     }
     .message-card {
       background: rgba(255, 255, 255, 0.05);
@@ -286,6 +288,77 @@
       transition: opacity 0.24s ease, transform 0.24s ease;
     }
     .message-card small { opacity: 0.78; font-weight: 600; }
+    /* --- UI Overlay Logic --- */
+    #game-ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px;
+        box-sizing: border-box;
+        z-index: 10;
+    }
+
+    /* Top and Bottom Rows */
+    .top-row, .bottom-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .bottom-row {
+        align-items: flex-end;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        padding-bottom: 5px;
+    }
+
+    /* Column Alignment */
+    .ui-group {
+        flex: 1;
+    }
+    .left-align { text-align: left; }
+    .center-align { text-align: center; }
+    .right-align { text-align: right; }
+
+    /* Typography */
+    .ui-label {
+        font-family: sans-serif;
+        font-weight: bold;
+        color: #fff;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+
+    .ui-value {
+        font-family: monospace;
+        font-weight: bold;
+        color: #0f0;
+        font-size: 1rem;
+    }
+
+    .big-score {
+        font-size: 1.4rem;
+    }
+
+    .stat-sub {
+        font-size: 0.7rem;
+        color: #ccc;
+        margin-top: 2px;
+    }
+
+    /* Feed Specifics */
+    #feed-content p {
+        font-size: 0.7rem;
+        color: #0f0;
+        margin: 2px 0;
+        font-style: italic;
+    }
     .overlay {
       position: absolute;
       inset: 0;
@@ -441,37 +514,56 @@
     </header>
 
   <div class="card" style="position: relative;">
-    <div class="hud" id="hud">
-      <div class="hud-row">
-        <div class="hud-block hud-feed">
-          <div class="hud-label">Live Feed</div>
-          <div class="feed-list" id="powerups"></div>
-          <div class="tweet-box" id="live-feed-display">
-            <div class="tweet-header"><span class="user">@elonmusk</span> • Standby</div>
-            <div class="tweet-body">Awaiting market-moving tweet…</div>
-          </div>
+    <div id="game-ui-layer">
+
+        <div class="top-row">
+            <div class="ui-group left-align">
+                <h2 class="ui-label">LIVE FEED</h2>
+                <div id="feed-content">
+                    <div id="powerups"></div>
+                    <div class="tweet-box" id="live-feed-display">
+                      <div class="tweet-header"><span class="user">@elonmusk</span> • Standby</div>
+                      <div class="tweet-body">Awaiting market-moving tweet…</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ui-group center-align">
+                <div class="stat-block">
+                    <span class="ui-label">STAGE:</span> <span class="ui-value" id="stage-val">LAUNCH LANE</span>
+                </div>
+                <div class="stat-sub">NEXT STAGE: <span id="tierLabel">ORBITAL EXPRESS</span></div>
+                <div class="stat-sub" id="stageNote">WARM UP</div>
+                <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
+            </div>
+
+            <div class="ui-group right-align">
+                <div class="stat-block">
+                    <span class="ui-label">STREAK:</span> <span class="ui-value" id="streak-val">X10</span>
+                </div>
+                <div class="stat-sub">High Score: <span id="high">9,933</span></div>
+                <div class="stat-sub" id="streakHint"></div>
+                <div class="hype-bar"><span id="hypeBar"></span></div>
+                <div class="stat-sub hype-note" id="hypeStatus">Stack streaks + pickups to trigger Overdrive.</div>
+                <div class="stat-sub" id="hype">Idle</div>
+                <div class="hidden bar"><span id="streakBar"></span></div>
+            </div>
         </div>
-        <div class="hud-block">
-          <div class="hud-label">Stage</div>
-            <div class="stage-name" id="stage">LAUNCH LANE</div>
-            <div class="stage-next">Next Stage: <span id="tierLabel"></span></div>
-            <div class="stage-note" id="stageNote">WARM UP</div>
+
+        <div class="bottom-row">
+            <div class="ui-group left-align">
+                <span class="ui-label">Distance:</span> <span class="ui-value" id="dist-val">106m</span>
+            </div>
+
+            <div class="ui-group center-align">
+                <span class="ui-label">SCORE:</span> <span class="ui-value big-score" id="score-val">4,343</span>
+            </div>
+
+            <div class="ui-group right-align">
+                <span class="ui-label">Lives:</span> <span class="ui-value" id="lives-val">3</span>
+            </div>
         </div>
-        <div class="hud-block">
-          <div class="hud-label">Streak</div>
-            <div class="streak-value" id="streak">X1</div>
-          <div class="subtle">High Score: <span id="high">0</span></div>
-          <div class="hidden bar"><span id="streakBar"></span></div>
-          <div class="subtle" id="streakHint"></div>
-        </div>
-        <div class="hud-block">
-          <div class="hud-label">Hype Meter</div>
-          <div class="streak-value" id="hype">Idle</div>
-          <div class="hype-bar"><span id="hypeBar"></span></div>
-          <div class="hype-note" id="hypeStatus">Stack streaks + pickups to trigger Overdrive.</div>
-        </div>
-      </div>
-      <div class="hidden bar stage-progress"><span id="stageBar"></span></div>
+
     </div>
     <div class="message-stack" id="messageStack" aria-live="polite"></div>
       <canvas id="game" width="960" height="540" aria-label="Elon Highway Runner game"></canvas>
@@ -863,11 +955,14 @@
     };
     const hud = {
       score: document.getElementById('score'),
+      overlayScore: document.getElementById('score-val'),
       distance: document.getElementById('distance'),
-      stage: document.getElementById('stage'),
-      streak: document.getElementById('streak'),
+      overlayDistance: document.getElementById('dist-val'),
+      stage: document.getElementById('stage-val'),
+      streak: document.getElementById('streak-val'),
       stock: document.getElementById('stock-price-display'),
       high: document.getElementById('high'),
+      lives: document.getElementById('lives-val'),
       powerups: document.getElementById('powerups'),
       stageBar: document.getElementById('stageBar'),
       distanceBar: document.getElementById('distanceBar'),
@@ -2441,10 +2536,13 @@
 
     function updateHud() {
       hud.score.textContent = Math.round(state.score).toLocaleString();
+      if (hud.overlayScore) hud.overlayScore.textContent = Math.round(state.score).toLocaleString();
       hud.distance.textContent = `${Math.round(state.distance)} m`;
+      if (hud.overlayDistance) hud.overlayDistance.textContent = `${Math.round(state.distance)}m`;
       hud.stage.textContent = stages[state.stageIndex].name.toUpperCase();
       hud.streak.textContent = `X${state.streak.toFixed(1)}`;
       hud.high.textContent = state.high.toLocaleString();
+      if (hud.lives) hud.lives.textContent = `${Math.max(1, (meta.upgrades.extraLife || 0) + 1)}`;
       marketHealth.render();
       const curStage = stages[state.stageIndex];
       const nextStage = stages[state.stageIndex + 1] || { threshold: state.distance + 1600, name: '∞' };
@@ -2487,15 +2585,13 @@
       if (powerTimers.streakBoost > 0) feedEntries.push('Streak booster');
 
       feedEntries.slice(0, 4).forEach((text) => {
-        const item = document.createElement('div');
-        item.className = 'feed-item';
+        const item = document.createElement('p');
         item.textContent = text.toUpperCase();
         hud.powerups.appendChild(item);
       });
 
       if (!hud.powerups.children.length) {
-        const item = document.createElement('div');
-        item.className = 'feed-item';
+        const item = document.createElement('p');
         item.textContent = 'AWAITING SIGNALS';
         hud.powerups.appendChild(item);
       }

@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
   <title>Elon Highway Run</title>
   <meta
     name="description"
@@ -10,6 +13,16 @@
   />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Rajdhani:wght@600;700&display=swap');
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      touch-action: none;
+    }
     :root {
       color-scheme: dark;
       --bg: #040c16;
@@ -126,6 +139,7 @@
     .hidden { display: none; }
     canvas {
       width: 100%;
+      height: 100%;
       display: block;
       background: linear-gradient(180deg, #0b1625 0%, #060e1c 100%);
       border-bottom-left-radius: 20px;
@@ -515,6 +529,14 @@
   </div>
 
   <script>
+    document.addEventListener(
+      'touchmove',
+      function (e) {
+        e.preventDefault();
+      },
+      { passive: false }
+    );
+
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const card = document.querySelector('.card');
@@ -1539,20 +1561,34 @@
     const uiMessages = [];
     let rafId = null;
 
-      function resize() {
-        const isPortrait = window.innerHeight > window.innerWidth;
+      function getViewportSize() {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+
+        if (window.visualViewport) {
+          width = window.visualViewport.width;
+          height = window.visualViewport.height;
+        }
+
+        return { width, height };
+      }
+
+      function resizeGame() {
+        const { width: viewportWidth, height: viewportHeight } = getViewportSize();
+        const isPortrait = viewportHeight > viewportWidth;
         const ratio = isPortrait ? 0.7 : 1.4;
-        const containerWidth = card?.clientWidth || window.innerWidth;
-        let w = Math.min(containerWidth, Math.min(1400, window.innerWidth - (isPortrait ? 12 : 32)));
+        const containerWidth = card?.clientWidth || viewportWidth;
+
+        let w = Math.min(containerWidth, Math.min(1400, viewportWidth - (isPortrait ? 12 : 32)));
         let h = w / ratio;
 
-        const maxHeight = window.innerHeight * (isPortrait ? 0.92 : 0.94);
+        const maxHeight = viewportHeight * (isPortrait ? 0.92 : 0.94);
         if (h > maxHeight) {
           h = maxHeight;
           w = h * ratio;
         }
 
-        const minHeight = isPortrait ? 420 : 420;
+        const minHeight = Math.min(viewportHeight, 420);
         if (h < minHeight) {
           h = minHeight;
           w = h * ratio;
@@ -1569,8 +1605,10 @@
         laneWidth = (viewWidth * roadProfile.widthBottom) / lanes;
         player.y = viewHeight - 160;
       }
-    resize();
-    window.addEventListener('resize', resize);
+
+    resizeGame();
+    window.addEventListener('resize', () => setTimeout(resizeGame, 100));
+    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 200));
 
     function horizonY() {
       return viewHeight * roadProfile.horizon;

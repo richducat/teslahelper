@@ -19,9 +19,10 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       background-color: #000;
-      touch-action: none;
+      touch-action: manipulation;
     }
     :root {
       color-scheme: dark;
@@ -533,15 +534,20 @@
   </div>
 
   <script>
-    document.addEventListener(
-      'touchmove',
-      function (e) {
-        e.preventDefault();
-      },
-      { passive: false }
-    );
-
     const canvas = document.getElementById('game');
+    const touchBar = document.getElementById('touchBar');
+
+    [canvas, touchBar].forEach((el) => {
+      if (!el) return;
+      el.addEventListener(
+        'touchmove',
+        function (e) {
+          e.preventDefault();
+        },
+        { passive: false }
+      );
+    });
+
     const ctx = canvas.getContext('2d');
     const card = document.querySelector('.card');
     const messageStack = document.getElementById('messageStack');

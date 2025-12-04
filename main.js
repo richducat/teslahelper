@@ -375,32 +375,136 @@
       return raw || fallbackMessage;
     }, []);
 
-    const fetchTelemetry = useCallback(async () => {
-      setIsLoadingTelemetry(true);
-      setAuthError('');
+    const refreshAccessToken = useCallback(async () => {
+      if (!authState?.refreshToken) return null;
+      const params = new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: TESLA_AUTH_CONFIG.clientId,
+        refresh_token: authState.refreshToken,
+      });
+
+      if (TESLA_AUTH_CONFIG.clientSecret) {
+        params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+      }
+
       try {
-        const response = await fetch('/api/tesla/vehicles', {
-          method: 'GET',
+        const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
+          method: 'POST',
+          mode: 'cors',
           cache: 'no-store',
-          credentials: 'include',
+          referrerPolicy: 'no-referrer',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
         });
-
         const payload = await response.json();
-        if (!response.ok) {
-          const reason = payload.error_description || payload.error || 'Unable to reach Tesla Fleet API via backend.';
-          throw new Error(reason);
-        }
-
-        const normalized = normalizeTelemetryFromFleet(payload, ANALYTICS_MOCK);
-        setTelemetryData(normalized);
-        setTelemetrySource('tesla');
-        setLastSynced(new Date().toISOString());
-        setAuthState({ status: 'connected', linkedAt: authState?.linkedAt || new Date().toISOString() });
-        persistAuth({ status: 'connected', linkedAt: authState?.linkedAt || new Date().toISOString() });
+        if (!response.ok) throw new Error(payload.error_description || 'Unable to refresh Tesla session.');
+        const refreshed = {
+          status: 'connected',
+          accessToken: payload.access_token,
+          refreshToken: payload.refresh_token || authState.refreshToken,
+          expiresAt: Date.now() + (payload.expires_in || 0) * 1000,
+        };
+        setAuthState(refreshed);
+        persistAuth(refreshed);
+        return refreshed;
       } catch (error) {
-        setAuthError(interpretTeslaFetchError(error, 'Tesla data request failed.'));
-      } finally {
-        setIsLoadingTelemetry(false);
+        const message = interpretTeslaFetchError(error, 'Unable to refresh Tesla session.');
+        setAuthError(message);
+        resetToDemo();
+        throw new Error(message);
+      }
+    }, [authState?.refreshToken, interpretTeslaFetchError, resetToDemo]);
+
+    const ensureFreshAccessToken = useCallback(async () => {
+      if (!authState?.accessToken) return null;
+
+      if (!authState?.expiresAt) return authState.accessToken;
+
+      const shouldRefresh = authState.expiresAt - Date.now() <= TESLA_AUTH_CONFIG.refreshSafetyWindowMs;
+      if (!shouldRefresh) return authState.accessToken;
+
+      try {
+        const refreshed = await refreshAccessToken();
+        return refreshed?.accessToken || authState.accessToken;
+      } catch (error) {
+        setAuthError(error.message || 'Session refresh failed.');
+        resetToDemo();
+        return null;
+      }
+    }, [authState?.accessToken, authState?.expiresAt, refreshAccessToken, resetToDemo]);
+
+    const fetchTelemetry = useCallback(
+      async (tokenOverride) => {
+        const activeToken = tokenOverride || (await ensureFreshAccessToken());
+        if (!activeToken) {
+          setAuthError('Sign in with your Tesla account to load telemetry.');
+          return;
+        }
+        setIsLoadingTelemetry(true);
+        try {
+          const response = await fetch(`${TESLA_AUTH_CONFIG.apiBase}/api/1/vehicles`, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-store',
+            referrerPolicy: 'no-referrer',
+            headers: { Authorization: `Bearer ${activeToken}` },
+          });
+          const payload = await response.json();
+          if (response.status === 401 && !tokenOverride) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed?.accessToken) {
+              await fetchTelemetry(refreshed.accessToken);
+              return;
+            }
+          }
+
+          if (!response.ok) {
+            throw new Error(payload.error_description || payload.error || 'Unable to reach Tesla Fleet API.');
+          }
+          const normalized = normalizeTelemetryFromFleet(payload, ANALYTICS_MOCK);
+          setTelemetryData(normalized);
+          setTelemetrySource('tesla');
+          setLastSynced(new Date().toISOString());
+        } catch (error) {
+          setAuthError(interpretTeslaFetchError(error, 'Tesla data request failed.'));
+        } finally {
+          setIsLoadingTelemetry(false);
+        }
+      },
+      [authState?.accessToken, ensureFreshAccessToken, interpretTeslaFetchError, refreshAccessToken]
+    );
+
+    const startDeviceLogin = useCallback(() => {
+      setAuthError('');
+      setTelemetrySource('demo');
+      setDeviceAuth(null);
+      setIsPolling(false);
+
+      const clientId = TESLA_AUTH_CONFIG.clientId;
+      if (!clientId) {
+        setAuthError('Tesla client ID is missing. Update your environment and try again.');
+        return;
+      }
+
+      const state = generateRandomState();
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(TESLA_AUTH_STATE_KEY, state);
+      }
+
+      const authUrl =
+        'https://auth.tesla.com/oauth2/v3/authorize' +
+        '?response_type=code' +
+        `&client_id=${encodeURIComponent(clientId)}` +
+        `&redirect_uri=${encodeURIComponent(TESLA_AUTH_CONFIG.redirectUri)}` +
+        `&scope=${encodeURIComponent(TESLA_AUTH_CONFIG.scope)}` +
+        `&state=${encodeURIComponent(state)}`;
+
+      window.location.href = authUrl;
+    }, []);
+
+    useEffect(() => {
+      if (authState?.status === 'connected' && authState.accessToken) {
+        fetchTelemetry(authState.accessToken);
       }
     }, [authState?.linkedAt, interpretTeslaFetchError]);
 

@@ -1,4 +1,3 @@
 config/runtime-env.js
-config/tesla-tokens.json
 config/tesla-auth.json
 .DS_Store

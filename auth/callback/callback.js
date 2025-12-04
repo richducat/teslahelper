@@ -5,12 +5,28 @@
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
+  const TESLA_REDIRECT_URI = 'https://teslahelper.app/auth/callback';
   const REDIRECT_TARGET = '/start';
 
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
   const error = urlParams.get('error');
   const state = urlParams.get('state');
+
+  const env = (key) => {
+    if (typeof process !== 'undefined' && process.env?.[key]) return process.env[key];
+    return undefined;
+  };
+
+  const teslaEnv = (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth) || {};
+
+  const TESLA_AUTH_CONFIG = {
+    clientId: env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || 'ownerapi',
+    clientSecret: env('TESLA_CLIENT_SECRET') || teslaEnv.clientSecret || '',
+    audience: teslaEnv.audience || 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    tokenEndpoint: teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
+    redirectUri: TESLA_REDIRECT_URI,
+  };
 
   const setStatus = (message, isError = false, detail = '') => {
     if (statusEl) {
@@ -43,6 +59,42 @@
     return true;
   };
 
+  const exchangeToken = async (authCode) => {
+    if (!TESLA_AUTH_CONFIG.clientId) {
+      throw new Error('Missing Tesla client ID.');
+    }
+    if (!TESLA_AUTH_CONFIG.clientSecret) {
+      throw new Error('Missing Tesla client secret. Configure TESLA_CLIENT_SECRET on the server.');
+    }
+
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('client_id', TESLA_AUTH_CONFIG.clientId);
+    params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+    params.append('code', authCode);
+    params.append('audience', TESLA_AUTH_CONFIG.audience);
+    params.append('redirect_uri', TESLA_AUTH_CONFIG.redirectUri);
+
+    const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+
+    if (!response.ok) {
+      let reason = 'Token exchange failed';
+      try {
+        const payload = await response.json();
+        reason = payload.error_description || payload.error || reason;
+      } catch (err) {
+        /* ignore parse error */
+      }
+      throw new Error(reason);
+    }
+
+    return response.json();
+  };
+
   const completeLogin = async () => {
     if (error) {
       setStatus('Tesla sign-in was cancelled or blocked.', true, error);
@@ -58,24 +110,14 @@
 
     try {
       setStatus('Exchanging code for tokens…');
-      const response = await fetch('/api/tesla/auth/exchange', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, state }),
-      });
-
-      if (!response.ok) {
-        let reason = 'Token exchange failed';
-        try {
-          const payload = await response.json();
-          reason = payload.error || payload.message || reason;
-        } catch (parseErr) {
-          /* ignore */
-        }
-        throw new Error(reason);
-      }
-
-      persistAuth({ status: 'connected', linkedAt: new Date().toISOString() });
+      const token = await exchangeToken(code);
+      const payload = {
+        status: 'connected',
+        accessToken: token.access_token,
+        refreshToken: token.refresh_token,
+        expiresAt: Date.now() + (token.expires_in || 0) * 1000,
+      };
+      persistAuth(payload);
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.removeItem(TESLA_AUTH_STATE_KEY);
       }

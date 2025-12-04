@@ -123,6 +123,26 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.43/dist/flexsearch.bundle.js"></script>
+  <script>
+    // Watchdog: if the app fails to hydrate (e.g., blocked CDN scripts), show a helpful
+    // fallback instead of a blank screen. main.js sets __TESLAHELPER_HYDRATED=true on success.
+    window.__TESLAHELPER_HYDRATED = false;
+    window.addEventListener('load', () => {
+      window.setTimeout(() => {
+        if (window.__TESLAHELPER_HYDRATED) return;
+        const root = document.getElementById('root') || document.body;
+        if (root) {
+          root.innerHTML = `
+            <div style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b0b0f;color:#fff;min-height:100vh;">
+              <h1 style="font-size:22px;font-weight:800;margin:0 0 10px;">Tesla Helper</h1>
+              <p style="margin:0 0 12px;">We couldn't load the app. Please refresh or try a different network.</p>
+              <p style="margin:0 0 16px;">If the issue continues, visit <a href="https://teslahelper.app" style="color:#a78bfa;font-weight:700;">teslahelper.app</a> for the latest version.</p>
+              <button onclick="location.reload()" style="padding:10px 14px;border-radius:12px;border:1px solid #a78bfa;background:#7c3aed;color:white;font-weight:700;cursor:pointer;">Reload</button>
+            </div>`;
+        }
+      }, 4000);
+    });
+  </script>
   <!-- App script compiled by Babel -->
   <script type="text/babel" src="main.js"></script>
 </body>

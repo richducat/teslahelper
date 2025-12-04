@@ -231,7 +231,7 @@
   const TESLA_AUTH_DEFAULT = {
     clientId: 'ownerapi',
     clientSecret: '',
-    scope: 'openid offline_access vehicle_device_data vehicle_cmds',
+    scope: 'openid offline_access user_data vehicle_device_data vehicle_cmds vehicle_charging_cmds',
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     deviceCodeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/device/code',
     tokenEndpoint: 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token',
@@ -240,10 +240,23 @@
     refreshSafetyWindowMs: 60 * 1000,
   };
 
+  const TESLA_REDIRECT_URI = 'https://teslahelper.app/auth/callback';
+  const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
+
   const TESLA_AUTH_CONFIG = {
     ...TESLA_AUTH_DEFAULT,
     ...(typeof window !== 'undefined' && window.APP_ENV?.teslaAuth ? window.APP_ENV.teslaAuth : {}),
   };
+
+  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_TESLA_CLIENT_ID) {
+    TESLA_AUTH_CONFIG.clientId = process.env.NEXT_PUBLIC_TESLA_CLIENT_ID;
+  }
+
+  if (typeof process !== 'undefined' && process.env?.TESLA_CLIENT_SECRET) {
+    TESLA_AUTH_CONFIG.clientSecret = process.env.TESLA_CLIENT_SECRET;
+  }
+
+  TESLA_AUTH_CONFIG.redirectUri = TESLA_REDIRECT_URI;
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
 
@@ -265,6 +278,15 @@
     } catch (error) {
       console.warn('TeslaHelper: failed to persist auth', error);
     }
+  }
+
+  function generateRandomState() {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const bytes = new Uint32Array(4);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, (b) => b.toString(16).padStart(8, '0')).join('');
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
   function normalizeTelemetryFromFleet(payload, fallback = ANALYTICS_MOCK) {
@@ -445,51 +467,32 @@
       [authState?.accessToken, ensureFreshAccessToken, interpretTeslaFetchError, refreshAccessToken]
     );
 
-    const startDeviceLogin = useCallback(async () => {
-      try {
-        setAuthError('');
-        setTelemetrySource('demo');
-        const params = new URLSearchParams({
-          client_id: TESLA_AUTH_CONFIG.clientId,
-          scope: TESLA_AUTH_CONFIG.scope,
-          audience: TESLA_AUTH_CONFIG.audience,
-        });
+    const startDeviceLogin = useCallback(() => {
+      setAuthError('');
+      setTelemetrySource('demo');
+      setDeviceAuth(null);
+      setIsPolling(false);
 
-        if (TESLA_AUTH_CONFIG.clientSecret) {
-          params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
-        }
-
-        const response = await fetch(TESLA_AUTH_CONFIG.deviceCodeEndpoint, {
-          method: 'POST',
-          mode: 'cors',
-          cache: 'no-store',
-          referrerPolicy: 'no-referrer',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params.toString(),
-        });
-
-        if (!response.ok) {
-          throw new Error('Tesla authentication is unavailable right now. Please try again.');
-        }
-
-        const payload = await response.json();
-        const deviceState = {
-          userCode: payload.user_code,
-          verificationUri: payload.verification_uri_complete || payload.verification_uri,
-          deviceCode: payload.device_code,
-          interval: payload.interval || 5,
-          expiresAt: Date.now() + (payload.expires_in || 600) * 1000,
-        };
-
-        setDeviceAuth(deviceState);
-        setAuthState({ status: 'pendingUser', deviceCode: deviceState.deviceCode });
-        setIsPolling(true);
-      } catch (error) {
-        const message = isTeslaNetworkBlockedError(error?.message)
-          ? TESLA_AUTH_NETWORK_BLOCKED_MESSAGE
-          : error?.message || 'Unable to start Tesla login.';
-        setAuthError(message);
+      const clientId = TESLA_AUTH_CONFIG.clientId;
+      if (!clientId) {
+        setAuthError('Tesla client ID is missing. Update your environment and try again.');
+        return;
       }
+
+      const state = generateRandomState();
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(TESLA_AUTH_STATE_KEY, state);
+      }
+
+      const authUrl =
+        'https://auth.tesla.com/oauth2/v3/authorize' +
+        '?response_type=code' +
+        `&client_id=${encodeURIComponent(clientId)}` +
+        `&redirect_uri=${encodeURIComponent(TESLA_AUTH_CONFIG.redirectUri)}` +
+        `&scope=${encodeURIComponent(TESLA_AUTH_CONFIG.scope)}` +
+        `&state=${encodeURIComponent(state)}`;
+
+      window.location.href = authUrl;
     }, []);
 
     useEffect(() => {

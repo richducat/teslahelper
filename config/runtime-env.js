@@ -4,8 +4,9 @@
 window.APP_ENV = {
   ...(window.APP_ENV || {}),
   teslaAuth: {
-    clientId: '6b4c3799-fcf9-4ecf-af69-cfe999df9727',
-    clientSecret: '***REMOVED***',
+    // Provide deploy-time credentials outside of the repo.
+    clientId: '',
+    clientSecret: '',
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     deviceCodeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/device/code',

@@ -467,7 +467,7 @@
       [authState?.accessToken, ensureFreshAccessToken, interpretTeslaFetchError, refreshAccessToken]
     );
 
-    const startDeviceLogin = useCallback(() => {
+    const startDeviceLogin = useCallback(async () => {
       setAuthError('');
       setTelemetrySource('demo');
       setDeviceAuth(null);
@@ -479,20 +479,47 @@
         return;
       }
 
-      const state = generateRandomState();
-      if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.setItem(TESLA_AUTH_STATE_KEY, state);
+      try {
+        const params = new URLSearchParams({
+          client_id: clientId,
+          scope: TESLA_AUTH_CONFIG.scope,
+          audience: TESLA_AUTH_CONFIG.audience,
+        });
+
+        if (TESLA_AUTH_CONFIG.clientSecret) {
+          params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+        }
+
+        const response = await fetch(TESLA_AUTH_CONFIG.deviceCodeEndpoint, {
+          method: 'POST',
+          mode: 'cors',
+          cache: 'no-store',
+          referrerPolicy: 'no-referrer',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error_description || payload.error || 'Tesla sign-in failed.');
+        }
+
+        const nextDeviceAuth = {
+          userCode: payload.user_code,
+          deviceCode: payload.device_code,
+          verificationUri: payload.verification_uri_complete || payload.verification_uri,
+          interval: payload.interval || 5,
+          expiresAt: Date.now() + (payload.expires_in || 600) * 1000,
+        };
+
+        setDeviceAuth(nextDeviceAuth);
+        setIsPolling(true);
+      } catch (error) {
+        const message = isTeslaNetworkBlockedError(error?.message)
+          ? TESLA_AUTH_NETWORK_BLOCKED_MESSAGE
+          : error?.message || 'Tesla sign-in failed. Please try again.';
+        setAuthError(message);
       }
-
-      const authUrl =
-        'https://auth.tesla.com/oauth2/v3/authorize' +
-        '?response_type=code' +
-        `&client_id=${encodeURIComponent(clientId)}` +
-        `&redirect_uri=${encodeURIComponent(TESLA_AUTH_CONFIG.redirectUri)}` +
-        `&scope=${encodeURIComponent(TESLA_AUTH_CONFIG.scope)}` +
-        `&state=${encodeURIComponent(state)}`;
-
-      window.location.href = authUrl;
     }, []);
 
     useEffect(() => {

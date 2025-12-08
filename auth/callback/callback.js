@@ -75,7 +75,9 @@
     params.append('audience', TESLA_AUTH_CONFIG.audience);
     params.append('redirect_uri', TESLA_AUTH_CONFIG.redirectUri);
 
-    const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
+    const proxyTokenEndpoint = 'https://corsproxy.io/' + TESLA_AUTH_CONFIG.tokenEndpoint;
+
+    const response = await fetch(proxyTokenEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),

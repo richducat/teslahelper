@@ -5,7 +5,11 @@
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
-  const TESLA_REDIRECT_URI = 'https://teslahelper.app/auth/callback';
+  const TESLA_REDIRECT_URI =
+    (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth?.redirectUri) ||
+    (typeof process !== 'undefined' &&
+      (process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI)) ||
+    'https://teslahelper.app/auth/callback';
   const REDIRECT_TARGET = '/start';
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -60,27 +64,14 @@
   };
 
   const exchangeToken = async (authCode) => {
-    if (!TESLA_AUTH_CONFIG.clientId) {
-      throw new Error('Missing Tesla client ID.');
-    }
-    if (!TESLA_AUTH_CONFIG.clientSecret) {
-      throw new Error('Missing Tesla client secret. Configure TESLA_CLIENT_SECRET on the server.');
-    }
-
-    const params = new URLSearchParams();
-    params.append('grant_type', 'authorization_code');
-    params.append('client_id', TESLA_AUTH_CONFIG.clientId);
-    params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
-    params.append('code', authCode);
-    params.append('audience', TESLA_AUTH_CONFIG.audience);
-    params.append('redirect_uri', TESLA_AUTH_CONFIG.redirectUri);
-
-    const proxyTokenEndpoint = 'https://corsproxy.io/' + TESLA_AUTH_CONFIG.tokenEndpoint;
-
-    const response = await fetch(proxyTokenEndpoint, {
+    const response = await fetch('/api/tesla/token-exchange', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: authCode,
+        audience: TESLA_AUTH_CONFIG.audience,
+        redirectUri: TESLA_AUTH_CONFIG.redirectUri,
+      }),
     });
 
     if (!response.ok) {

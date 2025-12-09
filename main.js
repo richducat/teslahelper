@@ -241,7 +241,11 @@
     refreshSafetyWindowMs: 60 * 1000,
   };
 
-  const TESLA_REDIRECT_URI = 'https://teslahelper.app/auth/callback';
+  const TESLA_REDIRECT_URI =
+    (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth?.redirectUri) ||
+    (typeof process !== 'undefined' &&
+      (process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI)) ||
+    'https://teslahelper.app/auth/callback';
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
 
   const TESLA_AUTH_CONFIG = {

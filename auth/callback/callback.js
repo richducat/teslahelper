@@ -5,7 +5,11 @@
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
-  const TESLA_REDIRECT_URI = 'https://teslahelper.app/auth/callback';
+  const TESLA_REDIRECT_URI =
+    (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth?.redirectUri) ||
+    (typeof process !== 'undefined' &&
+      (process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI)) ||
+    'https://teslahelper.app/auth/callback';
   const REDIRECT_TARGET = '/start';
 
   const urlParams = new URLSearchParams(window.location.search);

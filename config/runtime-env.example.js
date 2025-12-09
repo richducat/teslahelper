@@ -8,6 +8,7 @@ window.APP_ENV = {
     clientSecret: 'your-client-secret',
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    authorizeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/authorize',
     deviceCodeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/device/code',
     tokenEndpoint: 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token'
   }

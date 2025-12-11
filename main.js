@@ -232,11 +232,11 @@
     clientId: 'ownerapi',
     clientSecret: '',
     scope: 'openid offline_access user_data vehicle_device_data vehicle_cmds vehicle_charging_cmds',
-    audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
-    authorizeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/authorize',
-    deviceCodeEndpoint: 'https://auth-global.tesla.com/oauth2/v3/device/code',
-    tokenEndpoint: 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token',
-    apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    audience: 'https://fleet-api.prd.vn.cloud.tesla.com',
+    authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
+    deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
+    tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
+    apiBase: 'https://fleet-api.prd.vn.cloud.tesla.com',
     // Refresh one minute before expiry to avoid racing Tesla's tokens expiring mid-request.
     refreshSafetyWindowMs: 60 * 1000,
   };
@@ -496,12 +496,16 @@
         console.warn('TeslaHelper: unable to store OAuth state', error);
       }
 
+      const scope = (TESLA_AUTH_CONFIG.scope || '')
+        .split(/\s+/)
+        .filter(Boolean)
+        .join(' ');
+
       const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'code',
-        scope: TESLA_AUTH_CONFIG.scope,
-        audience: TESLA_AUTH_CONFIG.audience,
+        scope,
         state,
       });
 

@@ -27,7 +27,7 @@
   const TESLA_AUTH_CONFIG = {
     clientId: env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || 'ownerapi',
     clientSecret: env('TESLA_CLIENT_SECRET') || teslaEnv.clientSecret || '',
-    audience: teslaEnv.audience || 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    audience: teslaEnv.audience || 'https://fleet-api.prd.vn.cloud.tesla.com',
     tokenEndpoint: teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
     redirectUri: TESLA_REDIRECT_URI,
   };
@@ -64,15 +64,13 @@
   };
 
   const exchangeToken = async (authCode) => {
-    const response = await fetch('/api/tesla/token-exchange', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code: authCode,
-        audience: TESLA_AUTH_CONFIG.audience,
-        redirectUri: TESLA_AUTH_CONFIG.redirectUri,
-      }),
+    const params = new URLSearchParams({
+      code: authCode,
+      audience: TESLA_AUTH_CONFIG.audience,
+      redirectUri: TESLA_AUTH_CONFIG.redirectUri,
     });
+
+    const response = await fetch(`/api/tesla/exchange?${params.toString()}`);
 
     if (!response.ok) {
       let reason = 'Token exchange failed';

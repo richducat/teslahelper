@@ -1,16 +1,17 @@
 const DEFAULT_CONFIG = {
-  audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
-  tokenEndpoint: 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token',
+  audience: 'https://fleet-api.prd.vn.cloud.tesla.com',
+  tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
   redirectUri: 'https://teslahelper.app/auth/callback',
 };
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
-  const { code, audience, redirectUri } = req.body || {};
+  const payload = req.method === 'POST' ? req.body || {} : req.query || {};
+  const { code, audience, redirectUri } = payload;
   const clientId = process.env.NEXT_PUBLIC_TESLA_CLIENT_ID || process.env.TESLA_CLIENT_ID || 'ownerapi';
   const clientSecret = process.env.TESLA_CLIENT_SECRET;
   const tokenEndpoint = process.env.TESLA_TOKEN_ENDPOINT || DEFAULT_CONFIG.tokenEndpoint;

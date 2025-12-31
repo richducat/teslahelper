@@ -478,6 +478,21 @@
       setDeviceAuth(null);
       setIsPolling(false);
 
+        // Redirect to Tesla OAuth authorization endpoint
+  const redirectUri = 'https://teslahelper.app/auth/callback';
+  const scope = 'openid offline_access user_data vehicle_device_data vehicle_cmds vehicle_charging_cmds';
+  const state = Math.random().toString(36).substring(2);
+  const paramsOAuth = new URLSearchParams({
+    response_type: 'code',
+    client_id: TESLA_AUTH_CONFIG.clientId,
+    redirect_uri: redirectUri,
+    scope,
+    state,
+  });
+  const authUrl = `https://auth.tesla.com/oauth2/v3/authorize?${paramsOAuth.toString()}`;
+  window.location.assign(authUrl);
+  return;
+
       const clientId = TESLA_AUTH_CONFIG.clientId;
       const redirectUri = TESLA_AUTH_CONFIG.redirectUri;
       const authorizeEndpoint = TESLA_AUTH_CONFIG.authorizeEndpoint;

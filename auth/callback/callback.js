@@ -5,11 +5,19 @@
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
-  const TESLA_REDIRECT_URI =
-    (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth?.redirectUri) ||
-    (typeof process !== 'undefined' &&
-      (process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI)) ||
-    'https://teslahelper.app/auth/callback';
+  const trimAuthValue = (value) => (typeof value === 'string' ? value.trim() : value);
+
+  const TESLA_REDIRECT_URI = (() => {
+    if (typeof window !== 'undefined') {
+      const envRedirect = trimAuthValue(window.APP_ENV?.teslaAuth?.redirectUri);
+      if (envRedirect) return envRedirect;
+      return `${window.location.origin}/auth/callback`;
+    }
+    return (
+      trimAuthValue(process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI) ||
+      'https://teslahelper.app/auth/callback'
+    );
+  })();
   const REDIRECT_TARGET = '/start';
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -25,11 +33,11 @@
   const teslaEnv = (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth) || {};
 
   const TESLA_AUTH_CONFIG = {
-    clientId: env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || 'ownerapi',
-    clientSecret: env('TESLA_CLIENT_SECRET') || teslaEnv.clientSecret || '',
-    audience: teslaEnv.audience || 'https://fleet-api.prd.vn.cloud.tesla.com',
-    tokenEndpoint: teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
-    redirectUri: TESLA_REDIRECT_URI,
+    clientId: trimAuthValue(env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || 'ownerapi'),
+    clientSecret: trimAuthValue(env('TESLA_CLIENT_SECRET') || teslaEnv.clientSecret || ''),
+    audience: trimAuthValue(teslaEnv.audience || 'https://fleet-api.prd.vn.cloud.tesla.com'),
+    tokenEndpoint: trimAuthValue(teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token'),
+    redirectUri: trimAuthValue(TESLA_REDIRECT_URI),
   };
   const TESLA_CORS_PROXY = 'https://corsproxy.io/';
 

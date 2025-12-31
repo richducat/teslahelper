@@ -231,7 +231,7 @@
   const TESLA_AUTH_DEFAULT = {
     clientId: 'ownerapi',
     clientSecret: '',
-    scope: 'openid offline_access user_data vehicle_device_data vehicle_cmds vehicle_charging_cmds',
+    scope: ['openid', 'offline_access', 'user_data', 'vehicle_device_data', 'vehicle_cmds', 'vehicle_charging_cmds'],
     audience: 'https://fleet-api.prd.vn.cloud.tesla.com',
     authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
     deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
@@ -241,11 +241,19 @@
     refreshSafetyWindowMs: 60 * 1000,
   };
 
-  const TESLA_REDIRECT_URI =
-    (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth?.redirectUri) ||
-    (typeof process !== 'undefined' &&
-      (process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI)) ||
-    'https://teslahelper.app/auth/callback';
+  const trimAuthValue = (value) => (typeof value === 'string' ? value.trim() : value);
+
+  const TESLA_REDIRECT_URI = (() => {
+    if (typeof window !== 'undefined') {
+      const envRedirect = trimAuthValue(window.APP_ENV?.teslaAuth?.redirectUri);
+      if (envRedirect) return envRedirect;
+      return `${window.location.origin}/auth/callback`;
+    }
+    return (
+      trimAuthValue(process.env.NEXT_PUBLIC_TESLA_REDIRECT_URI || process.env.TESLA_REDIRECT_URI) ||
+      'https://teslahelper.app/auth/callback'
+    );
+  })();
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
 
   const TESLA_AUTH_CONFIG = {
@@ -261,7 +269,12 @@
     TESLA_AUTH_CONFIG.clientSecret = process.env.TESLA_CLIENT_SECRET;
   }
 
-  TESLA_AUTH_CONFIG.redirectUri = TESLA_REDIRECT_URI;
+  TESLA_AUTH_CONFIG.clientId = trimAuthValue(TESLA_AUTH_CONFIG.clientId);
+  TESLA_AUTH_CONFIG.clientSecret = trimAuthValue(TESLA_AUTH_CONFIG.clientSecret);
+  TESLA_AUTH_CONFIG.authorizeEndpoint = trimAuthValue(TESLA_AUTH_CONFIG.authorizeEndpoint);
+  TESLA_AUTH_CONFIG.deviceCodeEndpoint = trimAuthValue(TESLA_AUTH_CONFIG.deviceCodeEndpoint);
+  TESLA_AUTH_CONFIG.tokenEndpoint = trimAuthValue(TESLA_AUTH_CONFIG.tokenEndpoint);
+  TESLA_AUTH_CONFIG.redirectUri = trimAuthValue(TESLA_REDIRECT_URI);
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
 
@@ -496,10 +509,10 @@
         console.warn('TeslaHelper: unable to store OAuth state', error);
       }
 
-      const scope = (TESLA_AUTH_CONFIG.scope || '')
-        .split(/\s+/)
-        .filter(Boolean)
-        .join(' ');
+      const scopeList = Array.isArray(TESLA_AUTH_CONFIG.scope)
+        ? TESLA_AUTH_CONFIG.scope
+        : String(TESLA_AUTH_CONFIG.scope || '').split(/\s+/);
+      const scope = scopeList.filter(Boolean).join(' ');
 
       const params = new URLSearchParams({
         client_id: clientId,

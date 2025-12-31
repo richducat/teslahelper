@@ -31,6 +31,7 @@
     tokenEndpoint: teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
     redirectUri: TESLA_REDIRECT_URI,
   };
+  const TESLA_CORS_PROXY = 'https://corsproxy.io/';
 
   const setStatus = (message, isError = false, detail = '') => {
     if (statusEl) {
@@ -56,7 +57,7 @@
   const validateState = () => {
     if (typeof sessionStorage === 'undefined') return true;
     const stored = sessionStorage.getItem(TESLA_AUTH_STATE_KEY);
-    if (stored && state && stored !== state) {
+    if (stored && (!state || stored !== state)) {
       setStatus('State check failed', true, 'We could not verify this login attempt. Please start again.');
       return false;
     }
@@ -65,12 +66,24 @@
 
   const exchangeToken = async (authCode) => {
     const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: TESLA_AUTH_CONFIG.clientId,
       code: authCode,
-      audience: TESLA_AUTH_CONFIG.audience,
-      redirectUri: TESLA_AUTH_CONFIG.redirectUri,
+      redirect_uri: TESLA_AUTH_CONFIG.redirectUri,
     });
 
-    const response = await fetch(`/api/tesla/exchange?${params.toString()}`);
+    if (TESLA_AUTH_CONFIG.clientSecret) {
+      params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
+    }
+    if (TESLA_AUTH_CONFIG.audience) {
+      params.append('audience', TESLA_AUTH_CONFIG.audience);
+    }
+
+    const response = await fetch(`${TESLA_CORS_PROXY}${TESLA_AUTH_CONFIG.tokenEndpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
 
     if (!response.ok) {
       let reason = 'Token exchange failed';

@@ -231,7 +231,7 @@
   const TESLA_AUTH_DEFAULT = {
     clientId: 'ownerapi',
     clientSecret: '',
-    scope: 'openid offline_access user_data vehicle_device_data vehicle_cmds vehicle_charging_cmds',
+    scope: ['openid', 'offline_access', 'user_data', 'vehicle_device_data', 'vehicle_cmds', 'vehicle_charging_cmds'],
     audience: 'https://fleet-api.prd.vn.cloud.tesla.com',
     authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
     deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
@@ -496,10 +496,10 @@
         console.warn('TeslaHelper: unable to store OAuth state', error);
       }
 
-      const scope = (TESLA_AUTH_CONFIG.scope || '')
-        .split(/\s+/)
-        .filter(Boolean)
-        .join(' ');
+      const scopeList = Array.isArray(TESLA_AUTH_CONFIG.scope)
+        ? TESLA_AUTH_CONFIG.scope
+        : String(TESLA_AUTH_CONFIG.scope || '').split(/\s+/);
+      const scope = scopeList.filter(Boolean).join(' ');
 
       const params = new URLSearchParams({
         client_id: clientId,

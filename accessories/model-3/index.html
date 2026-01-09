@@ -15,12 +15,34 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TeslaHelper</title>
-  <meta name="description" content="TeslaHelper accessories" />
+  <title>TeslaHelper · Model 3 accessories guide</title>
+  <meta name="description" content="Model 3 accessory buying guide with fitment notes, comparisons, and installation tips." />
   <base href="/" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
+  <script>
+    document.documentElement.classList.add('js');
+  </script>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif; background: #0b0b0f; color: #f8fafc; }
+    a { color: #a78bfa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .no-js-content { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+    .site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
+    .site-nav { display: flex; flex-wrap: wrap; gap: 12px 16px; font-size: 0.95rem; }
+    .tagline { color: #cbd5f5; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 20px; margin-top: 16px; }
+    .section { margin-top: 28px; }
+    .footer { margin-top: 48px; border-top: 1px solid #1f2937; padding-top: 20px; color: #cbd5f5; font-size: 0.9rem; }
+    .js-only { display: none; }
+    .js .js-only { display: block; }
+    .js .no-js-content { display: none; }
+    ul { padding-left: 20px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    p { margin: 0 0 12px; }
+  </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     window.APP_ENV = window.APP_ENV || {
@@ -32,7 +54,102 @@
   </script>
 </head>
 <body class="min-h-screen">
-  <div id="root"></div>
+  <div class="no-js-content">
+    <header class="site-header">
+      <div>
+        <strong>Tesla Helper</strong>
+        <div class="tagline">Model 3 accessory buying guide.</div>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/guides">Guides</a>
+        <a href="/accessories">Accessories</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Model 3 accessories guide (2024+ Highland and legacy models)</h1>
+      <p>
+        This guide focuses on daily-use upgrades that protect the interior, reduce glare, and keep charging tidy. We
+        separate Highland (2024+) fitment notes from legacy Model 3 (2017–2023) to avoid compatibility issues.
+      </p>
+
+      <section class="section">
+        <h2>Top priorities for Model 3 owners</h2>
+        <div class="card">
+          <ul>
+            <li><strong>All-weather floor mats:</strong> prioritize full coverage and lip height for snow/sand.</li>
+            <li><strong>Screen protection:</strong> matte protectors reduce glare from the larger, brighter display.</li>
+            <li><strong>Console organizers:</strong> Highland consoles have deeper bins—measure before buying.</li>
+            <li><strong>Charging kit:</strong> include J1772 adapters and cable management for home charging.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>How we compare options</h2>
+        <div class="card">
+          <ul>
+            <li>Fitment accuracy per model year and trim.</li>
+            <li>Material durability (especially in hot climates).</li>
+            <li>Ease of installation and removal for cleaning.</li>
+            <li>Value versus OEM accessories and premium brands.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Recommended accessory mix</h2>
+        <p>
+          We keep a mix of practical and comfort-focused upgrades. Typical picks include floor mats, a tempered glass
+          screen protector, center console trays, a MagSafe phone mount that avoids blocking vents, and brighter trunk
+          LEDs for night loading.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Installation and safety notes</h2>
+        <div class="card">
+          <ul>
+            <li>Do not route charging cables across pedals or door seals.</li>
+            <li>Use alcohol wipes before applying screen protectors to prevent bubbles.</li>
+            <li>Confirm accessories do not interfere with seat rails or airbag sensors.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Related guides</h2>
+        <p>
+          Review the <a href="/guides/charging-at-home">charging at home guide</a> and the
+          <a href="/guides/winter-range-tips">winter range tips</a> for more Model 3-specific ownership advice.
+        </p>
+      </section>
+
+      <p class="tagline">
+        Affiliate disclosure: TeslaHelper may earn a commission when you buy through our links. This does not affect
+        our recommendations or rankings.
+      </p>
+    </main>
+
+    <footer class="footer">
+      <nav class="site-nav" aria-label="Footer">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/disclaimer">Disclaimer</a>
+        <a href="/contact">Contact</a>
+      </nav>
+      <p>
+        TeslaHelper is independently developed and is not affiliated with, endorsed by, or sponsored by Tesla, Inc.
+        Tesla and related marks are trademarks of Tesla, Inc.
+      </p>
+    </footer>
+  </div>
+
+  <div id="root" class="js-only"></div>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>

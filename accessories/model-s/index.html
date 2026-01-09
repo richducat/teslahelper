@@ -15,12 +15,34 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TeslaHelper</title>
-  <meta name="description" content="TeslaHelper accessories" />
+  <title>TeslaHelper · Model S accessories guide</title>
+  <meta name="description" content="Model S accessory buying guide with luxury-focused upgrades and fitment notes." />
   <base href="/" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
+  <script>
+    document.documentElement.classList.add('js');
+  </script>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif; background: #0b0b0f; color: #f8fafc; }
+    a { color: #a78bfa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .no-js-content { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+    .site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
+    .site-nav { display: flex; flex-wrap: wrap; gap: 12px 16px; font-size: 0.95rem; }
+    .tagline { color: #cbd5f5; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 20px; margin-top: 16px; }
+    .section { margin-top: 28px; }
+    .footer { margin-top: 48px; border-top: 1px solid #1f2937; padding-top: 20px; color: #cbd5f5; font-size: 0.9rem; }
+    .js-only { display: none; }
+    .js .js-only { display: block; }
+    .js .no-js-content { display: none; }
+    ul { padding-left: 20px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    p { margin: 0 0 12px; }
+  </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     window.APP_ENV = window.APP_ENV || {
@@ -32,7 +54,90 @@
   </script>
 </head>
 <body class="min-h-screen">
-  <div id="root"></div>
+  <div class="no-js-content">
+    <header class="site-header">
+      <div>
+        <strong>Tesla Helper</strong>
+        <div class="tagline">Model S accessory buying guide.</div>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/guides">Guides</a>
+        <a href="/accessories">Accessories</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Model S accessories guide (2021+ refresh and legacy trims)</h1>
+      <p>
+        Model S accessories should preserve the premium feel of the cabin while adding practical protection. We focus
+        on quiet, low-profile upgrades that match the larger displays and wider console of the refresh models.
+      </p>
+
+      <section class="section">
+        <h2>Priority upgrades</h2>
+        <div class="card">
+          <ul>
+            <li><strong>Dual-screen protection:</strong> reduce glare and fingerprints on both displays.</li>
+            <li><strong>Premium floor liners:</strong> choose stitched edges to keep the luxury look.</li>
+            <li><strong>Console organizers:</strong> separate charging cables from key cards.</li>
+            <li><strong>Trunk storage bins:</strong> keep detailing supplies from sliding.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Comparison factors</h2>
+        <div class="card">
+          <ul>
+            <li>Noise and vibration reduction at highway speed.</li>
+            <li>Compatibility with the rear screen for refresh models.</li>
+            <li>Material quality that matches the dashboard trim.</li>
+            <li>Ease of removing accessories for detailing.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Who it is for</h2>
+        <p>
+          If you value a luxury interior, prioritize screen and console protection first. Performance drivers should
+          add a compact tire inflator and charging adapters for long-distance travel.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Related guides</h2>
+        <p>
+          Visit the <a href="/guides/fsd-supervised-explained">FSD Supervised guide</a> and
+          <a href="/guides/tire-care">tire care guide</a> for Model S-specific tips.
+        </p>
+      </section>
+
+      <p class="tagline">
+        Affiliate disclosure: TeslaHelper may earn a commission when you buy through our links. This does not affect
+        our recommendations or rankings.
+      </p>
+    </main>
+
+    <footer class="footer">
+      <nav class="site-nav" aria-label="Footer">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/disclaimer">Disclaimer</a>
+        <a href="/contact">Contact</a>
+      </nav>
+      <p>
+        TeslaHelper is independently developed and is not affiliated with, endorsed by, or sponsored by Tesla, Inc.
+        Tesla and related marks are trademarks of Tesla, Inc.
+      </p>
+    </footer>
+  </div>
+
+  <div id="root" class="js-only"></div>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>

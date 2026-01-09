@@ -15,12 +15,92 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TeslaHelper</title>
-  <meta name="description" content="TeslaHelper resources" />
+  <title>TeslaHelper · Quick-start checklist</title>
+  <meta name="description" content="TeslaHelper quick-start checklist with delivery-day, charging, and safety setup steps." />
   <base href="/" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
+  <script>
+    document.documentElement.classList.add('js');
+  </script>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0b0f;
+      color: #f8fafc;
+    }
+    a {
+      color: #a78bfa;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .no-js-content {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+    .site-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .site-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+      font-size: 0.95rem;
+    }
+    .tagline {
+      color: #cbd5f5;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .section {
+      margin-top: 28px;
+    }
+    .footer {
+      margin-top: 48px;
+      border-top: 1px solid #1f2937;
+      padding-top: 20px;
+      color: #cbd5f5;
+      font-size: 0.9rem;
+    }
+    .js-only {
+      display: none;
+    }
+    .js .js-only {
+      display: block;
+    }
+    .js .no-js-content {
+      display: none;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    h1,
+    h2,
+    h3 {
+      margin: 0 0 12px;
+    }
+    p {
+      margin: 0 0 12px;
+    }
+  </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     window.APP_ENV = window.APP_ENV || {
@@ -32,7 +112,76 @@
   </script>
 </head>
 <body class="min-h-screen">
-  <div id="root"></div>
+  <div class="no-js-content">
+    <header class="site-header">
+      <div>
+        <strong>Tesla Helper</strong>
+        <div class="tagline">Quick-start checklist for new Tesla owners.</div>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/guides">Guides</a>
+        <a href="/accessories">Accessories</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Start here: Tesla ownership quick-start checklist</h1>
+      <p>
+        Use this checklist as a simple, repeatable plan for delivery day, safety setup, and your first week of
+        ownership. We keep the steps short so you can stay focused and avoid missing small but important items.
+      </p>
+
+      <section class="section">
+        <h2>Delivery day essentials</h2>
+        <div class="card">
+          <ul>
+            <li>Inspect paint, glass, and trim for shipping damage before you leave the lot.</li>
+            <li>Confirm your charging adapters and key cards are present.</li>
+            <li>Pair your phone key and verify you can lock/unlock before driving away.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>First-week setup</h2>
+        <div class="card">
+          <ul>
+            <li>Set charging limits and scheduled charging for your routine.</li>
+            <li>Enable safety features such as Sentry Mode and PIN to Drive.</li>
+            <li>Save home/work locations for optimized navigation and range estimates.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Next steps</h2>
+        <p>
+          Continue with the <a href="/guides/delivery-checklist">delivery checklist guide</a>, then review the
+          <a href="/guides/charging-at-home">charging at home guide</a> and the
+          <a href="/accessories/model-y">accessories buying guides</a> for your model.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <nav class="site-nav" aria-label="Footer">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/disclaimer">Disclaimer</a>
+        <a href="/contact">Contact</a>
+      </nav>
+      <p>
+        TeslaHelper is independently developed and is not affiliated with, endorsed by, or sponsored by Tesla, Inc.
+        Tesla and related marks are trademarks of Tesla, Inc.
+      </p>
+    </footer>
+  </div>
+
+  <div id="root" class="js-only"></div>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>

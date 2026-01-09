@@ -1,64 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CHDHZ2V14G"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-
-    gtag('config', 'G-CHDHZ2V14G');
-  </script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TeslaHelper · Owner starter kit</title>
-  <meta name="description" content="Tesla owner starter kit overview and what's included." />
+  <title>Delivery checklist · TeslaHelper</title>
+  <meta name="description" content="Delivery day checklist for Tesla owners including inspection points and setup steps." />
   <base href="/" />
-  <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
-  <script>
-    document.documentElement.classList.add('js');
-  </script>
   <style>
     :root { color-scheme: light dark; }
     body { margin: 0; font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif; background: #0b0b0f; color: #f8fafc; }
     a { color: #a78bfa; text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .no-js-content { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 64px; }
     .site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
     .site-nav { display: flex; flex-wrap: wrap; gap: 12px 16px; font-size: 0.95rem; }
     .tagline { color: #cbd5f5; }
     .card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 20px; margin-top: 16px; }
     .section { margin-top: 28px; }
     .footer { margin-top: 48px; border-top: 1px solid #1f2937; padding-top: 20px; color: #cbd5f5; font-size: 0.9rem; }
-    .js-only { display: none; }
-    .js .js-only { display: block; }
-    .js .no-js-content { display: none; }
     ul { padding-left: 20px; }
     h1, h2, h3 { margin: 0 0 12px; }
     p { margin: 0 0 12px; }
   </style>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    window.APP_ENV = window.APP_ENV || {
-      plausibleDomain: 'teslahelper.app',
-      metaPixelId: 'xxxxxxxxxxxxxxx',
-      googleAdsId: 'AW-XXXXXXXXX',
-      beehiivEmbedId: 'bhv_XXXXXXXX',
-    };
-  </script>
 </head>
-<body class="min-h-screen">
-  <div class="no-js-content">
+<body>
+  <div class="container">
     <header class="site-header">
       <div>
         <strong>Tesla Helper</strong>
-        <div class="tagline">Owner starter kit overview.</div>
+        <div class="tagline">Delivery checklist guide.</div>
       </div>
       <nav class="site-nav" aria-label="Primary">
         <a href="/">Home</a>
@@ -71,27 +43,47 @@
     </header>
 
     <main>
-      <h1>Tesla owner starter kit</h1>
+      <h1>Delivery day checklist for Tesla owners</h1>
       <p>
-        This starter kit summarizes our most-requested checklists in a single download. It is designed for new owners
-        who want a quick overview of delivery, charging, and safety setup.
+        This checklist keeps delivery day quick and stress-free. Capture issues before you leave the lot and complete
+        the core setup steps so your first drive is smooth.
       </p>
 
       <section class="section">
-        <h2>Included topics</h2>
+        <h2>Exterior inspection</h2>
         <div class="card">
           <ul>
-            <li>Delivery day inspection checklist.</li>
-            <li>Charging basics and adapter guidance.</li>
-            <li>Safety feature setup and reminders.</li>
+            <li>Walk the car in natural light and check for paint defects.</li>
+            <li>Inspect glass, lights, and trim alignment.</li>
+            <li>Confirm charge port door opens and closes cleanly.</li>
           </ul>
         </div>
       </section>
 
       <section class="section">
-        <h2>Prefer the free guides?</h2>
+        <h2>Interior inspection</h2>
+        <div class="card">
+          <ul>
+            <li>Check seats, stitching, and headliner for marks.</li>
+            <li>Test the touchscreen and steering wheel controls.</li>
+            <li>Verify both key cards and emergency release tools.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>First-day setup</h2>
         <p>
-          You can always read the full guides for free in our <a href="/guides">guides library</a>.
+          Pair your phone key, set a charge limit, and enable Sentry Mode. Review your software version and connect to
+          Wi-Fi at home for faster updates.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Related guides</h2>
+        <p>
+          Next, read <a href="/guides/charging-at-home">charging at home</a> and the
+          <a href="/guides/fsd-supervised-explained">FSD Supervised overview</a>.
         </p>
       </section>
     </main>
@@ -109,11 +101,5 @@
       </p>
     </footer>
   </div>
-
-  <div id="root" class="js-only"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" src="/marketing.js"></script>
 </body>
 </html>

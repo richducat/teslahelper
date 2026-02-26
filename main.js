@@ -106,10 +106,10 @@
    * extend this object with your own colours if you wish.
    * ------------------------------------------------------------------ */
   const ACCENTS = {
-    violet: { btn: 'bg-violet-500', hover: 'hover:bg-violet-600', border: 'border-violet-400', underline: 'bg-violet-500' },
-    emerald: { btn: 'bg-emerald-500', hover: 'hover:bg-emerald-600', border: 'border-emerald-400', underline: 'bg-emerald-500' },
-    blue: { btn: 'bg-blue-500', hover: 'hover:bg-blue-600', border: 'border-blue-400', underline: 'bg-blue-500' },
-    amber: { btn: 'bg-amber-500', hover: 'hover:bg-amber-600', border: 'border-amber-400', underline: 'bg-amber-500' },
+    violet: { btn: 'bg-indigo-600', hover: 'hover:bg-indigo-500', border: 'border-indigo-400', underline: 'bg-indigo-500' },
+    emerald: { btn: 'bg-emerald-600', hover: 'hover:bg-emerald-500', border: 'border-emerald-400', underline: 'bg-emerald-500' },
+    blue: { btn: 'bg-blue-600', hover: 'hover:bg-blue-500', border: 'border-blue-400', underline: 'bg-blue-500' },
+    amber: { btn: 'bg-amber-600', hover: 'hover:bg-amber-500', border: 'border-amber-400', underline: 'bg-amber-500' },
   };
 
   /* ------------------------------------------------------------------
@@ -722,7 +722,16 @@
    * shadow. Any custom classes are forwarded via ``className``.
    * ------------------------------------------------------------------ */
   function Card({ children, className }) {
-    return <div className={classNames('rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.03)]', className)}>{children}</div>;
+    return (
+      <div
+        className={classNames(
+          'rounded-3xl border border-white/5 bg-white/[0.03] backdrop-blur-md shadow-xl transition-all duration-300 hover:border-white/10',
+          className
+        )}
+      >
+        {children}
+      </div>
+    );
   }
 
   /* ------------------------------------------------------------------
@@ -742,29 +751,32 @@
     ...rest
   }) {
     const sizes = {
-      md: 'h-10 px-4 text-sm',
-      sm: 'h-8 px-3 text-sm',
-      xs: 'h-7 px-2.5 text-xs',
-      icon: 'h-9 w-9 text-base',
+      md: 'h-11 px-6 text-sm',
+      sm: 'h-9 px-4 text-sm',
+      xs: 'h-8 px-3 text-xs',
+      icon: 'h-10 w-10 text-base',
     };
     const variantClasses = {
       primary: classNames(
-        'text-white border-transparent',
-        accent?.btn || 'bg-violet-500',
-        accent?.hover || 'hover:bg-violet-600'
+        'text-white shadow-lg shadow-black/20 transform active:scale-95',
+        accent?.btn || 'bg-indigo-600',
+        accent?.hover || 'hover:bg-indigo-500'
       ),
       secondary: classNames(
-        isDark ? 'bg-neutral-900/80 text-white border border-neutral-700 hover:bg-neutral-800' : 'bg-white text-neutral-900 border border-neutral-300 hover:bg-neutral-50'
+        'border transition-all duration-200 active:scale-95',
+        isDark
+          ? 'bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20'
+          : 'bg-neutral-900 text-white border-neutral-800 hover:bg-neutral-800'
       ),
       ghost: classNames(
-        'border border-transparent',
-        isDark ? 'text-white hover:bg-white/5' : 'text-neutral-900 hover:bg-neutral-100'
+        'border border-transparent transition-colors duration-200',
+        isDark ? 'text-white hover:bg-white/10' : 'text-neutral-900 hover:bg-neutral-100'
       ),
     };
     return (
       <Tag
         className={classNames(
-          'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-[background-color,color,border-color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-60 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center gap-2 rounded-2xl font-bold tracking-tight transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed',
           sizes[size] || sizes.md,
           variantClasses[variant],
           className
@@ -906,7 +918,7 @@
     );
   }
 
-  
+
 
 
   /* ------------------------------------------------------------------
@@ -1035,29 +1047,29 @@
         <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black opacity-90" aria-hidden="true" />
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true" />
         <form onSubmit={handleNext} className="relative space-y-6 p-6 sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/60">
-                Step {step + 1} of {stepsTotal}
+          <div className="flex items-start justify-between gap-6">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
+                Protocol Stage {step + 1} of {stepsTotal}
               </p>
-              <h3 className="mt-1 text-2xl font-bold leading-tight">
+              <h3 className="text-3xl font-extrabold tracking-tight leading-none">
                 {step === 0
-                  ? 'Which Tesla are you setting up?'
+                  ? 'Identify Your Vehicle'
                   : step === 1
-                    ? 'When did you receive it?'
+                    ? 'Ownership Profile'
                     : step === 2
-                      ? 'What do you need help with?'
-                      : 'Where should we send the quick-start?'}
+                      ? 'Personalize Support'
+                      : 'Delivery Protocol'}
               </h3>
             </div>
-            <div className="flex flex-col items-end gap-2 text-xs font-semibold text-white/70">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
-                Secure & spam-free
+            <div className="hidden sm:flex flex-col items-end gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/50">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" aria-hidden="true" />
+                TLS 1.3 Secure
               </div>
-              <div className="relative h-1.5 w-40 overflow-hidden rounded-full bg-white/10">
+              <div className="relative h-1 w-32 overflow-hidden rounded-full bg-white/5">
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-emerald-400 via-blue-400 to-violet-500"
+                  className="absolute inset-y-0 left-0 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -1080,14 +1092,18 @@
                     type="button"
                     onClick={() => handleSelect('model', model)}
                     className={classNames(
-                      'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                      'flex items-center justify-between rounded-2xl border px-6 py-4 text-left transition-all duration-300 transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                       formState.model === model
-                        ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
-                        : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                        ? 'border-indigo-400 bg-indigo-500/10 text-white shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                        : 'border-white/5 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white'
                     )}
                   >
-                    <span className="font-semibold">{model}</span>
-                    {formState.model === model ? <span aria-hidden="true">✓</span> : <span aria-hidden="true">→</span>}
+                    <span className="font-bold tracking-tight">{model}</span>
+                    {formState.model === model ? (
+                      <span className="h-2 w-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.8)]" aria-hidden="true" />
+                    ) : (
+                      <span className="opacity-20" aria-hidden="true">→</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -1102,14 +1118,14 @@
                       type="button"
                       onClick={() => handleSelect('delivery', windowLabel)}
                       className={classNames(
-                        'rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                        'rounded-2xl border px-6 py-4 text-left transition-all duration-300 transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                         formState.delivery === windowLabel
-                          ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
-                          : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                          ? 'border-indigo-400 bg-indigo-500/10 text-white shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                          : 'border-white/5 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white'
                       )}
                     >
-                      <div className="font-semibold">{windowLabel}</div>
-                      <p className="text-xs text-white/70">We tailor checklists to your delivery stage.</p>
+                      <div className="font-bold tracking-tight">{windowLabel}</div>
+                      <p className="text-xs opacity-50 mt-1">Tailored intelligence protocols for your owner stage.</p>
                     </button>
                   )
                 )}
@@ -1133,14 +1149,16 @@
                         type="button"
                         onClick={() => toggleFocus(item.value)}
                         className={classNames(
-                          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                          'flex items-center gap-4 rounded-2xl border px-6 py-4 text-left transition-all duration-300 transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                           active
-                            ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
-                            : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                            ? 'border-indigo-400 bg-indigo-500/10 text-white shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                            : 'border-white/5 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white'
                         )}
                       >
-                        <span className="text-lg">{active ? '✔' : '+'}</span>
-                        <span className="font-semibold">{item.label}</span>
+                        <span className={classNames('text-lg font-black', active ? 'text-indigo-400' : 'opacity-20')}>
+                          {active ? '●' : '+'}
+                        </span>
+                        <span className="font-bold tracking-tight">{item.label}</span>
                       </button>
                     );
                   })}
@@ -1161,13 +1179,13 @@
                     required
                     value={formState.email}
                     onChange={handleInput}
-                    placeholder="you@example.com"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                    placeholder="name@domain.com"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-white placeholder:text-white/20 focus:border-indigo-400 focus:outline-none transition-all"
                   />
                 </div>
                 <div className="grid gap-3">
-                  <label className="text-sm font-semibold" htmlFor="zip">
-                    ZIP (optional for utility rebate guidance)
+                  <label className="text-xs font-black uppercase tracking-widest opacity-50" htmlFor="zip">
+                    Postal Code (Local Rebate Intelligence)
                   </label>
                   <input
                     id="zip"
@@ -1175,8 +1193,8 @@
                     inputMode="numeric"
                     value={formState.zip}
                     onChange={handleInput}
-                    placeholder="94103"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                    placeholder="90210"
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-white placeholder:text-white/20 focus:border-indigo-400 focus:outline-none transition-all"
                   />
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
@@ -1382,67 +1400,62 @@
     return (
       <Card
         className={classNames(
-          'border p-4 md:p-5',
+          'p-6 md:p-8 overflow-hidden relative',
           className,
-          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+          isDark ? 'bg-neutral-900/40 border-neutral-800' : 'bg-white border-neutral-200 shadow-2xl'
         )}
       >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <div className="text-xs uppercase tracking-[0.25em] opacity-70">Tesla account</div>
-            <div className="font-semibold text-lg">Premium, Secure & Owner-Centric</div>
-            <p className="text-sm opacity-80 max-w-2xl">
-              TeslaHelper is built with a security-first mindset and a focus on real Tesla owners. We use secure authentication,
-              respect your privacy, and design every feature to feel like a natural extension of your car—not another clunky tool.
-            </p>
-            <div className="flex flex-wrap gap-2 text-xs opacity-80">
-              <span
-                className={classNames(
-                  'rounded-full px-3 py-1 font-semibold',
-                  telemetrySource === 'tesla'
-                    ? 'bg-emerald-500/20 text-emerald-500'
-                    : isDark
-                      ? 'bg-neutral-800 text-white'
-                      : 'bg-neutral-100 text-neutral-800'
-                )}
-              >
-                {telemetrySource === 'tesla' ? 'Live from Tesla Fleet API' : 'Waiting for Tesla sign-in'}
-              </span>
-              {lastSynced ? <span>Last synced {new Date(lastSynced).toLocaleString()}</span> : null}
-              {isLoadingTelemetry ? <span>Refreshing…</span> : null}
-              {isPolling ? <span>Waiting for approval…</span> : null}
+        {isConnected && (
+          <div className="absolute top-0 right-0 p-4">
+            <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Live System Active
             </div>
-            {authError ? (
-              <div
-                className={classNames(
-                  'rounded-lg border px-3 py-2 text-sm',
-                  isDark ? 'border-amber-500/50 text-amber-200 bg-amber-500/10' : 'border-amber-400 text-amber-700 bg-amber-50'
-                )}
-              >
+          </div>
+        )}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
+          <div className="flex-1 space-y-6">
+            <div className="space-y-2">
+              <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50">Tesla Intelligence Protocol</div>
+              <h3 className="text-3xl font-extrabold tracking-tight">Secure. Private. Owner-First.</h3>
+              <p className="text-base leading-relaxed opacity-70 max-w-xl">
+                Connect your vehicle via the Tesla Fleet API to unlock professional-grade telemetry,
+                FSD performance analytics, and regional safety insights. Your credentials never touch our servers.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <span className={classNames(
+                  'h-3 w-3 rounded-full',
+                  isConnected ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-neutral-700'
+                )} />
+                <span className="opacity-80">
+                  {isConnected ? 'Hardware Connected' : 'System Ready'}
+                </span>
+              </div>
+              {lastSynced && (
+                <div className="text-xs opacity-50 font-medium">
+                  Last Sync: {new Date(lastSynced).toLocaleTimeString()}
+                </div>
+              )}
+            </div>
+
+            {authError && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
                 {authError}
               </div>
-            ) : null}
-            {deviceAuth ? (
-              <div
-                className={classNames(
-                  'grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-[auto,1fr] sm:items-center',
-                  isDark ? 'border-neutral-800 bg-neutral-900/60' : 'border-neutral-200 bg-neutral-50'
-                )}
-              >
-                <div className="font-mono text-lg font-semibold" aria-label="Tesla verification code">
-                  {deviceAuth.userCode}
-                </div>
-                <div className="space-y-1">
-                  <div className="font-semibold">Approve the login with Tesla</div>
-                  <p className="opacity-80">
-                    Open
-                    <a className="ml-1 underline" href={deviceAuth.verificationUri} target="_blank" rel="noreferrer">
-                      {deviceAuth.verificationUri}
-                    </a>
-                    , then enter the code shown here. We’ll update the dashboard as soon as Tesla confirms.
-                  </p>
-                </div>
-                <div className="sm:col-span-2">
+            )}
+
+            {deviceAuth && (
+              <div className="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-1">Authorization Code</div>
+                    <div className="font-mono text-4xl font-black tracking-tighter" aria-label="Tesla verification code">
+                      {deviceAuth.userCode}
+                    </div>
+                  </div>
                   <Button
                     as="a"
                     href={deviceAuth.verificationUri}
@@ -1450,32 +1463,38 @@
                     rel="noreferrer"
                     variant="primary"
                     accent={accent}
-                    isDark={isDark}
                     className="w-full sm:w-auto"
                   >
-                    Open Tesla login
+                    Authorize on Tesla.com
                   </Button>
                 </div>
+                <p className="text-sm opacity-60 leading-relaxed italic">
+                  Complete the verification on Tesla's secure portal. We'll automatically update your dashboard once approved.
+                </p>
               </div>
-            ) : null}
+            )}
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-72">
+
+          <div className="flex w-full flex-col gap-3 lg:w-80">
             <Button
               onClick={isConnected ? onRefresh : onStartLogin}
               accent={accent}
-              isDark={isDark}
+              size="md"
               disabled={isLoadingTelemetry || isPolling}
+              className="w-full text-base py-6"
             >
               {isConnected
-                ? isLoadingTelemetry
-                  ? 'Refreshing…'
-                  : 'Refresh telemetry'
-                : deviceAuth
-                  ? 'Awaiting approval…'
-                  : 'Connect Tesla account'}
+                ? isLoadingTelemetry ? 'Syncing...' : 'Refresh Telemetry'
+                : 'Connect My Tesla'}
             </Button>
-            <Button variant="secondary" isDark={isDark} onClick={onReset} disabled={isPolling}>
-              {isConnected ? 'Disconnect Tesla' : 'Browse without signing in'}
+            <Button
+              variant="secondary"
+              isDark={isDark}
+              onClick={onReset}
+              disabled={isPolling}
+              className="w-full opacity-80 hover:opacity-100"
+            >
+              {isConnected ? 'Disconnect System' : 'Use Demo Dashboard'}
             </Button>
           </div>
         </div>
@@ -1493,14 +1512,14 @@
     return (
       <Card
         className={classNames(
-          'border p-4 h-full',
-          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+          'p-6 h-full transition-all duration-300 transform hover:scale-[1.02]',
+          isDark ? 'bg-neutral-900/40 border-neutral-800' : 'bg-white border-neutral-200'
         )}
       >
-        <div className="text-xs uppercase tracking-[0.25em] opacity-70">{label}</div>
-        <div className="mt-2 text-2xl font-bold leading-tight">{value}</div>
-        {helper ? <div className="mt-1 text-sm opacity-80">{helper}</div> : null}
-        <div className={classNames('mt-3 h-1 rounded-full', accent.underline)} aria-hidden="true" />
+        <div className="text-[10px] font-black uppercase tracking-[0.25em] opacity-40">{label}</div>
+        <div className="mt-3 text-3xl font-black tracking-tight leading-tight">{value}</div>
+        {helper ? <div className="mt-1 text-xs font-semibold opacity-60 italic">{helper}</div> : null}
+        <div className={classNames('mt-4 h-1 w-12 rounded-full', accent.underline)} aria-hidden="true" />
       </Card>
     );
   }
@@ -1528,17 +1547,17 @@
     return (
       <Card
         className={classNames(
-          'border p-4 flex flex-col gap-3',
-          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+          'p-5 flex flex-col gap-4',
+          isDark ? 'bg-neutral-900/40 border-neutral-800' : 'bg-white border-neutral-200'
         )}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="font-semibold leading-tight">{trip.name}</div>
-            <div className="text-xs opacity-70">{trip.date}</div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <div className="font-extrabold tracking-tight leading-none">{trip.name}</div>
+            <div className="text-[10px] font-black uppercase tracking-widest opacity-40">{trip.date}</div>
           </div>
-          <div className={classNames('text-xs font-semibold px-2 py-1 rounded-full', accent.btn, 'text-white')}>
-            {trip.autopilotPct}% on AP
+          <div className={classNames('text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm', accent.btn, 'text-white')}>
+            {trip.autopilotPct}% Protocols Active
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1949,9 +1968,9 @@
           subtitle="TeslaHelper is a premium all-in-one web app that empowers Tesla owners to get more from their vehicles. Designed by Tesla enthusiasts for Tesla enthusiasts, it combines all the essentials of the official Tesla app with powerful new features that make ownership easier and more fun. Enjoy a friendly, tech-savvy experience that puts you in full control of your Tesla—anytime, anywhere."
         />
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {ids.map((id) => (
-          <CarTile key={id} id={id} accent={accent} carImages={carImages} isDark={isDark} />
-        ))}
+          {ids.map((id) => (
+            <CarTile key={id} id={id} accent={accent} carImages={carImages} isDark={isDark} />
+          ))}
         </div>
       </section>
     );
@@ -2165,23 +2184,23 @@
             <Card className={classNames('p-4 border', cardBg, borderSoft)}>
               <div className="grid md:grid-cols-4 gap-3">
                 <input
-                  placeholder="Search videos (e.g., charging, sentry, FSD)"
+                  placeholder="Query protocol (e.g., Sentry, FSD, Supercharging)"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   className={classNames(
-                    'w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2',
-                    isDark ? 'bg-neutral-950 border-neutral-800 focus:ring-violet-500' : 'bg-white border-neutral-300 focus:ring-violet-500'
+                    'w-full rounded-2xl px-5 py-3 text-sm border focus:outline-none focus:ring-2 transition-all',
+                    isDark ? 'bg-neutral-950 border-white/5 focus:ring-indigo-500 placeholder:text-white/20' : 'bg-white border-neutral-300 focus:ring-indigo-500'
                   )}
                 />
                 <select
                   value={modelFilter}
                   onChange={(e) => setModelFilter(e.target.value)}
                   className={classNames(
-                    'w-full rounded-lg px-3 py-2 text-sm border',
-                    isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
+                    'w-full rounded-2xl px-5 py-3 text-sm border transition-all appearance-none',
+                    isDark ? 'bg-neutral-950 border-white/5 focus:ring-indigo-500' : 'bg-white border-neutral-300'
                   )}
                 >
-                  <option value="">All models</option>
+                  <option value="">Filter by Model</option>
                   {Array.from(new Set(models.map((m) => m.model))).map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -2192,11 +2211,11 @@
                   value={yearFilter}
                   onChange={(e) => setYearFilter(e.target.value)}
                   className={classNames(
-                    'w-full rounded-lg px-3 py-2 text-sm border',
-                    isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-neutral-300'
+                    'w-full rounded-2xl px-5 py-3 text-sm border transition-all appearance-none',
+                    isDark ? 'bg-neutral-950 border-white/5 focus:ring-indigo-500' : 'bg-white border-neutral-300'
                   )}
                 >
-                  <option value="">All years</option>
+                  <option value="">Filter by Era</option>
                   {Array.from(new Set(models.map((m) => m.year_range).filter(Boolean))).map((y) => (
                     <option key={y} value={y}>
                       {y}
@@ -2350,12 +2369,12 @@
     }, [navMenuOpen]);
     useEffect(() => {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.register('/sw.js').catch(() => { });
       }
     }, []);
     useEffect(() => {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.register('/sw.js').catch(() => { });
       }
     }, []);
     useEffect(() => {

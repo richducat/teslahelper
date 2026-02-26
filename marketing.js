@@ -69,10 +69,10 @@
   ];
 
   const ACCENTS = {
-    violet: { btn: 'bg-violet-500', hover: 'hover:bg-violet-600', underline: 'bg-violet-500' },
-    emerald: { btn: 'bg-emerald-500', hover: 'hover:bg-emerald-600', underline: 'bg-emerald-500' },
-    blue: { btn: 'bg-blue-500', hover: 'hover:bg-blue-600', underline: 'bg-blue-500' },
-    amber: { btn: 'bg-amber-500', hover: 'hover:bg-amber-600', underline: 'bg-amber-500' },
+    violet: { btn: 'bg-indigo-600', hover: 'hover:bg-indigo-500', border: 'border-indigo-400', underline: 'bg-indigo-500' },
+    emerald: { btn: 'bg-emerald-600', hover: 'hover:bg-emerald-500', border: 'border-emerald-400', underline: 'bg-emerald-500' },
+    blue: { btn: 'bg-blue-600', hover: 'hover:bg-blue-600', border: 'border-blue-400', underline: 'bg-blue-500' },
+    amber: { btn: 'bg-amber-600', hover: 'hover:bg-amber-500', border: 'border-amber-400', underline: 'bg-amber-500' },
   };
 
   const SUPPORT_LINK = 'https://ts.la/richard834858';
@@ -132,6 +132,19 @@
 
   const NICE_TO_HAVE = ['Mud flaps for winter roads', 'Cup holder stabilizers', 'Key card sleeves', 'Cable ties and Velcro wraps', 'Tire inflator and patch kit'];
 
+  function Card({ children, className }) {
+    return (
+      <div
+        className={classNames(
+          'rounded-3xl border border-white/5 bg-white/[0.03] backdrop-blur-md shadow-xl transition-all duration-300 hover:border-white/10',
+          className
+        )}
+      >
+        {children}
+      </div>
+    );
+  }
+
   function classNames(...classes) {
     return classes.filter(Boolean).join(' ');
   }
@@ -162,16 +175,23 @@
     );
   }
 
-  function NavButton({ as: Tag = 'button', variant = 'primary', accent, className, children, ...rest }) {
+  function NavButton({ as: Tag = 'button', variant = 'primary', accent, className, children, isDark = true, ...rest }) {
     const variants = {
-      primary: classNames('text-white border-transparent', accent?.btn || 'bg-violet-500', accent?.hover || 'hover:bg-violet-600'),
-      secondary: 'bg-neutral-900/80 text-white border border-neutral-700 hover:bg-neutral-800',
+      primary: classNames(
+        'text-white shadow-lg shadow-black/20 transform active:scale-95',
+        accent?.btn || 'bg-indigo-600',
+        accent?.hover || 'hover:bg-indigo-500'
+      ),
+      secondary: classNames(
+        'border transition-all duration-200 active:scale-95',
+        'bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20'
+      ),
       ghost: 'border border-transparent text-white hover:bg-white/5',
     };
     return (
       <Tag
         className={classNames(
-          'inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-[background-color,color,border-color,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-60 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-bold tracking-tight transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed',
           variants[variant],
           className
         )}
@@ -339,26 +359,41 @@
 
   function Hero({ title, subtitle }) {
     return (
-      <section className="bg-neutral-950 text-white">
-        <div className="mx-auto max-w-5xl px-4 py-12 grid md:grid-cols-2 gap-8 items-center">
-          <div className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.3em]">TeslaHelper</p>
-            <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">{title}</h1>
-            <p className="text-lg opacity-90">{subtitle}</p>
-            <ul className="space-y-2 text-sm opacity-90 list-disc list-inside">
-              <li>Organized by model and year.</li>
-              <li>Charging, FSD (Supervised), safety, and day-one setup.</li>
-              <li>Email flow → kit → checkout → upsell.</li>
+      <section className="bg-neutral-950 text-white overflow-hidden relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-indigo-500/10 blur-[120px] rounded-full" aria-hidden="true" />
+        <div className="mx-auto max-w-6xl px-4 py-16 md:py-24 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
+                Tesla Intelligence System
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.9]">
+                {title}
+              </h1>
+              <p className="text-xl opacity-60 font-medium max-w-lg leading-relaxed">
+                {subtitle}
+              </p>
+            </div>
+            <ul className="grid sm:grid-cols-2 gap-4">
+              {[
+                'Model-specific intelligence',
+                'FSD (Supervised) telemetry',
+                'Home charging protocols',
+                'Safety event analytics',
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-sm font-bold opacity-80">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
           <div className="relative">
-            <div
-              className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-emerald-500/10 via-violet-500/10 to-blue-500/10 blur-2xl"
-              aria-hidden="true"
-            />
-            <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] shadow-2xl shadow-emerald-500/10 p-6 backdrop-blur">
+            <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500/20 to-blue-500/20 blur-3xl opacity-50" aria-hidden="true" />
+            <Card className="p-8 lg:p-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 h-40 w-40 bg-indigo-500/5 blur-3xl" aria-hidden="true" />
               <OnboardingForm />
-            </div>
+            </Card>
           </div>
         </div>
       </section>
@@ -367,23 +402,35 @@
 
   function OfferCard({ name, price, bullets, buttonHref }) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white shadow-xl">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-xl font-bold">{name}</h3>
-          <div className="text-2xl font-extrabold">${price}</div>
+      <Card className="p-8 md:p-10 space-y-8 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-6">
+          <div className="text-4xl md:text-5xl font-black tracking-tighter opacity-10 group-hover:opacity-20 transition-opacity">
+            ${price}
+          </div>
         </div>
-        <ul className="mt-4 space-y-2 text-sm opacity-90 list-disc list-inside">
-          {bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-        <a
-          className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-violet-600 px-4 py-3 font-semibold hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        <div className="space-y-4 relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
+            Exclusive System Offer
+          </div>
+          <h3 className="text-3xl font-black tracking-tight max-w-md">{name}</h3>
+          <ul className="grid sm:grid-cols-2 gap-4">
+            {bullets.map((b) => (
+              <li key={b} className="flex items-center gap-3 text-sm font-bold opacity-60">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                {b}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <NavButton
+          as="a"
           href={buttonHref}
+          variant="primary"
+          className="w-full py-6 text-base"
         >
-          Buy now
-        </a>
-      </div>
+          Secure Access Now
+        </NavButton>
+      </Card>
     );
   }
 
@@ -396,24 +443,25 @@
       window.open(href, '_blank', 'noopener');
     };
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-neutral-800 grid place-items-center text-xl" aria-hidden="true">
+      <Card className="p-6 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02]">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 grid place-items-center text-2xl shadow-inner" aria-hidden="true">
             {image || '🛍️'}
           </div>
-          <div>
-            <div className="font-semibold text-white">{title}</div>
-            <div className="text-sm opacity-80">{blurb}</div>
+          <div className="space-y-1">
+            <div className="font-bold text-white tracking-tight">{title}</div>
+            <div className="text-xs opacity-50 font-medium leading-relaxed">{blurb}</div>
           </div>
         </div>
-        <button
+        <NavButton
           onClick={onClick}
-          className="rounded-lg bg-violet-600 px-4 py-2 font-semibold text-white hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          variant="secondary"
+          className="w-full"
         >
-          {clicked ? 'Opening…' : 'View pick'}
-        </button>
+          {clicked ? 'Syncing...' : 'View Protocol'}
+        </NavButton>
         <a href={href} className="sr-only">Affiliate link</a>
-      </div>
+      </Card>
     );
   }
 
@@ -659,7 +707,7 @@
                 ))}
               </ul>
             </nav>
-            <div className={classNames('h-[3px] w-full rounded-full', accent.underline)} />
+            <div className={classNames('h-0.5 w-full rounded-full opacity-50', accent.underline)} />
           </div>
         </header>
         <main>{children}</main>
@@ -750,10 +798,10 @@
               {step === 0
                 ? 'Which Tesla are you setting up?'
                 : step === 1
-                ? 'When did you receive it?'
-                : step === 2
-                ? 'What do you need help with?'
-                : 'Where should we send the quick-start?'}
+                  ? 'When did you receive it?'
+                  : step === 2
+                    ? 'What do you need help with?'
+                    : 'Where should we send the quick-start?'}
             </h3>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-xs text-white/70">
@@ -776,14 +824,18 @@
                   type="button"
                   onClick={() => handleSelect('model', model)}
                   className={classNames(
-                    'flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                    'flex items-center justify-between rounded-2xl border px-6 py-4 text-left transition-all duration-300 transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                     formState.model === model
-                      ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
-                      : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                      ? 'border-indigo-400 bg-indigo-500/10 text-white shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                      : 'border-white/5 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white'
                   )}
                 >
-                  <span className="font-semibold">{model}</span>
-                  {formState.model === model ? <span aria-hidden="true">✓</span> : <span aria-hidden="true">→</span>}
+                  <span className="font-bold tracking-tight">{model}</span>
+                  {formState.model === model ? (
+                    <span className="h-2 w-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.8)]" aria-hidden="true" />
+                  ) : (
+                    <span className="opacity-20" aria-hidden="true">→</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -791,22 +843,21 @@
 
           {step === 1 && (
             <div className="grid sm:grid-cols-2 gap-3">
-              {['Ordered / Waiting', 'Delivered in the last 30 days', 'Delivered 1-6 months ago', 'Delivered 6+ months ago'].map((windowLabel) => (
-                <button
-                  key={windowLabel}
-                  type="button"
-                  onClick={() => handleSelect('delivery', windowLabel)}
-                  className={classNames(
-                    'rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                    formState.delivery === windowLabel
-                      ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
-                      : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
-                  )}
-                >
-                  <div className="font-semibold">{windowLabel}</div>
-                  <p className="text-xs text-white/70">We tailor checklists to your delivery stage.</p>
-                </button>
-              ))}
+              {['Ordered / Waiting', 'Delivered in the last 30 days', 'Delivered 1-6 months ago', 'Delivered 6+ months ago'].map((windowLabel) => <button
+                key={windowLabel}
+                type="button"
+                onClick={() => handleSelect('delivery', windowLabel)}
+                className={classNames(
+                  'rounded-2xl border px-6 py-4 text-left transition-all duration-300 transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                  formState.delivery === windowLabel
+                    ? 'border-indigo-400 bg-indigo-500/10 text-white shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                    : 'border-white/5 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white'
+                )}
+              >
+                <div className="font-bold tracking-tight">{windowLabel}</div>
+                <p className="text-xs opacity-50 mt-1">Tailored intelligence protocols for your owner stage stage.</p>
+              </button>
+              )}
             </div>
           )}
 
@@ -827,14 +878,16 @@
                       type="button"
                       onClick={() => toggleFocus(item.value)}
                       className={classNames(
-                        'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                        'flex items-center gap-4 rounded-2xl border px-6 py-4 text-left transition-all duration-300 transform active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                         active
-                          ? 'border-emerald-300/80 bg-emerald-400/10 text-white'
-                          : 'border-white/10 bg-white/5 text-white/80 hover:border-white/20'
+                          ? 'border-indigo-400 bg-indigo-500/10 text-white shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                          : 'border-white/5 bg-white/[0.03] text-white/60 hover:border-white/20 hover:text-white'
                       )}
                     >
-                      <span className="text-lg">{active ? '✔' : '+'}</span>
-                      <span className="font-semibold">{item.label}</span>
+                      <span className={classNames('text-lg font-black', active ? 'text-indigo-400' : 'opacity-20')}>
+                        {active ? '●' : '+'}
+                      </span>
+                      <span className="font-bold tracking-tight">{item.label}</span>
                     </button>
                   );
                 })}
@@ -855,13 +908,13 @@
                   required
                   value={formState.email}
                   onChange={handleInput}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                  placeholder="name@domain.com"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-white placeholder:text-white/20 focus:border-indigo-400 focus:outline-none transition-all"
                 />
               </div>
               <div className="grid gap-3">
-                <label className="text-sm font-semibold" htmlFor="zip">
-                  ZIP (optional for utility rebate guidance)
+                <label className="text-xs font-black uppercase tracking-widest opacity-50" htmlFor="zip">
+                  Postal Code (Local Rebate Intelligence)
                 </label>
                 <input
                   id="zip"
@@ -869,8 +922,8 @@
                   inputMode="numeric"
                   value={formState.zip}
                   onChange={handleInput}
-                  placeholder="94103"
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white shadow-inner focus:border-emerald-400/80 focus:outline-none"
+                  placeholder="90210"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-white placeholder:text-white/20 focus:border-indigo-400 focus:outline-none transition-all"
                 />
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">

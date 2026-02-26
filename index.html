@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-CHDHZ2V14G"></script>
@@ -13,30 +14,21 @@
     gtag('config', 'G-CHDHZ2V14G');
   </script>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Tesla Helper</title>
-  <meta
-    name="description"
-    content="Independent companion tools and guides for Tesla owners with checklists, charging tips, and accessory buying advice."
-  />
+  <meta name="description"
+    content="Independent companion tools and guides for Tesla owners with checklists, charging tips, and accessory buying advice." />
   <base href="/" />
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
-  <meta
-    http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; img-src 'self' data: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-api.prd.vn.cloud.tesla.com https://fleet-api.prd.eu.vn.cloud.tesla.com https://fleet-api.prd.cn.vn.cloud.tesla.com https://fleet-api.prd.au.vn.cloud.tesla.com https://fleet-api.prd.jp.vn.cloud.tesla.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; base-uri 'none'; object-src 'none'; frame-ancestors 'none';"
-  />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; img-src 'self' data: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-api.prd.vn.cloud.tesla.com https://fleet-api.prd.eu.vn.cloud.tesla.com https://fleet-api.prd.cn.vn.cloud.tesla.com https://fleet-api.prd.au.vn.cloud.tesla.com https://fleet-api.prd.jp.vn.cloud.tesla.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; base-uri 'none'; object-src 'none'; frame-ancestors 'none';" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="Tesla Helper · Companion tools & guides for Tesla owners" />
-  <meta
-    property="og:description"
-    content="Independent Tesla ownership guidance, charging tips, and accessory buying advice."
-  />
+  <meta property="og:description"
+    content="Independent Tesla ownership guidance, charging tips, and accessory buying advice." />
   <meta property="og:image" content="https://teslahelper.app/og/teslahelper-default.jpg" />
   <meta property="og:url" content="https://teslahelper.app" />
   <meta property="og:type" content="website" />
@@ -103,79 +95,125 @@
     :root {
       color-scheme: light dark;
     }
+
     body {
       margin: 0;
-      font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0b0b0f;
+      font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1c1c24 0%, #0b0b0f 100%);
       color: #f8fafc;
+      overflow-x: hidden;
     }
+
     a {
       color: #a78bfa;
       text-decoration: none;
+      transition: all 0.2s ease;
     }
+
     a:hover {
-      text-decoration: underline;
+      color: #c4b5fd;
+      text-decoration: none;
+      text-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
     }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
     .no-js-content {
-      max-width: 980px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 32px 20px 64px;
+      padding: 48px 24px;
     }
+
     .site-header {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: 24px;
+      margin-bottom: 48px;
     }
+
     .site-nav {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px 16px;
+      gap: 16px 24px;
       font-size: 0.95rem;
+      font-weight: 500;
     }
+
     .tagline {
-      color: #cbd5f5;
-    }
-    .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 16px;
-    }
-    .section {
-      margin-top: 28px;
-    }
-    .footer {
-      margin-top: 48px;
-      border-top: 1px solid #1f2937;
-      padding-top: 20px;
-      color: #cbd5f5;
+      color: #94a3b8;
       font-size: 0.9rem;
+      margin-top: 4px;
     }
+
+    .card {
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: 20px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .section {
+      margin-top: 40px;
+    }
+
+    .footer {
+      margin-top: 64px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 32px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
     .js-only {
       display: none;
     }
+
     .js .js-only {
       display: block;
     }
+
     .js .no-js-content {
       display: none;
     }
+
     ul {
       padding-left: 20px;
     }
+
     h1,
     h2,
     h3 {
       margin: 0 0 12px;
     }
+
     p {
       margin: 0 0 12px;
     }
   </style>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -204,6 +242,7 @@
     window.APP_ENV.teslaAuth = { ...defaultTeslaAuth, ...(runtimeEnv.teslaAuth || {}) };
   </script>
 </head>
+
 <body class="min-h-screen">
   <div class="no-js-content">
     <header class="site-header">
@@ -229,8 +268,10 @@
         charging, and maintaining your vehicle.
       </p>
       <p>
-        Start with the <a href="/guides">guides library</a> for deep dives, review the <a href="/accessories">accessory buying guides</a>
-        before your next purchase, or explore the <a href="/start">quick-start checklist</a> if you are new to Tesla ownership.
+        Start with the <a href="/guides">guides library</a> for deep dives, review the <a href="/accessories">accessory
+          buying guides</a>
+        before your next purchase, or explore the <a href="/start">quick-start checklist</a> if you are new to Tesla
+        ownership.
       </p>
 
       <section class="section">
@@ -301,4 +342,5 @@
   <!-- App script compiled by Babel -->
   <script type="text/babel" src="main.js"></script>
 </body>
+
 </html>

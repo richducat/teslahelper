@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-CHDHZ2V14G"></script>
@@ -17,10 +18,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tesla Helper · Auth callback</title>
   <base href="/" />
-  <meta
-    http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data:; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-api.prd.vn.cloud.tesla.com https://www.googletagmanager.com https://www.google-analytics.com; frame-ancestors 'none';"
-  />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data:; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.na.vn.cloud.tesla.com https://fleet-api.prd.na.vn.cloud.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-api.prd.vn.cloud.tesla.com https://corsproxy.io https://www.googletagmanager.com https://www.google-analytics.com; frame-ancestors 'none';" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
@@ -28,6 +27,7 @@
   <script src="/config/runtime-env.js"></script>
   <script defer src="/auth/callback/callback.js"></script>
 </head>
+
 <body class="min-h-screen bg-neutral-950 text-white">
   <main class="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-4 py-12 text-center">
     <div class="space-y-4">
@@ -36,23 +36,20 @@
           <rect x="4" y="4" width="24" height="24" rx="6" class="fill-current opacity-90" />
           <path
             d="M10.5 21.5h4.25a3.75 3.75 0 0 0 3.75-3.75v-.5A3.25 3.25 0 0 0 15.25 14H10.5v-3h11v2h-4.25a3.25 3.25 0 0 1 0 6.5H10.5v2Z"
-            class="fill-white"
-          />
+            class="fill-white" />
         </svg>
       </div>
       <h1 class="text-2xl font-bold">Connecting your Tesla account…</h1>
       <p id="status" class="text-sm text-neutral-200">Finishing secure sign-in with Tesla.</p>
       <p id="detail" class="text-sm text-neutral-400"></p>
       <div class="pt-4">
-        <a
-          id="home-link"
-          href="/"
-          class="hidden inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 font-semibold text-neutral-900 hover:bg-neutral-100"
-        >
+        <a id="home-link" href="/"
+          class="hidden inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 font-semibold text-neutral-900 hover:bg-neutral-100">
           Return to TeslaHelper
         </a>
       </div>
     </div>
   </main>
 </body>
+
 </html>

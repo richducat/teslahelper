@@ -35,8 +35,8 @@
   const TESLA_AUTH_CONFIG = {
     clientId: trimAuthValue(env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || 'ownerapi'),
     clientSecret: trimAuthValue(env('TESLA_CLIENT_SECRET') || teslaEnv.clientSecret || ''),
-    audience: trimAuthValue(teslaEnv.audience || 'https://fleet-api.prd.vn.cloud.tesla.com'),
-    tokenEndpoint: trimAuthValue(teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token'),
+    audience: trimAuthValue(teslaEnv.audience || 'https://fleet-api.prd.na.vn.cloud.tesla.com'),
+    tokenEndpoint: trimAuthValue(teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token'),
     redirectUri: trimAuthValue(TESLA_REDIRECT_URI),
   };
   const TESLA_CORS_PROXY = 'https://corsproxy.io/';

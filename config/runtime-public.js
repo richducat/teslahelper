@@ -8,7 +8,7 @@ window.APP_ENV = {
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
-    tokenEndpoint: 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token',
+    tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
     redirectUri: 'https://teslahelper.app/auth/callback',
     backendOrigin: 'https://teslahelper.vercel.app',
   },

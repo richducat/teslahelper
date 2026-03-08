@@ -13,5 +13,6 @@ window.APP_ENV = {
     authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
     tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
     redirectUri: 'https://your-domain.com/auth/callback',
+    corsProxyUrl: 'https://corsproxy.io/?key=your-corsproxy-key&url=',
   }
 };

@@ -9,6 +9,7 @@ const ALLOWED_TESLA_HOST_PATTERNS = {
   api: [/^fleet-api\.prd\.[a-z]+\.vn\.cloud\.tesla\.com$/],
   token: [/^fleet-auth\.prd(?:\.[a-z]+)?\.vn\.cloud\.tesla\.com$/],
 };
+const ALLOWED_PROXY_HOST_PATTERNS = [/^corsproxy\.io$/];
 
 export function trimAuthValue(value) {
   return typeof value === 'string' ? value.trim() : value;
@@ -37,9 +38,8 @@ export function setCorsHeaders(req, res) {
     'https://teslahelper.app',
     'https://www.teslahelper.app',
     'https://teslahelper.vercel.app',
-    'http://127.0.0.1:4821',
-    'http://localhost:4821',
   ]);
+  const localhostPatterns = [/^http:\/\/127\.0\.0\.1(?::\d+)?$/, /^http:\/\/localhost(?::\d+)?$/];
 
   const extraOrigins = String(process.env.ALLOWED_ORIGINS || '')
     .split(',')
@@ -48,7 +48,7 @@ export function setCorsHeaders(req, res) {
 
   extraOrigins.forEach((value) => allowedOrigins.add(value));
 
-  if (origin && allowedOrigins.has(origin)) {
+  if (origin && (allowedOrigins.has(origin) || localhostPatterns.some((pattern) => pattern.test(origin)))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
@@ -86,6 +86,35 @@ export function normalizeTeslaUrl(value, kind, fallback) {
     return parsed.toString();
   } catch (error) {
     return fallback;
+  }
+}
+
+export function normalizeCorsProxyUrl(value) {
+  const candidate = trimAuthValue(value);
+  if (!candidate) return '';
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== 'https:') return '';
+    if (!ALLOWED_PROXY_HOST_PATTERNS.some((pattern) => pattern.test(parsed.hostname))) return '';
+    parsed.hash = '';
+    parsed.searchParams.set('url', '');
+    return parsed.toString();
+  } catch (error) {
+    return '';
+  }
+}
+
+export function withCorsProxy(targetUrl, corsProxyUrl) {
+  const proxyBase = normalizeCorsProxyUrl(corsProxyUrl);
+  if (!proxyBase) return targetUrl;
+
+  try {
+    const proxied = new URL(proxyBase);
+    proxied.searchParams.set('url', targetUrl);
+    return proxied.toString();
+  } catch (error) {
+    return targetUrl;
   }
 }
 

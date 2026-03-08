@@ -43,6 +43,7 @@
     tokenEndpoint: trimAuthValue(teslaEnv.tokenEndpoint || DEFAULT_TESLA_CONFIG.tokenEndpoint),
     redirectUri: trimAuthValue(TESLA_REDIRECT_URI),
     backendOrigin: trimAuthValue(teslaEnv.backendOrigin || ''),
+    corsProxyUrl: trimAuthValue(teslaEnv.corsProxyUrl || ''),
   };
 
   const setStatus = (message, isError = false, detail = '') => {
@@ -107,6 +108,7 @@
       audience: TESLA_AUTH_CONFIG.audience,
       redirectUri: TESLA_AUTH_CONFIG.redirectUri,
       tokenEndpoint: TESLA_AUTH_CONFIG.tokenEndpoint,
+      corsProxyUrl: TESLA_AUTH_CONFIG.corsProxyUrl,
     });
   };
 

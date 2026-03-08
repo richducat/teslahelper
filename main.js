@@ -242,6 +242,7 @@
   const TESLA_AUTH_DEFAULT = {
     clientId: '',
     clientSecret: '',
+    corsProxyUrl: '',
     scope: ['openid', 'offline_access', 'user_data', 'vehicle_device_data', 'vehicle_cmds', 'vehicle_charging_cmds'],
     audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
@@ -443,6 +444,7 @@
           refreshToken: authState.refreshToken,
           clientId: TESLA_AUTH_CONFIG.clientId,
           clientSecret: TESLA_AUTH_CONFIG.clientSecret,
+          corsProxyUrl: TESLA_AUTH_CONFIG.corsProxyUrl,
           audience: TESLA_AUTH_CONFIG.audience,
           tokenEndpoint: TESLA_AUTH_CONFIG.tokenEndpoint,
         });
@@ -494,6 +496,7 @@
           const payload = await postTeslaApi('/api/tesla/vehicles', {
             accessToken: activeToken,
             apiBase: TESLA_AUTH_CONFIG.apiBase,
+            corsProxyUrl: TESLA_AUTH_CONFIG.corsProxyUrl,
           });
           const normalized = normalizeTelemetryFromFleet(payload, ANALYTICS_MOCK);
           setTelemetryData(normalized);

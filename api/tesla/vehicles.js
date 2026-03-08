@@ -1,11 +1,13 @@
 import {
   DEFAULT_TESLA_CONFIG,
   handleCors,
+  normalizeCorsProxyUrl,
   normalizeTeslaUrl,
   parseTeslaResponse,
   resolvePayload,
   sendJson,
   trimAuthValue,
+  withCorsProxy,
 } from './_shared.js';
 
 export default async function handler(req, res) {
@@ -20,6 +22,7 @@ export default async function handler(req, res) {
 
   const payload = resolvePayload(req);
   const accessToken = trimAuthValue(payload.accessToken || payload.access_token);
+  const corsProxyUrl = normalizeCorsProxyUrl(payload.corsProxyUrl || process.env.CORS_PROXY_URL || '');
   const apiBase = normalizeTeslaUrl(
     payload.apiBase || process.env.TESLA_API_BASE || DEFAULT_TESLA_CONFIG.apiBase,
     'api',
@@ -35,7 +38,7 @@ export default async function handler(req, res) {
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   try {
-    const listResponse = await fetch(`${apiBase}/api/1/vehicles`, {
+    const listResponse = await fetch(withCorsProxy(`${apiBase}/api/1/vehicles`, corsProxyUrl), {
       method: 'GET',
       headers,
     });
@@ -53,7 +56,7 @@ export default async function handler(req, res) {
     let vehicleError = '';
 
     if (vin) {
-      const vehicleResponse = await fetch(`${apiBase}/api/1/vehicles/${encodeURIComponent(vin)}/vehicle_data`, {
+      const vehicleResponse = await fetch(withCorsProxy(`${apiBase}/api/1/vehicles/${encodeURIComponent(vin)}/vehicle_data`, corsProxyUrl), {
         method: 'GET',
         headers,
       });

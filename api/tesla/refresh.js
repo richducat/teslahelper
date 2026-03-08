@@ -1,12 +1,14 @@
 import {
   DEFAULT_TESLA_CONFIG,
   handleCors,
+  normalizeCorsProxyUrl,
   normalizeTeslaUrl,
   parseTeslaResponse,
   resolveClientCredentials,
   resolvePayload,
   sendJson,
   trimAuthValue,
+  withCorsProxy,
 } from './_shared.js';
 
 export default async function handler(req, res) {
@@ -22,6 +24,7 @@ export default async function handler(req, res) {
   const payload = resolvePayload(req);
   const refreshToken = trimAuthValue(payload.refreshToken || payload.refresh_token);
   const audience = trimAuthValue(payload.audience || process.env.TESLA_AUDIENCE || DEFAULT_TESLA_CONFIG.audience);
+  const corsProxyUrl = normalizeCorsProxyUrl(payload.corsProxyUrl || process.env.CORS_PROXY_URL || '');
   const tokenEndpoint = normalizeTeslaUrl(
     payload.tokenEndpoint || process.env.TESLA_TOKEN_ENDPOINT || DEFAULT_TESLA_CONFIG.tokenEndpoint,
     'token',
@@ -55,7 +58,7 @@ export default async function handler(req, res) {
   });
 
   try {
-    const response = await fetch(tokenEndpoint, {
+    const response = await fetch(withCorsProxy(tokenEndpoint, corsProxyUrl), {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),

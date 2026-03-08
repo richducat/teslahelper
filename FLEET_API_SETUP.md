@@ -1,41 +1,49 @@
 # Tesla Fleet API integration guide
 
-This project uses Tesla's Fleet API to fetch live vehicle telemetry after a customer signs in with their Tesla account. Use this guide to configure developer access and wire credentials into the app so we can log and pull data for customers.
+This project now uses Tesla's OAuth authorization-code flow and same-origin `/api/tesla/*` routes for token exchange, refresh, and vehicle fetches.
 
-## 1) Set up Tesla developer access
-1. Sign in at [developer.tesla.com](https://developer.tesla.com) and create a Fleet API project.
-2. Create or join the correct organization so the app is owned by your company (not a personal account).
-3. Generate an OAuth client for the Fleet API with the **device flow** enabled (matches the UI flow in `main.js`).
-4. Record the client ID and client secret, and set the callback URLs/allowed origins to include the domain you will host this app on.
-5. For Fleet tokens, use the fleet auth host (for NA: `https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token`). Using the global auth token endpoint will prevent the app from exchanging the device code for customer access tokens.
+## 1) Create a Tesla OAuth client
+1. Sign in at [developer.tesla.com](https://developer.tesla.com) and create or open your Fleet API project.
+2. Create an OAuth client for the domain where this app will run.
+3. Add the callback URL `https://your-domain.com/auth/callback`.
+4. Add your site origin wherever Tesla asks for allowed origins or app URLs.
+5. Save the Tesla client ID and client secret.
 
-## 2) Request the right scopes and audience
-The app expects the following defaults defined in `main.js`:
-- Scope: `openid offline_access vehicle_device_data vehicle_cmds`
-- Audience: `https://fleet-api.prd.na.vn.cloud.tesla.com`
+## 2) Configure this app
+1. Copy `config/runtime-env.example.js` to `config/runtime-env.js`.
+2. Set:
+   - `clientId`
+   - `audience` and `apiBase` for your region
+   - `redirectUri` to your real callback URL
+3. Prefer setting `TESLA_CLIENT_SECRET` in your deployment/serverless environment.
+4. If you are using the included static runtime config only, `clientSecret` in `runtime-env.js` is still accepted as a compatibility fallback, but server-side env vars are safer.
 
-If your Tesla client uses a different region, update the audience, token, and API base URLs accordingly.
+## 3) Default endpoints used by the app
+- Authorize endpoint: `https://auth.tesla.com/oauth2/v3/authorize`
+- Token endpoint: `https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token`
+- North America audience/API base: `https://fleet-api.prd.na.vn.cloud.tesla.com`
 
-## 3) Wire credentials into the app
-1. Copy `config/runtime-env.example.js` to `config/runtime-env.js` (ignored by git).
-2. Replace the placeholders with your Tesla client values:
-   - `clientId` and `clientSecret` from the developer portal
-   - `audience`, `apiBase`, `deviceCodeEndpoint`, and `tokenEndpoint` that match the region for your fleet account (use the fleet auth host, not `auth-global`, for tokens)
-3. Deploy the site with `config/runtime-env.js` served before `main.js` so `window.APP_ENV.teslaAuth` overrides the defaults and keeps the token endpoint aligned with the Fleet API region.
+These defaults match Tesla's current Fleet API docs as of March 8, 2026. If your Tesla project uses another region, override `audience` and `apiBase` in `runtime-env.js`.
 
-## 4) Verify device login and token refresh
-The UI initiates the Tesla device login flow and polls the token endpoint until the user approves access. Token refresh happens automatically with a safety window to avoid expiry during API calls. To validate:
-1. From the landing page, choose **Sign in with Tesla** and follow the verification URL with the provided user code.
-2. Confirm that vehicle data appears under "Live from Tesla Fleet API." The app fetches `/api/1/vehicles` using the bearer token stored in localStorage.
-3. After the initial token expires, ensure refresh succeeds without forcing the user to sign in again.
+## 4) Scopes requested by the app
+- `openid`
+- `offline_access`
+- `user_data`
+- `vehicle_device_data`
+- `vehicle_cmds`
+- `vehicle_charging_cmds`
 
-## 5) Logging and observability
-- The app stores authentication state in `localStorage` under `teslahelper.teslaAuth` (see `main.js`).
-- To capture customer telemetry for analytics or support, extend the telemetry normalization in `normalizeTelemetryFromFleet` (inside `main.js`) to emit the fields your backend expects and forward them to your logging endpoint after each successful fetch.
-- Handle 401 responses by attempting a refresh (already implemented) and clear local storage if refresh fails to keep sessions clean.
+Trim these down if you only need read-only telemetry.
 
-## 6) Operational tips
-- Use separate Tesla OAuth clients for staging and production and point each environment's `runtime-env.js` at the correct endpoints.
-- Limit stored scope to only what you need; removing `vehicle_cmds` disables remote commands if you only need read-only data.
-- Rotate client secrets periodically and redeploy the updated `runtime-env.js` values.
-- If the Fleet API returns rate-limit or availability errors, the UI surfaces a friendly error string; consider adding retry/backoff logic around the fetch calls in `main.js` if your deployment needs more resilience.
+## 5) Verify the flow
+1. Open the homepage and choose `Sign in with Tesla`.
+2. Complete the Tesla-hosted sign-in and consent flow.
+3. Confirm the callback lands on `/#my-tesla`.
+4. Use `Refresh vehicle data` and verify live data replaces the demo dashboard.
+5. Wait for the access token to get close to expiry, then refresh again and confirm the session stays alive without another login.
+
+## 6) Runtime notes
+- Tokens are stored in `localStorage` under `teslahelper.teslaAuth`.
+- The callback page exchanges the code through `/api/tesla/exchange`.
+- Vehicle fetches go through `/api/tesla/vehicles`.
+- Refreshes go through `/api/tesla/refresh`.

@@ -20,10 +20,11 @@
     content="Independent companion tools and guides for Tesla owners with checklists, charging tips, and accessory buying advice." />
   <base href="/" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#0b0b0f" />
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#090b0f" />
   <meta name="color-scheme" content="dark light" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; img-src 'self' data: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-api.prd.vn.cloud.tesla.com https://fleet-api.prd.eu.vn.cloud.tesla.com https://fleet-api.prd.cn.vn.cloud.tesla.com https://fleet-api.prd.au.vn.cloud.tesla.com https://fleet-api.prd.jp.vn.cloud.tesla.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; base-uri 'none'; object-src 'none'; frame-ancestors 'none';" />
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-auth.prd.na.vn.cloud.tesla.com https://fleet-api.prd.na.vn.cloud.tesla.com https://fleet-api.prd.eu.vn.cloud.tesla.com https://fleet-api.prd.cn.vn.cloud.tesla.com https://fleet-api.prd.au.vn.cloud.tesla.com https://fleet-api.prd.jp.vn.cloud.tesla.com https://www.googletagmanager.com https://www.google-analytics.com; frame-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; base-uri 'none'; object-src 'none';" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="Tesla Helper · Companion tools & guides for Tesla owners" />
@@ -98,7 +99,7 @@
 
     body {
       margin: 0;
-      font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
       background: radial-gradient(circle at 50% 0%, #1c1c24 0%, #0b0b0f 100%);
       color: #f8fafc;
       overflow-x: hidden;
@@ -212,11 +213,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap"
     rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="config/runtime-public.js"></script>
+  <script src="/api/runtime-env.js"></script>
   <script src="config/runtime-env.js"></script>
   <script>
     const runtimeEnv = window.APP_ENV || {};
@@ -229,12 +232,11 @@
       adsenseSidebarSlotId: '1234567890',
     };
     const defaultTeslaAuth = {
-      clientId: 'ownerapi',
+      clientId: '',
       clientSecret: '',
-      audience: 'https://fleet-api.prd.vn.cloud.tesla.com',
-      apiBase: 'https://fleet-api.prd.vn.cloud.tesla.com',
+      audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+      apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
       authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
-      deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
       tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
     };
 

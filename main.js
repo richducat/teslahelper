@@ -36,27 +36,30 @@
   const BRAND_NAME = 'Tesla Helper';
   const BRAND = {
     name: BRAND_NAME,
-    tagline: 'Premium, secure, and owner-first.',
-    defaultAccent: 'violet',
+    tagline: 'A cleaner ownership cockpit for Tesla drivers.',
+    defaultAccent: 'ember',
   };
 
   function BrandWordmark({ compact }) {
     return (
       <span
         className={classNames(
-          'inline-flex items-center gap-2 font-black tracking-tight transition-all',
+          'inline-flex items-center gap-3 font-semibold tracking-[-0.02em] transition-all',
           compact ? 'text-base' : 'text-lg'
         )}
         aria-hidden="true"
       >
-        <svg className="h-6 w-6" viewBox="0 0 32 32" role="img" aria-hidden="true" focusable="false">
-          <rect x="4" y="4" width="24" height="24" rx="6" className="fill-current opacity-90" />
+        <svg className={classNames('shrink-0', compact ? 'h-5 w-5' : 'h-6 w-6')} viewBox="0 0 36 36" role="img" aria-hidden="true" focusable="false">
+          <rect x="4" y="4" width="28" height="28" rx="10" className="fill-current opacity-10" />
           <path
-            d="M10.5 21.5h4.25a3.75 3.75 0 0 0 3.75-3.75v-.5A3.25 3.25 0 0 0 15.25 14H10.5v-3h11v2h-4.25a3.25 3.25 0 0 1 0 6.5H10.5v2Z"
-            className="fill-white"
+            d="M11.5 13.25c4.15-2.6 8.85-2.6 13 0M18 13.5v10.25M14.75 17.5h6.5"
+            className="stroke-current"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
-        <span>{BRAND_NAME}</span>
+        <span className="font-semibold">{BRAND_NAME}</span>
       </span>
     );
   }
@@ -106,6 +109,14 @@
    * extend this object with your own colours if you wish.
    * ------------------------------------------------------------------ */
   const ACCENTS = {
+    ember: {
+      btn: 'bg-[#171a20]',
+      hover: 'hover:bg-[#0f1113]',
+      border: 'border-[#171a20]/12',
+      underline: 'bg-[#e82127]',
+      focus: 'focus-visible:outline-[#e82127]',
+      tint: 'text-[#e82127]',
+    },
     violet: { btn: 'bg-indigo-600', hover: 'hover:bg-indigo-500', border: 'border-indigo-400', underline: 'bg-indigo-500' },
     emerald: { btn: 'bg-emerald-600', hover: 'hover:bg-emerald-500', border: 'border-emerald-400', underline: 'bg-emerald-500' },
     blue: { btn: 'bg-blue-600', hover: 'hover:bg-blue-500', border: 'border-blue-400', underline: 'bg-blue-500' },
@@ -229,14 +240,13 @@
   ];
 
   const TESLA_AUTH_DEFAULT = {
-    clientId: 'ownerapi',
+    clientId: '',
     clientSecret: '',
     scope: ['openid', 'offline_access', 'user_data', 'vehicle_device_data', 'vehicle_cmds', 'vehicle_charging_cmds'],
-    audience: 'https://fleet-api.prd.vn.cloud.tesla.com',
+    audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     authorizeEndpoint: 'https://auth.tesla.com/oauth2/v3/authorize',
-    deviceCodeEndpoint: 'https://auth.tesla.com/oauth2/v3/device/code',
     tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
-    apiBase: 'https://fleet-api.prd.vn.cloud.tesla.com',
+    apiBase: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
     // Refresh one minute before expiry to avoid racing Tesla's tokens expiring mid-request.
     refreshSafetyWindowMs: 60 * 1000,
   };
@@ -272,27 +282,47 @@
   TESLA_AUTH_CONFIG.clientId = trimAuthValue(TESLA_AUTH_CONFIG.clientId);
   TESLA_AUTH_CONFIG.clientSecret = trimAuthValue(TESLA_AUTH_CONFIG.clientSecret);
   TESLA_AUTH_CONFIG.authorizeEndpoint = trimAuthValue(TESLA_AUTH_CONFIG.authorizeEndpoint);
-  TESLA_AUTH_CONFIG.deviceCodeEndpoint = trimAuthValue(TESLA_AUTH_CONFIG.deviceCodeEndpoint);
   TESLA_AUTH_CONFIG.tokenEndpoint = trimAuthValue(TESLA_AUTH_CONFIG.tokenEndpoint);
+  TESLA_AUTH_CONFIG.apiBase = trimAuthValue(TESLA_AUTH_CONFIG.apiBase);
+  TESLA_AUTH_CONFIG.audience = trimAuthValue(TESLA_AUTH_CONFIG.audience);
   TESLA_AUTH_CONFIG.redirectUri = trimAuthValue(TESLA_REDIRECT_URI);
+  const TESLA_AUTH_IS_CONFIGURED = Boolean(
+    TESLA_AUTH_CONFIG.clientId &&
+    TESLA_AUTH_CONFIG.clientId !== 'ownerapi' &&
+    TESLA_AUTH_CONFIG.authorizeEndpoint &&
+    TESLA_AUTH_CONFIG.tokenEndpoint &&
+    TESLA_AUTH_CONFIG.audience &&
+    TESLA_AUTH_CONFIG.apiBase
+  );
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
+  const TESLA_PRO_STORAGE_KEY = 'teslahelper.isPro';
+
+  function getTeslaApiBase(path) {
+    const backendOrigin = trimAuthValue(TESLA_AUTH_CONFIG.backendOrigin || '');
+    if (!backendOrigin) return path;
+    return `${backendOrigin.replace(/\/$/, '')}${path}`;
+  }
 
   function loadStoredAuth() {
-    if (typeof window === 'undefined') return { status: 'signedOut' };
+    if (typeof window === 'undefined') return { status: 'signedOut', isPro: false };
     try {
       const saved = localStorage.getItem(TESLA_AUTH_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : { status: 'signedOut' };
+      const isPro = localStorage.getItem(TESLA_PRO_STORAGE_KEY) === 'true';
+      const auth = saved ? JSON.parse(saved) : { status: 'signedOut' };
+      return { ...auth, isPro };
     } catch (error) {
       console.warn('TeslaHelper: failed to read auth storage', error);
-      return { status: 'signedOut' };
+      return { status: 'signedOut', isPro: false };
     }
   }
 
   function persistAuth(state) {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem(TESLA_AUTH_STORAGE_KEY, JSON.stringify(state));
+      const { isPro, ...auth } = state;
+      localStorage.setItem(TESLA_AUTH_STORAGE_KEY, JSON.stringify(auth));
+      localStorage.setItem(TESLA_PRO_STORAGE_KEY, isPro ? 'true' : 'false');
     } catch (error) {
       console.warn('TeslaHelper: failed to persist auth', error);
     }
@@ -307,10 +337,30 @@
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
+  async function postTeslaApi(path, payload) {
+    const response = await fetch(getTeslaApiBase(path), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    let body = {};
+    try {
+      body = await response.json();
+    } catch (error) {
+      body = {};
+    }
+    if (!response.ok) {
+      const requestError = new Error(body.error || 'Tesla request failed.');
+      requestError.status = response.status;
+      throw requestError;
+    }
+    return body;
+  }
+
   function normalizeTelemetryFromFleet(payload, fallback = ANALYTICS_MOCK) {
     const vehicles = payload?.response || [];
-    const first = vehicles[0] || payload?.vehicle || {};
-    const vehicleData = first.vehicle_data || first;
+    const primaryVehicle = payload?.vehicle || vehicles[0] || {};
+    const vehicleData = primaryVehicle.vehicle_data || primaryVehicle;
 
     const odometer = Math.round(vehicleData?.vehicle_state?.odometer ?? fallback.summary.totalMiles);
     const whPerMile = Math.round(vehicleData?.charge_state?.wh_per_mile || fallback.summary.avgEfficiency);
@@ -320,7 +370,7 @@
 
     const trip = {
       id: 'latest-trip',
-      name: first.display_name || vehicleData?.vehicle_config?.car_type || 'Latest drive',
+      name: primaryVehicle.display_name || vehicleData?.vehicle_config?.car_type || 'Latest drive',
       date: new Date().toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
       distance: Math.max(5, Math.round((vehicleData?.drive_state?.heading || 90) / 3)),
       duration: vehicleData?.drive_state?.active_route_minutes_to_arrival
@@ -360,21 +410,20 @@
     const [telemetryData, setTelemetryData] = useState(ANALYTICS_MOCK);
     const [telemetrySource, setTelemetrySource] = useState('demo');
     const [authState, setAuthState] = useState(() => loadStoredAuth());
-    const [deviceAuth, setDeviceAuth] = useState(null);
     const [authError, setAuthError] = useState('');
-    const [isPolling, setIsPolling] = useState(false);
     const [isLoadingTelemetry, setIsLoadingTelemetry] = useState(false);
     const [lastSynced, setLastSynced] = useState(null);
 
     const resetToDemo = useCallback(() => {
-      setAuthState({ status: 'signedOut' });
+      setAuthState({ status: 'signedOut', isPro: false });
       setTelemetryData(ANALYTICS_MOCK);
       setTelemetrySource('demo');
-      setDeviceAuth(null);
       setLastSynced(null);
       setAuthError('');
       if (typeof window !== 'undefined') {
         localStorage.removeItem(TESLA_AUTH_STORAGE_KEY);
+        localStorage.removeItem(TESLA_PRO_STORAGE_KEY);
+        sessionStorage?.removeItem?.(TESLA_AUTH_STATE_KEY);
       }
     }, []);
 
@@ -388,28 +437,17 @@
 
     const refreshAccessToken = useCallback(async () => {
       if (!authState?.refreshToken) return null;
-      const params = new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: TESLA_AUTH_CONFIG.clientId,
-        refresh_token: authState.refreshToken,
-      });
-
-      if (TESLA_AUTH_CONFIG.clientSecret) {
-        params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
-      }
 
       try {
-        const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
-          method: 'POST',
-          mode: 'cors',
-          cache: 'no-store',
-          referrerPolicy: 'no-referrer',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params.toString(),
+        const payload = await postTeslaApi('/api/tesla/refresh', {
+          refreshToken: authState.refreshToken,
+          clientId: TESLA_AUTH_CONFIG.clientId,
+          clientSecret: TESLA_AUTH_CONFIG.clientSecret,
+          audience: TESLA_AUTH_CONFIG.audience,
+          tokenEndpoint: TESLA_AUTH_CONFIG.tokenEndpoint,
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error_description || 'Unable to refresh Tesla session.');
         const refreshed = {
+          ...authState,
           status: 'connected',
           accessToken: payload.access_token,
           refreshToken: payload.refresh_token || authState.refreshToken,
@@ -453,30 +491,23 @@
         }
         setIsLoadingTelemetry(true);
         try {
-          const response = await fetch(`${TESLA_AUTH_CONFIG.apiBase}/api/1/vehicles`, {
-            method: 'GET',
-            mode: 'cors',
-            cache: 'no-store',
-            referrerPolicy: 'no-referrer',
-            headers: { Authorization: `Bearer ${activeToken}` },
+          const payload = await postTeslaApi('/api/tesla/vehicles', {
+            accessToken: activeToken,
+            apiBase: TESLA_AUTH_CONFIG.apiBase,
           });
-          const payload = await response.json();
-          if (response.status === 401 && !tokenOverride) {
+          const normalized = normalizeTelemetryFromFleet(payload, ANALYTICS_MOCK);
+          setTelemetryData(normalized);
+          setTelemetrySource('tesla');
+          setLastSynced(new Date().toISOString());
+          setAuthError(payload.vehicleError || '');
+        } catch (error) {
+          if (error?.status === 401 && !tokenOverride) {
             const refreshed = await refreshAccessToken();
             if (refreshed?.accessToken) {
               await fetchTelemetry(refreshed.accessToken);
               return;
             }
           }
-
-          if (!response.ok) {
-            throw new Error(payload.error_description || payload.error || 'Unable to reach Tesla Fleet API.');
-          }
-          const normalized = normalizeTelemetryFromFleet(payload, ANALYTICS_MOCK);
-          setTelemetryData(normalized);
-          setTelemetrySource('tesla');
-          setLastSynced(new Date().toISOString());
-        } catch (error) {
           setAuthError(interpretTeslaFetchError(error, 'Tesla data request failed.'));
         } finally {
           setIsLoadingTelemetry(false);
@@ -485,18 +516,16 @@
       [authState?.accessToken, ensureFreshAccessToken, interpretTeslaFetchError, refreshAccessToken]
     );
 
-    const startDeviceLogin = useCallback(async () => {
+    const startTeslaLogin = useCallback(async () => {
       setAuthError('');
       setTelemetrySource('demo');
-      setDeviceAuth(null);
-      setIsPolling(false);
 
       const clientId = TESLA_AUTH_CONFIG.clientId;
       const redirectUri = TESLA_AUTH_CONFIG.redirectUri;
       const authorizeEndpoint = TESLA_AUTH_CONFIG.authorizeEndpoint;
 
-      if (!clientId || !authorizeEndpoint || !redirectUri) {
-        setAuthError('Tesla OAuth settings are incomplete. Update your environment and try again.');
+      if (!TESLA_AUTH_IS_CONFIGURED || !clientId || !authorizeEndpoint || !redirectUri) {
+        setAuthError('Tesla sign-in is not configured for this deployment. Add your Tesla OAuth client ID and secret, then redeploy.');
         return;
       }
 
@@ -524,9 +553,6 @@
 
       const authUrl = `${authorizeEndpoint}?${params.toString()}`;
       window.location.assign(authUrl);
-      return;
-
-      // Device-code flow removed in favour of direct OAuth redirect handled on the server.
     }, []);
 
     useEffect(() => {
@@ -534,69 +560,6 @@
         fetchTelemetry(authState.accessToken);
       }
     }, [authState?.accessToken, authState?.status, fetchTelemetry]);
-
-    useEffect(() => {
-      if (!deviceAuth || !isPolling) return undefined;
-      const intervalMs = Math.max(5, deviceAuth.interval) * 1000;
-      const timer = setInterval(async () => {
-        if (Date.now() > deviceAuth.expiresAt) {
-          setAuthError('Tesla verification code expired. Start again.');
-          setIsPolling(false);
-          setDeviceAuth(null);
-          return;
-        }
-
-        try {
-          const params = new URLSearchParams({
-            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-            client_id: TESLA_AUTH_CONFIG.clientId,
-            device_code: deviceAuth.deviceCode,
-          });
-
-          if (TESLA_AUTH_CONFIG.clientSecret) {
-            params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
-          }
-
-          const response = await fetch(TESLA_AUTH_CONFIG.tokenEndpoint, {
-            method: 'POST',
-            mode: 'cors',
-            cache: 'no-store',
-            referrerPolicy: 'no-referrer',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString(),
-          });
-
-          const payload = await response.json();
-
-          if (payload.error === 'authorization_pending' || payload.error === 'slow_down') return;
-
-          if (!response.ok) {
-            throw new Error(payload.error_description || 'Tesla login failed.');
-          }
-
-          const nextAuth = {
-            status: 'connected',
-            accessToken: payload.access_token,
-            refreshToken: payload.refresh_token,
-            expiresAt: Date.now() + (payload.expires_in || 0) * 1000,
-          };
-
-          setAuthState(nextAuth);
-          persistAuth(nextAuth);
-          setIsPolling(false);
-          setDeviceAuth(null);
-          fetchTelemetry(nextAuth.accessToken);
-        } catch (error) {
-          const message = isTeslaNetworkBlockedError(error?.message)
-            ? TESLA_AUTH_NETWORK_BLOCKED_MESSAGE
-            : error?.message || 'Tesla login failed.';
-          setAuthError(message);
-          setIsPolling(false);
-        }
-      }, intervalMs);
-
-      return () => clearInterval(timer);
-    }, [deviceAuth, isPolling, fetchTelemetry, interpretTeslaFetchError]);
 
     useEffect(() => {
       if (authState?.status !== 'connected' || !authState.expiresAt) return;
@@ -611,13 +574,12 @@
       telemetrySource,
       authState,
       authError,
-      deviceAuth,
-      startDeviceLogin,
+      startTeslaLogin,
       resetToDemo,
       isLoadingTelemetry,
-      isPolling,
       lastSynced,
       refreshTelemetry: fetchTelemetry,
+      isAuthConfigured: TESLA_AUTH_IS_CONFIGURED,
     };
   }
 
@@ -635,49 +597,49 @@
       label: 'Lifetime miles',
       value: (d) => `${(d?.summary?.totalMiles || 0).toLocaleString()} mi`,
       caption: () => 'Across all trips',
-      icon: '📈',
+      icon: 'MILES',
     },
     {
       id: 'avgEfficiency',
       label: 'Avg efficiency',
       value: (d) => `${d?.summary?.avgEfficiency || 0} Wh/mi`,
       caption: () => 'Last 30 days',
-      icon: '⚡',
+      icon: 'EFF',
     },
     {
       id: 'autopilotPct',
       label: 'Autopilot usage',
       value: (d) => `${d?.summary?.autopilotPct || 0}%`,
       caption: (d) => `${(d?.summary?.autopilotMiles || 0).toLocaleString()} mi`,
-      icon: '🧠',
+      icon: 'AP',
     },
     {
       id: 'autopilotMiles',
       label: 'Autopilot miles',
       value: (d) => `${(d?.summary?.autopilotMiles || 0).toLocaleString()} mi`,
       caption: (d) => `${d?.summary?.autopilotPct || 0}% of your miles`,
-      icon: '🛣️',
+      icon: 'AUTO',
     },
     {
       id: 'safetyScore',
       label: 'Safety score',
       value: (d) => `${d?.summary?.safetyScore || 0}`,
       caption: () => 'Tesla Insurance style',
-      icon: '🛡️',
+      icon: 'SAFE',
     },
     {
       id: 'fsdLongest',
       label: 'Longest FSD session',
       value: (d) => `${d?.fsd?.longestSession || 0} mi`,
       caption: (d) => `${d?.fsd?.disengagements || 0} disengagements`,
-      icon: '🛰️',
+      icon: 'FSD',
     },
     {
       id: 'regen',
       label: 'Energy recovered',
       value: (d) => `${(d?.achievements?.find((a) => a.id === 'regen')?.current || 0).toFixed(1)} kWh`,
       caption: () => 'Through regenerative braking',
-      icon: '🌿',
+      icon: 'REGEN',
     },
   ];
 
@@ -725,7 +687,7 @@
     return (
       <div
         className={classNames(
-          'rounded-3xl border border-white/5 bg-white/[0.03] backdrop-blur-md shadow-xl transition-all duration-300 hover:border-white/10',
+          'rounded-[28px] border backdrop-blur-xl shadow-[0_24px_70px_rgba(15,23,42,0.08)] transition-all duration-300',
           className
         )}
       >
@@ -751,34 +713,37 @@
     ...rest
   }) {
     const sizes = {
-      md: 'h-11 px-6 text-sm',
-      sm: 'h-9 px-4 text-sm',
-      xs: 'h-8 px-3 text-xs',
-      icon: 'h-10 w-10 text-base',
+      md: 'h-12 px-6 text-sm',
+      sm: 'h-10 px-4 text-sm',
+      xs: 'h-9 px-3 text-xs',
+      icon: 'h-10 w-10 text-xs',
     };
     const variantClasses = {
       primary: classNames(
-        'text-white shadow-lg shadow-black/20 transform active:scale-95',
-        accent?.btn || 'bg-indigo-600',
-        accent?.hover || 'hover:bg-indigo-500'
+        isDark
+          ? 'text-neutral-950 shadow-[0_16px_40px_rgba(0,0,0,0.28)]'
+          : 'text-white shadow-[0_16px_40px_rgba(17,26,32,0.16)]',
+        accent?.btn || (isDark ? 'bg-white' : 'bg-[#171a20]'),
+        accent?.hover || (isDark ? 'hover:bg-white/90' : 'hover:bg-[#0f1113]')
       ),
       secondary: classNames(
         'border transition-all duration-200 active:scale-95',
         isDark
-          ? 'bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20'
-          : 'bg-neutral-900 text-white border-neutral-800 hover:bg-neutral-800'
+          ? 'bg-white/[0.04] text-white border-white/10 hover:bg-white/[0.08] hover:border-white/20'
+          : 'bg-white/80 text-[#171a20] border-black/10 hover:bg-white hover:border-black/20'
       ),
       ghost: classNames(
-        'border border-transparent transition-colors duration-200',
-        isDark ? 'text-white hover:bg-white/10' : 'text-neutral-900 hover:bg-neutral-100'
+        'border border-transparent transition-colors duration-200 shadow-none',
+        isDark ? 'text-white/72 hover:text-white hover:bg-white/[0.06]' : 'text-[#171a20]/74 hover:text-[#171a20] hover:bg-black/[0.04]'
       ),
     };
     return (
       <Tag
         className={classNames(
-          'inline-flex items-center justify-center gap-2 rounded-2xl font-bold tracking-tight transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-[0.01em] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-40 disabled:cursor-not-allowed',
           sizes[size] || sizes.md,
           variantClasses[variant],
+          accent?.focus || 'focus-visible:outline-[#e82127]',
           className
         )}
         {...rest}
@@ -801,19 +766,25 @@
     return (
       <Card
         className={classNames(
-          'border p-3 h-full',
-          isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200'
+          'h-full border p-4',
+          isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/76 border-black/8'
         )}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="text-2xl" aria-hidden="true">
-            {metric.icon || '📊'}
+        <div className="flex items-center justify-between gap-3">
+          <div
+            className={classNames(
+              'inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em]',
+              isDark ? 'border-white/10 bg-white/[0.04] text-white/72' : 'border-black/8 bg-black/[0.03] text-[#171a20]/72'
+            )}
+            aria-hidden="true"
+          >
+            {metric.icon || 'STAT'}
           </div>
           <div className={classNames('mt-1 h-1 rounded-full w-16', accent?.underline || 'bg-violet-500')} aria-hidden="true" />
         </div>
-        <div className="mt-2 text-sm opacity-80">{metric.label}</div>
-        <div className="text-xl font-bold leading-tight">{value}</div>
-        {caption ? <div className="text-xs opacity-70 mt-1">{caption}</div> : null}
+        <div className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em] opacity-55">{metric.label}</div>
+        <div className="mt-2 text-[1.75rem] font-semibold leading-tight tracking-[-0.03em]">{value}</div>
+        {caption ? <div className="mt-2 text-sm opacity-70">{caption}</div> : null}
       </Card>
     );
   }
@@ -1248,15 +1219,19 @@
 
   function SectionTitle({ title, subtitle }) {
     return (
-      <div className="mb-5 max-w-3xl">
+      <div className="mb-8 max-w-3xl space-y-3">
+        <div className="inline-flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.32em] opacity-60">
+          <span className="h-px w-8 bg-[#e82127]" aria-hidden="true" />
+          Tesla Helper
+        </div>
         <h2
-          className="font-bold"
-          style={{ fontSize: 'clamp(1.125rem, 1.2vw + .75rem, 1.5rem)', letterSpacing: '0.1px', lineHeight: 1.35 }}
+          className="font-semibold tracking-[-0.03em]"
+          style={{ fontSize: 'clamp(1.4rem, 1.4vw + 0.9rem, 2.4rem)', lineHeight: 1.08 }}
         >
           {title}
         </h2>
         {subtitle ? (
-          <p className="text-sm opacity-80 leading-relaxed" style={{ lineHeight: 1.5 }}>
+          <p className="max-w-2xl text-sm opacity-72 leading-relaxed sm:text-[15px]" style={{ lineHeight: 1.65 }}>
             {subtitle}
           </p>
         ) : null}
@@ -1387,116 +1362,151 @@
     telemetrySource,
     authState,
     authError,
-    deviceAuth,
     lastSynced,
     isLoadingTelemetry,
-    isPolling,
+    isAuthConfigured,
     onStartLogin,
     onReset,
     onRefresh,
     className = '',
   }) {
-    const isConnected = authState?.status === 'connected' && telemetrySource === 'tesla';
+    const hasTeslaSession = authState?.status === 'connected';
+    const isConnected = hasTeslaSession && telemetrySource === 'tesla';
+    const primaryLabel = hasTeslaSession
+      ? isLoadingTelemetry
+        ? 'Syncing vehicle...'
+        : isConnected
+          ? 'Refresh vehicle data'
+          : 'Load my vehicle'
+      : 'Sign in with Tesla';
+    const connectionHighlights = hasTeslaSession
+      ? [
+        {
+          label: 'Tesla account',
+          value: 'Connected',
+          helper: authState?.expiresAt ? `Session refreshes before ${new Date(authState.expiresAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.` : 'Ready for live sync.',
+        },
+        {
+          label: 'Vehicle snapshot',
+          value: isConnected ? 'Live' : 'Pending',
+          helper: isConnected && lastSynced
+            ? `Last synced ${new Date(lastSynced).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+            : 'Load your vehicle after sign-in.',
+        },
+        {
+          label: 'Fallback mode',
+          value: 'Demo available',
+          helper: 'Disconnect at any time and return to the preview dashboard.',
+        },
+      ]
+      : [
+        {
+          label: 'Official login',
+          value: 'Tesla-hosted',
+          helper: 'You leave this page briefly to authorize on Tesla’s own sign-in screen.',
+        },
+        {
+          label: 'Token exchange',
+          value: 'Same-origin',
+          helper: 'The callback finishes through this site’s `/api/tesla` route instead of a public CORS proxy.',
+        },
+        {
+          label: 'What loads',
+          value: 'Vehicles + data',
+          helper: 'After sign-in we fetch your vehicle list and a live vehicle snapshot.',
+        },
+      ];
+
     return (
       <Card
         className={classNames(
-          'p-6 md:p-8 overflow-hidden relative',
+          'p-6 md:p-8 overflow-hidden relative border shadow-2xl',
           className,
-          isDark ? 'bg-neutral-900/40 border-neutral-800' : 'bg-white border-neutral-200 shadow-2xl'
+          isDark ? 'bg-neutral-950/80 border-white/10' : 'bg-white/95 border-neutral-200'
         )}
       >
-        {isConnected && (
-          <div className="absolute top-0 right-0 p-4">
-            <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live System Active
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] opacity-80">
+              <span
+                className={classNames(
+                  'h-2.5 w-2.5 rounded-full',
+                  isConnected ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.7)]' : hasTeslaSession ? 'bg-amber-400' : 'bg-white/30'
+                )}
+              />
+              {isConnected ? 'Vehicle synced' : hasTeslaSession ? 'Tesla account connected' : 'Connection ready'}
             </div>
+            {lastSynced && isConnected ? (
+              <div className="text-xs opacity-60">
+                Last sync {new Date(lastSynced).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              </div>
+            ) : null}
           </div>
-        )}
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
-          <div className="flex-1 space-y-6">
+
+          <div className="space-y-4">
             <div className="space-y-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50">Tesla Intelligence Protocol</div>
-              <h3 className="text-3xl font-extrabold tracking-tight">Secure. Private. Owner-First.</h3>
-              <p className="text-base leading-relaxed opacity-70 max-w-xl">
-                Connect your vehicle via the Tesla Fleet API to unlock professional-grade telemetry,
-                FSD performance analytics, and regional safety insights. Your credentials never touch our servers.
+              <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50">Tesla account connection</div>
+              <h3 className="text-3xl font-extrabold tracking-tight">Sign in once. Sync your vehicle when you need it.</h3>
+              <p className="text-base leading-relaxed opacity-75 max-w-2xl">
+                Use Tesla’s official OAuth screen, return here automatically, and load a live vehicle snapshot without relying on third-party CORS workarounds.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <span className={classNames(
-                  'h-3 w-3 rounded-full',
-                  isConnected ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-neutral-700'
-                )} />
-                <span className="opacity-80">
-                  {isConnected ? 'Hardware Connected' : 'System Ready'}
-                </span>
-              </div>
-              {lastSynced && (
-                <div className="text-xs opacity-50 font-medium">
-                  Last Sync: {new Date(lastSynced).toLocaleTimeString()}
+            <div className="grid gap-3 sm:grid-cols-3">
+              {connectionHighlights.map((item) => (
+                <div
+                  key={item.label}
+                  className={classNames(
+                    'rounded-2xl border p-4',
+                    isDark ? 'border-white/10 bg-white/[0.03]' : 'border-neutral-200 bg-neutral-50'
+                  )}
+                >
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] opacity-45">{item.label}</div>
+                  <div className="mt-2 text-lg font-black tracking-tight">{item.value}</div>
+                  <p className="mt-2 text-sm leading-relaxed opacity-70">{item.helper}</p>
                 </div>
-              )}
+              ))}
             </div>
 
             {authError && (
-              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
                 {authError}
               </div>
             )}
 
-            {deviceAuth && (
-              <div className="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-1">Authorization Code</div>
-                    <div className="font-mono text-4xl font-black tracking-tighter" aria-label="Tesla verification code">
-                      {deviceAuth.userCode}
-                    </div>
-                  </div>
-                  <Button
-                    as="a"
-                    href={deviceAuth.verificationUri}
-                    target="_blank"
-                    rel="noreferrer"
-                    variant="primary"
-                    accent={accent}
-                    className="w-full sm:w-auto"
-                  >
-                    Authorize on Tesla.com
-                  </Button>
-                </div>
-                <p className="text-sm opacity-60 leading-relaxed italic">
-                  Complete the verification on Tesla's secure portal. We'll automatically update your dashboard once approved.
-                </p>
+            {!isAuthConfigured && !hasTeslaSession && (
+              <div className={classNames(
+                'rounded-2xl border px-4 py-3 text-sm leading-relaxed',
+                isDark ? 'border-amber-400/20 bg-amber-400/10 text-amber-100' : 'border-amber-300 bg-amber-50 text-amber-900'
+              )}>
+                This deployment still needs a Tesla OAuth client ID and secret configured before live sign-in will work.
               </div>
             )}
           </div>
 
-          <div className="flex w-full flex-col gap-3 lg:w-80">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button
-              onClick={isConnected ? onRefresh : onStartLogin}
+              onClick={hasTeslaSession ? onRefresh : onStartLogin}
               accent={accent}
               size="md"
-              disabled={isLoadingTelemetry || isPolling}
-              className="w-full text-base py-6"
+              disabled={isLoadingTelemetry || (!hasTeslaSession && !isAuthConfigured)}
+              className="w-full text-base py-6 sm:flex-1"
             >
-              {isConnected
-                ? isLoadingTelemetry ? 'Syncing...' : 'Refresh Telemetry'
-                : 'Connect My Tesla'}
+              {primaryLabel}
             </Button>
             <Button
               variant="secondary"
               isDark={isDark}
               onClick={onReset}
-              disabled={isPolling}
-              className="w-full opacity-80 hover:opacity-100"
+              className="w-full opacity-80 hover:opacity-100 sm:flex-1"
             >
-              {isConnected ? 'Disconnect System' : 'Use Demo Dashboard'}
+              {hasTeslaSession ? 'Disconnect Tesla account' : 'Use demo dashboard'}
             </Button>
           </div>
+
+          <p className="text-xs leading-relaxed opacity-55">
+            Tesla credentials are entered on Tesla’s own sign-in page. This app stores returned tokens locally in your browser so you can refresh vehicle data without signing in every time.
+          </p>
         </div>
       </Card>
     );
@@ -1539,6 +1549,81 @@
             aria-hidden="true"
           />
         </div>
+      </div>
+    );
+  }
+
+  function UpgradeModal({ isOpen, onClose, accent, offers }) {
+    if (!isOpen) return null;
+    const kitPrice = offers?.tripwire?.price || 19;
+    const coursePrice = offers?.upsell?.price || 49;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+        <Card className="relative w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
+          <div className="p-8 md:p-12 space-y-8">
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400">
+                Unlock Pro Intelligence
+              </div>
+              <h2 className="text-4xl font-black tracking-tight">The Ultimate Owner Toolkit</h2>
+              <p className="text-lg opacity-60 max-w-md mx-auto">
+                Get lifetime access to advanced analytics, priority safety alerts, and professional-grade checklists.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <h3 className="text-xs font-black uppercase tracking-widest opacity-40">What's Included</h3>
+                <ul className="space-y-4">
+                  {[
+                    'Historical Performance Trends',
+                    'FSD Disengagement Heatmaps',
+                    'Advanced Efficiency Analytics',
+                    'Global Aesthetic Customization',
+                    'Priority Firmware Intelligence',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm font-bold opacity-80">
+                      <span className="h-2 w-2 rounded-full bg-indigo-500 mt-1" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Lifetime Access</div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black">${kitPrice}</span>
+                    <span className="text-sm opacity-40 line-through">$49.99</span>
+                  </div>
+                  <p className="text-xs opacity-50 mt-4 leading-relaxed italic">
+                    One-time payment. No subscriptions. 100% money-back guarantee.
+                  </p>
+                </div>
+                <Button
+                  as="a"
+                  href={offers?.tripwire?.gumroadUrl || '#'}
+                  variant="primary"
+                  accent={accent}
+                  className="w-full mt-6 py-6 text-base"
+                >
+                  Secure Pro Now
+                </Button>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="text-xs font-bold opacity-40 hover:opacity-100 transition-opacity w-full text-center"
+            >
+              Skip for now, continue with restricted access
+            </button>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -1731,7 +1816,7 @@
                       <div className="text-xs uppercase tracking-[0.25em] opacity-70">Recent trips</div>
                       <div className="font-semibold">Trip distance, efficiency, Autopilot, and safety events</div>
                     </div>
-                    <Button as="a" href="#" variant="secondary" size="sm" isDark={isDark}>
+                    <Button as="a" href="#library?q=drive" variant="secondary" size="sm" isDark={isDark}>
                       Open trip detail
                     </Button>
                   </div>
@@ -1946,7 +2031,7 @@
               accent={accent}
               isDark={isDark}
             >
-              Open library
+              Open guides
             </Button>
           </div>
         </div>
@@ -1964,8 +2049,8 @@
     return (
       <section id="models" className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
-          title="The Ultimate Companion for Tesla Owners"
-          subtitle="TeslaHelper is a premium all-in-one web app that empowers Tesla owners to get more from their vehicles. Designed by Tesla enthusiasts for Tesla enthusiasts, it combines all the essentials of the official Tesla app with powerful new features that make ownership easier and more fun. Enjoy a friendly, tech-savvy experience that puts you in full control of your Tesla—anytime, anywhere."
+          title="Choose your Tesla model"
+          subtitle="Jump into model-specific guides, delivery checklists, and accessory fitment pages without digging through a generic help center."
         />
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {ids.map((id) => (
@@ -2159,8 +2244,8 @@
       <section id="library" className="mx-auto max-w-6xl px-4 pb-24">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <SectionTitle
-            title="Personalize Your Tesla Experience"
-            subtitle="Your Tesla is unique—your app experience should be too. TeslaHelper lets you customize climate and charging schedules, tailor notifications, and pin your favorite controls so you always see what matters most at a glance."
+            title="Owner guides library"
+            subtitle="Search by model, ownership topic, or software feature to find practical guides faster."
           />
           <div className="flex sm:flex-col items-start gap-2 sm:items-end" aria-label="Library controls">
             <Button
@@ -2184,7 +2269,7 @@
             <Card className={classNames('p-4 border', cardBg, borderSoft)}>
               <div className="grid md:grid-cols-4 gap-3">
                 <input
-                  placeholder="Query protocol (e.g., Sentry, FSD, Supercharging)"
+                  placeholder="Search charging, phone key, sentry, winter range..."
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   className={classNames(
@@ -2227,7 +2312,7 @@
                   href="#models"
                   variant="primary"
                   size="md"
-                  accent={ACCENTS.violet}
+                  accent={accent}
                   isDark={isDark}
                   className="text-center"
                 >
@@ -2274,36 +2359,32 @@
    * ------------------------------------------------------------------ */
   function TeslaHelperApp() {
     const [mode, setMode] = useState(() => {
-      if (typeof window === 'undefined') return 'dark';
+      if (typeof window === 'undefined') return 'light';
       const stored = window.localStorage?.getItem('teslahelper-theme');
       if (stored === 'light' || stored === 'dark') return stored;
-      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
-      return prefersDark ? 'dark' : 'light';
+      return 'light';
     });
     const [reduceMotion, setReduceMotion] = useState(false);
     const [headerCompact, setHeaderCompact] = useState(false);
     const [headerSearch, setHeaderSearch] = useState('');
     const [navMenuOpen, setNavMenuOpen] = useState(false);
     const navMenuRef = useRef(null);
-    const [showOnboarding, setShowOnboarding] = useState(true);
     const [showInstallModal, setShowInstallModal] = useState(false);
-    const [showTeslaModal, setShowTeslaModal] = useState(false);
-    const accent = useMemo(() => ACCENTS[BRAND.defaultAccent] || ACCENTS.violet, []);
+    const accent = useMemo(() => ACCENTS[BRAND.defaultAccent] || ACCENTS.ember || ACCENTS.violet, []);
     const isDark = mode === 'dark';
-    const pageBg = isDark ? 'bg-neutral-950 text-white' : 'bg-white text-neutral-900';
-    const headerBg = isDark ? 'bg-neutral-900/95 border-neutral-800' : 'bg-white/95 border-neutral-200';
+    const pageBg = isDark ? 'bg-[#0d1014] text-white' : 'bg-[#f3f2ee] text-[#171a20]';
+    const headerBg = isDark ? 'bg-[#111418]/82 border-white/10' : 'bg-[#f7f6f2]/78 border-black/8';
     const {
       telemetryData,
       telemetrySource,
       authState,
       authError,
-      deviceAuth,
-      startDeviceLogin,
+      startTeslaLogin,
       resetToDemo,
       isLoadingTelemetry,
-      isPolling,
       lastSynced,
       refreshTelemetry,
+      isAuthConfigured,
     } = useTeslaTelemetry();
 
     // Car images are loaded lazily from tesla_helper_base64_1280.json. The keys in
@@ -2373,11 +2454,6 @@
       }
     }, []);
     useEffect(() => {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => { });
-      }
-    }, []);
-    useEffect(() => {
       const handleAnchorClick = (event) => {
         if (typeof document === 'undefined') return;
         const anchor = event.target?.closest?.('a[href^="#"]');
@@ -2436,57 +2512,41 @@
     };
     const exploreMenuItems = [
       { href: '/', label: 'Homepage' },
-      { href: '#library', label: 'Open Library' },
-      {
-        href: '#my-tesla',
-        label: 'Connect Tesla account',
-        onClick: () => setShowTeslaModal(true),
-      },
-      { href: '#my-tesla', label: 'My Tesla' },
+      { href: '#connect', label: 'Connect Tesla account' },
+      { href: '#my-tesla', label: 'Vehicle dashboard' },
+      { href: '#library', label: 'Owner guides' },
+      { href: '#models', label: 'Model selector' },
       { href: '/start', label: 'Start' },
-      { href: '/kit', label: 'Kit' },
-      { href: '/upsell', label: 'Upsell' },
-      { href: '/musk-highway-runner', label: 'Runner' },
       { href: '/accessories/model-y', label: 'Accessories' },
       { href: '/chargers', label: 'Chargers' },
-      { href: '/insurance', label: 'Insurance' },
-      { href: '/disclosure', label: 'Disclosure' },
-      { href: '/thank-you', label: 'Thank you' },
+      { href: '/about', label: 'About' },
+      { href: '/contact', label: 'Contact' },
     ];
     const navTabs = [
-      { href: '#top', label: 'Home' },
-      { href: '#library', label: 'Library' },
+      { href: '#connect', label: 'Vehicle' },
+      { href: '#library', label: 'Guides' },
       { href: '#models', label: 'Models' },
-      { href: '#my-tesla', label: 'My Tesla' },
-      { href: '/start', label: 'Start' },
-      { href: '/musk-highway-runner', label: 'Runner' },
       { href: '/accessories/model-y', label: 'Accessories' },
+      { href: '/about', label: 'About' },
     ];
 
     return (
-      <div id="top" className={classNames('min-h-screen', pageBg)}>
+      <div id="top" className={classNames('min-h-screen selection:bg-[#e82127]/15', pageBg)}>
         <header
           className={classNames(
-            'sticky top-0 z-40 backdrop-blur border-b shadow-[0_1px_0_rgba(255,255,255,0.04)]',
+            'sticky top-0 z-40 border-b backdrop-blur-xl',
             headerBg
           )}
           style={headerStyle}
         >
-          <div
-            className={classNames(
-              'mx-auto max-w-6xl px-4 flex flex-col transition-[gap] duration-150',
-              headerCompact ? 'gap-2 py-2' : 'gap-3 py-3'
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <div className="relative" ref={navMenuRef}>
+          <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3 py-3 sm:py-4">
+              <div className="relative lg:hidden" ref={navMenuRef}>
                 <button
                   type="button"
                   className={classNames(
-                    'inline-flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition',
-                    isDark
-                      ? 'border-white/10 bg-white/5 text-white hover:border-white/30'
-                      : 'border-neutral-300 bg-white text-neutral-900 hover:border-neutral-400'
+                    'inline-flex h-10 w-10 items-center justify-center rounded-full border transition',
+                    isDark ? 'border-white/10 bg-white/[0.04] text-white' : 'border-black/10 bg-white/72 text-[#171a20]'
                   )}
                   aria-haspopup="menu"
                   aria-expanded={navMenuOpen}
@@ -2501,19 +2561,17 @@
                 >
                   <span className="sr-only">Toggle navigation</span>
                   <div className="flex flex-col justify-center space-y-1" aria-hidden="true">
-                    <span className="block h-0.5 w-5 rounded-full bg-current" />
                     <span className="block h-0.5 w-4 rounded-full bg-current" />
                     <span className="block h-0.5 w-5 rounded-full bg-current" />
+                    <span className="block h-0.5 w-3 rounded-full bg-current" />
                   </div>
                 </button>
                 {navMenuOpen && (
                   <div
                     id="main-nav-explore-menu"
                     className={classNames(
-                      'absolute left-0 mt-2 w-52 max-w-[calc(100vw-2rem)] rounded-xl border shadow-lg ring-1',
-                      isDark
-                        ? 'border-white/10 bg-neutral-900/95 text-white ring-black/30'
-                        : 'border-neutral-200 bg-white text-neutral-900 ring-black/5'
+                      'absolute left-0 mt-3 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border shadow-[0_24px_70px_rgba(15,23,42,0.14)]',
+                      isDark ? 'border-white/10 bg-[#15191e]/96 text-white' : 'border-black/8 bg-[#fbfaf7]/96 text-[#171a20]'
                     )}
                     role="menu"
                   >
@@ -2522,8 +2580,8 @@
                         <li key={item.href}>
                           <a
                             className={classNames(
-                              'block px-4 py-2 text-sm focus:outline-none',
-                              isDark ? 'hover:bg-white/10 focus:bg-white/10' : 'hover:bg-neutral-100 focus:bg-neutral-100'
+                              'block px-4 py-3 text-sm',
+                              isDark ? 'hover:bg-white/[0.06] focus:bg-white/[0.06]' : 'hover:bg-black/[0.03] focus:bg-black/[0.03]'
                             )}
                             href={item.href}
                             target={item.target}
@@ -2552,227 +2610,231 @@
                   </div>
                 )}
               </div>
-              <div className="flex flex-1 items-center gap-2 min-w-0">
-                <a
-                  href="https://teslahelper.app"
-                  className="inline-flex items-center justify-center md:justify-start"
-                  aria-label={BRAND.name}
-                >
-                  <BrandWordmark compact={headerCompact} />
-                  <span className="sr-only">{BRAND.name}</span>
-                </a>
-                <Button
-                  onClick={() => setShowTeslaModal(true)}
-                  variant="secondary"
-                  size={headerCompact ? 'xs' : 'sm'}
-                  className="rounded-full whitespace-nowrap"
-                  isDark={isDark}
-                >
-                  Connect
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-pressed={isDark}
-                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-                  onClick={() => setMode(isDark ? 'light' : 'dark')}
-                  isDark={isDark}
-                  className={classNames('rounded-full', headerCompact ? 'h-8 w-8 text-sm' : '')}
-                >
-                  {isDark ? '🌞' : '🌙'}
-                </Button>
-                <Button
-                  as="a"
-                  href="#library"
-                  variant="primary"
-                  size={headerCompact ? 'xs' : 'sm'}
-                  accent={accent}
-                  isDark={isDark}
-                  className="hidden md:inline-flex rounded-full"
-                >
-                  Open Library
-                </Button>
-                <Button
-                  as="a"
-                  href={SUPPORT_LINK}
-                  target="_blank"
-                  rel="noreferrer"
-                  variant="ghost"
-                  size={headerCompact ? 'xs' : 'sm'}
-                  isDark={isDark}
-                  className="rounded-full"
-                >
-                  Contribute
-                </Button>
-              </div>
+              <a href="/" className="inline-flex min-w-0 items-center" aria-label={BRAND.name}>
+                <BrandWordmark compact={headerCompact} />
+                <span className="sr-only">{BRAND.name}</span>
+              </a>
             </div>
-            <form
-              className={classNames('flex w-full items-center', headerCompact ? 'gap-2' : 'gap-3')}
-              role="search"
-              onSubmit={handleSearchSubmit}
-            >
-              <label className="sr-only" htmlFor="global-search">
-                Search the Tesla Helper library
-              </label>
-              <div className="relative flex-1">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true">
-                  🔍
-                </span>
-                <input
-                  id="global-search"
-                  value={headerSearch}
-                  onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="Search for news or Tesla tips"
+
+            <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+              {navTabs.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
                   className={classNames(
-                    'w-full rounded-full pl-11 pr-4 text-sm border focus:outline-none focus:ring-2 shadow-inner',
-                    headerCompact ? 'h-10' : 'h-11',
+                    'rounded-full px-4 py-2 text-sm font-medium transition',
                     isDark
-                      ? 'bg-neutral-900/90 border-white/10 text-white focus:ring-emerald-400/80 focus:border-emerald-400/80'
-                      : 'bg-white border-neutral-300 text-neutral-900 focus:ring-emerald-500/70 focus:border-emerald-500/70'
+                      ? 'text-white/72 hover:bg-white/[0.06] hover:text-white'
+                      : 'text-[#171a20]/72 hover:bg-black/[0.04] hover:text-[#171a20]'
                   )}
-                />
-              </div>
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-2 py-3 sm:py-4">
               <Button
+                as="a"
+                href="#connect"
+                variant="secondary"
+                size={headerCompact ? 'xs' : 'sm'}
+                className="hidden whitespace-nowrap sm:inline-flex"
+                isDark={isDark}
+              >
+                {authState?.status === 'connected' ? 'Connected' : 'Connect Tesla'}
+              </Button>
+              <Button
+                as="a"
+                href="#library"
                 variant="primary"
                 size={headerCompact ? 'xs' : 'sm'}
-                type="submit"
                 accent={accent}
                 isDark={isDark}
-                className="hidden md:inline-flex rounded-full px-4"
+                className="hidden md:inline-flex"
               >
-                Search
+                Owner Guides
               </Button>
-            </form>
-            <nav className="flex items-center overflow-x-auto pt-1" aria-label="Primary">
-              <ul className="flex items-center gap-3 text-sm font-semibold">
-                {navTabs.map((item) => (
-                  <li key={item.href}>
-                    <a
-                      href={item.href}
-                      className={classNames(
-                        'inline-flex items-center gap-1 rounded-full transition',
-                        headerCompact ? 'px-2.5 py-1.5 text-[13px]' : 'px-3 py-2',
-                        isDark
-                          ? 'text-white/80 hover:text-white hover:bg-white/10'
-                          : 'text-neutral-800 hover:text-black hover:bg-neutral-100',
-                        accent.hover
-                      )}
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <div className={classNames('h-[3px] w-full rounded-full', accent.underline)} />
+              <Button
+                variant="ghost"
+                size={headerCompact ? 'xs' : 'sm'}
+                aria-pressed={isDark}
+                aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+                onClick={() => setMode(isDark ? 'light' : 'dark')}
+                isDark={isDark}
+                className="min-w-[72px]"
+              >
+                {isDark ? 'Light' : 'Dark'}
+              </Button>
+            </div>
           </div>
         </header>
-        {/* Hero / quick links */}
-        <section className="relative overflow-hidden">
+        <section id="connect" className="relative overflow-hidden">
           <div
             className={classNames(
               'absolute inset-0 -z-10',
               isDark
-                ? 'bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950'
-                : 'bg-gradient-to-br from-violet-50 via-white to-white'
+                ? 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(232,33,39,0.14),transparent_24%),linear-gradient(180deg,#0d1014_0%,#12161b_55%,#0d1014_100%)]'
+                : 'bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_34%),radial-gradient(circle_at_82%_14%,rgba(232,33,39,0.12),transparent_22%),linear-gradient(180deg,#f8f7f3_0%,#f3f2ee_56%,#eceae3_100%)]'
             )}
             aria-hidden="true"
           />
-          <div className="absolute right-10 top-6 -z-10 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true" />
-          <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 grid md:grid-cols-2 gap-8 items-start">
-            <div className="space-y-4">
-              <p className="uppercase tracking-widest text-xs opacity-80">Tesla owners · Premium companion</p>
-              <h1
-                className="font-extrabold leading-tight"
-                style={{ fontSize: 'clamp(1.5rem, 2vw + 1rem, 2.25rem)', letterSpacing: '0.1px', lineHeight: 1.3 }}
-              >
-                TeslaHelper: Elevate Your Tesla Experience
-              </h1>
-              <ul className="mt-2 space-y-2 text-sm opacity-90">
-                <li className="flex items-start gap-2">
-                  <span aria-hidden="true">•</span>
-                  <span>
-                    The premium companion app that gives you deeper insights, smarter controls, and more personalization for your
-                    Tesla—without replacing the official app.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span aria-hidden="true">•</span>
-                  <span>
-                    Designed by Tesla enthusiasts for Tesla enthusiasts, it combines essentials from the official app with powerful
-                    new features that make ownership easier and more fun.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span aria-hidden="true">•</span>
-                  <span>
-                    Control your Tesla from anywhere with a clean, fast interface. Lock or unlock, precondition the cabin,
-                    check charge status, and manage multiple vehicles from one simple dashboard, so everyday tasks take just a
-                    tap.
-                  </span>
-                </li>
-              </ul>
-              <div className="mt-6 flex gap-3 flex-wrap">
-                <Button as="a" href="#onboarding" variant="primary" accent={accent} isDark={isDark}>
-                  Get Started with TeslaHelper
+          <div className={classNames('absolute inset-x-0 top-0 -z-10 h-px', accent.underline)} aria-hidden="true" />
+          <div className="absolute left-[8%] top-16 -z-10 h-64 w-64 rounded-full bg-white/20 blur-3xl" aria-hidden="true" />
+          <div className="absolute right-[6%] top-20 -z-10 h-72 w-72 rounded-full bg-[#e82127]/10 blur-3xl" aria-hidden="true" />
+          <div className="mx-auto grid max-w-[1240px] gap-10 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:items-start lg:gap-12">
+            <div className="space-y-8">
+              <div className={classNames(
+                'inline-flex items-center gap-3 rounded-full border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.32em]',
+                isDark ? 'border-white/10 bg-white/[0.04] text-white/72' : 'border-black/8 bg-white/72 text-[#171a20]/64'
+              )}>
+                <span className="h-2 w-2 rounded-full bg-[#e82127]" />
+                Independent owner tools
+              </div>
+              <div className="space-y-5">
+                <h1
+                  className="max-w-4xl font-semibold tracking-[-0.05em] leading-none"
+                  style={{ fontSize: 'clamp(2.6rem, 4vw + 1rem, 5.4rem)' }}
+                >
+                  Your Tesla, without the clutter.
+                </h1>
+                <p className="max-w-2xl text-base leading-relaxed opacity-72 md:text-lg" style={{ lineHeight: 1.72 }}>
+                  Connect once, pull a live vehicle snapshot, and move directly into the guides, setup steps, and ownership answers that actually matter.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={authState?.status === 'connected' ? () => refreshTelemetry() : () => startTeslaLogin()}
+                  variant="primary"
+                  accent={accent}
+                  isDark={isDark}
+                >
+                  {authState?.status === 'connected' ? 'Refresh my vehicle' : 'Sign in with Tesla'}
                 </Button>
-                <Button onClick={() => setShowTeslaModal(true)} variant="secondary" isDark={isDark}>
-                  See How It Works
+                <Button as="a" href="#library" variant="secondary" isDark={isDark}>
+                  Browse owner guides
                 </Button>
                 <Button onClick={() => setShowInstallModal(true)} variant="ghost" isDark={isDark}>
-                  Start with TeslaHelper
+                  Install the app
                 </Button>
               </div>
-              <p className="mt-2 text-xs opacity-80">
-                Ready to Upgrade Your Ride? Experience a smarter way to own your Tesla. Connect your vehicle, explore your drive
-                data, and unlock more control in just a few clicks.
-              </p>
-            </div>
-            <div className="relative w-full">
-              {showOnboarding ? (
-                <div className="space-y-3">
-                  <div className="flex justify-end">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      isDark={isDark}
-                      onClick={() => setShowOnboarding(false)}
-                      className="rounded-full"
-                    >
-                      Hide account sign up
-                    </Button>
+              <form
+                className={classNames(
+                  'rounded-[30px] border p-3 sm:p-4',
+                  isDark ? 'border-white/10 bg-white/[0.04]' : 'border-black/8 bg-white/72'
+                )}
+                role="search"
+                onSubmit={handleSearchSubmit}
+              >
+                <label className="sr-only" htmlFor="hero-library-search">
+                  Search the Tesla Helper library
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex-1">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.32em] opacity-55">Search the library</div>
+                    <input
+                      id="hero-library-search"
+                      value={headerSearch}
+                      onChange={(e) => setHeaderSearch(e.target.value)}
+                      placeholder="Charging at home, phone key, winter range..."
+                      className={classNames(
+                        'w-full rounded-full border px-5 py-3.5 text-sm focus:outline-none focus:ring-2',
+                        isDark
+                          ? 'border-white/10 bg-[#0d1014] text-white placeholder:text-white/28 focus:ring-white/18'
+                          : 'border-black/8 bg-[#f8f7f3] text-[#171a20] placeholder:text-[#171a20]/38 focus:ring-black/10'
+                      )}
+                    />
                   </div>
-                  <OnboardingWizard accent={accent} isDark={isDark} />
-                </div>
-              ) : (
-                <div className="flex justify-center">
-                  <Button
-                    variant="primary"
-                    accent={accent}
-                    isDark={isDark}
-                    className="w-full rounded-2xl md:w-auto"
-                    onClick={() => setShowOnboarding(true)}
-                  >
-                    Account sign up
+                  <Button type="submit" variant="primary" accent={accent} isDark={isDark} className="w-full sm:mt-5 sm:w-auto">
+                    Search library
                   </Button>
                 </div>
-              )}
+              </form>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    label: 'Account',
+                    value: 'Tesla OAuth',
+                    detail: 'Official Tesla-hosted sign-in with a clean return path.',
+                  },
+                  {
+                    label: 'Vehicle',
+                    value: telemetrySource === 'tesla' ? 'Live' : 'Ready',
+                    detail: telemetrySource === 'tesla' ? 'Current snapshot is loaded from your Tesla account.' : 'Connect when you are ready to sync.',
+                  },
+                  {
+                    label: 'Library',
+                    value: 'Searchable',
+                    detail: 'Model, charging, safety, and ownership guidance in one place.',
+                  },
+                ].map((item) => (
+                  <Card
+                    key={item.label}
+                    className={classNames(
+                      'border p-5',
+                      isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-black/8'
+                    )}
+                  >
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.28em] opacity-48">{item.label}</div>
+                    <div className="mt-3 text-[1.6rem] font-semibold tracking-[-0.03em]">{item.value}</div>
+                    <p className="mt-3 text-sm leading-relaxed opacity-68">{item.detail}</p>
+                  </Card>
+                ))}
+              </div>
+              <HomeWidgetGrid data={telemetryData} config={{ template: 'balanced' }} accent={accent} isDark={isDark} />
+            </div>
+            <div className="lg:pt-8">
+              <TeslaConnectCard
+                accent={accent}
+                isDark={isDark}
+                telemetrySource={telemetrySource}
+                authState={authState}
+                authError={authError}
+                lastSynced={lastSynced}
+                isLoadingTelemetry={isLoadingTelemetry}
+                isAuthConfigured={isAuthConfigured}
+                onStartLogin={startTeslaLogin}
+                onReset={resetToDemo}
+                onRefresh={refreshTelemetry}
+                className="w-full"
+              />
             </div>
           </div>
-          <div className="mx-auto max-w-6xl px-4">
-            <div className={classNames('h-1 rounded-full w-24', accent.underline)} />
+        </section>
+        <section className="mx-auto max-w-[1240px] px-4 py-10 sm:px-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                title: 'Connect cleanly',
+                body: 'Tesla-hosted OAuth, a first-party callback, and an ownership flow that does not feel improvised.',
+              },
+              {
+                title: 'See the live snapshot',
+                body: 'The first useful action is loading your vehicles and a current status view you can refresh on demand.',
+              },
+              {
+                title: 'Move into the right guide',
+                body: 'Charging, delivery, winter driving, accessories, and setup help stay close to the vehicle context.',
+              },
+            ].map((item) => (
+              <Card
+                key={item.title}
+                className={classNames(
+                  'border p-6',
+                  isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-black/8'
+                )}
+              >
+                <div className="mb-4 h-1 w-10 rounded-full bg-[#e82127]" aria-hidden="true" />
+                <div className="text-xl font-semibold tracking-[-0.03em]">{item.title}</div>
+                <p className="mt-3 text-sm leading-relaxed opacity-72">{item.body}</p>
+              </Card>
+            ))}
           </div>
         </section>
-        {/* Models and library */}
-        <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
-        <LibraryPanel accent={accent} isDark={isDark} />
-        <AdsenseShowcase accent={accent} isDark={isDark} />
         <TelemetryAnalyticsSection
           sectionId="my-tesla"
-          title="Drive Analytics & Insights"
-          subtitle="Understand your Tesla like never before with in-depth analytics on every drive. TeslaHelper turns your driving data into actionable insights to help you drive smarter and more efficiently. See detailed trip reports, energy use, and efficiency trends over time so you can get the most out of every charge."
+          title="Live Tesla dashboard preview"
+          subtitle="After you connect, refresh to pull your vehicles and a current data snapshot. If you are not signed in yet, the demo dashboard stays available so the page is still useful."
           accent={accent}
           isDark={isDark}
           data={telemetryData}
@@ -2781,44 +2843,12 @@
           isLoadingTelemetry={isLoadingTelemetry}
           onRefresh={refreshTelemetry}
         />
-        <section className="mx-auto max-w-6xl px-4 pb-10" aria-label="Remote Control & Convenience">
-          <Card className={classNames('border px-3 py-3 md:px-4 md:py-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200')}>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="font-semibold flex items-center gap-2">
-                <span className="text-lg" aria-hidden="true">⭐</span>
-                Remote Control & Convenience
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-2 w-full md:w-auto">
-                {[
-                  { label: 'My Tesla', href: '#my-tesla', icon: '📊' },
-                  { label: 'Models', href: '#models', icon: '🚗' },
-                  { label: 'Video Library', href: '#library', icon: '🎞️' },
-                  { label: 'Charging', href: '#library?q=charging', icon: '🔌' },
-                  { label: 'Autopilot / FSD', href: '#library?q=autopilot', icon: '🧭' },
-                  { label: 'Safety', href: '#library?q=sentry', icon: '🛡️' },
-                ].map((q) => (
-                  <a
-                    key={q.label}
-                    data-quicklink
-                    href={q.href}
-                    className={classNames(
-                      'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold justify-center hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                      isDark ? 'bg-neutral-800 text-white' : 'bg-white text-black',
-                      accent.hover
-                    )}
-                  >
-                    <span aria-hidden="true">{q.icon}</span>
-                    {q.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </section>
+        <LibraryPanel accent={accent} isDark={isDark} />
+        <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
         <section className="mx-auto max-w-6xl px-4 pb-16">
           <SectionTitle
-            title="Beyond the Official Tesla App"
-            subtitle="Think of TeslaHelper as the perfect complement to the official Tesla app. You still keep everything Tesla provides, but add richer analytics, smarter shortcuts, and owner-focused tools that fill in the gaps—so you open TeslaHelper first."
+            title="Cross-check with official Tesla resources"
+            subtitle="TeslaHelper is meant to be practical, not authoritative. Use these official Tesla references whenever you need final confirmation."
           />
           <div className="grid md:grid-cols-2 gap-4">
             {OFFICIAL_LINKS.map((link) => (
@@ -2852,9 +2882,9 @@
             <div className="text-center md:text-left">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
             <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
               <div className="flex items-center gap-4">
-                <a className="hover:opacity-100" href="#">Terms</a>
-                <a className="hover:opacity-100" href="#">Privacy</a>
-                <a className="hover:opacity-100" href="#">Accessibility</a>
+                <a className="hover:opacity-100" href="/terms">Terms</a>
+                <a className="hover:opacity-100" href="/privacy">Privacy</a>
+                <a className="hover:opacity-100" href="/contact">Contact</a>
                 <a className="hover:opacity-100" href="https://www.tesla.com/legal/trademark-copyright" target="_blank" rel="noreferrer">
                   Tesla legal
                 </a>
@@ -2869,50 +2899,11 @@
                 className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white shadow-lg shadow-red-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 style={{ background: 'linear-gradient(90deg, #ef4444, #f87171)' }}
               >
-                <span aria-hidden="true">⚡</span> Support Us
+                <span aria-hidden="true">⚡</span> Support TeslaHelper
               </a>
             </div>
           </div>
         </footer>
-        {showTeslaModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Connect your Tesla account"
-            onClick={() => setShowTeslaModal(false)}
-          >
-            <div className="absolute inset-0 bg-black/60" />
-            <div
-              className="relative z-10 w-full max-w-3xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-black/70 text-white text-2xl font-bold shadow-lg hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                aria-label="Close"
-                onClick={() => setShowTeslaModal(false)}
-              >
-                ×
-              </button>
-              <TeslaConnectCard
-                accent={accent}
-                isDark={isDark}
-                telemetrySource={telemetrySource}
-                authState={authState}
-                authError={authError}
-                deviceAuth={deviceAuth}
-                lastSynced={lastSynced}
-                isLoadingTelemetry={isLoadingTelemetry}
-                isPolling={isPolling}
-                onStartLogin={startDeviceLogin}
-                onReset={resetToDemo}
-                onRefresh={refreshTelemetry}
-                className="w-full"
-              />
-            </div>
-          </div>
-        )}
         {showInstallModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4"

@@ -5,6 +5,10 @@
 
   const TESLA_AUTH_STORAGE_KEY = 'teslahelper.teslaAuth';
   const TESLA_AUTH_STATE_KEY = 'teslahelper.teslaAuth.state';
+  const DEFAULT_TESLA_CONFIG = {
+    audience: 'https://fleet-api.prd.na.vn.cloud.tesla.com',
+    tokenEndpoint: 'https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token',
+  };
   const trimAuthValue = (value) => (typeof value === 'string' ? value.trim() : value);
 
   const TESLA_REDIRECT_URI = (() => {
@@ -18,7 +22,7 @@
       'https://teslahelper.app/auth/callback'
     );
   })();
-  const REDIRECT_TARGET = '/start';
+  const REDIRECT_TARGET = '/#my-tesla';
 
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
@@ -33,13 +37,13 @@
   const teslaEnv = (typeof window !== 'undefined' && window.APP_ENV?.teslaAuth) || {};
 
   const TESLA_AUTH_CONFIG = {
-    clientId: trimAuthValue(env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || 'ownerapi'),
+    clientId: trimAuthValue(env('NEXT_PUBLIC_TESLA_CLIENT_ID') || teslaEnv.clientId || ''),
     clientSecret: trimAuthValue(env('TESLA_CLIENT_SECRET') || teslaEnv.clientSecret || ''),
-    audience: trimAuthValue(teslaEnv.audience || 'https://fleet-api.prd.na.vn.cloud.tesla.com'),
-    tokenEndpoint: trimAuthValue(teslaEnv.tokenEndpoint || 'https://fleet-auth.prd.na.vn.cloud.tesla.com/oauth2/v3/token'),
+    audience: trimAuthValue(teslaEnv.audience || DEFAULT_TESLA_CONFIG.audience),
+    tokenEndpoint: trimAuthValue(teslaEnv.tokenEndpoint || DEFAULT_TESLA_CONFIG.tokenEndpoint),
     redirectUri: trimAuthValue(TESLA_REDIRECT_URI),
+    backendOrigin: trimAuthValue(teslaEnv.backendOrigin || ''),
   };
-  const TESLA_CORS_PROXY = 'https://corsproxy.io/';
 
   const setStatus = (message, isError = false, detail = '') => {
     if (statusEl) {
@@ -72,39 +76,38 @@
     return true;
   };
 
-  const exchangeToken = async (authCode) => {
-    const params = new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: TESLA_AUTH_CONFIG.clientId,
-      code: authCode,
-      redirect_uri: TESLA_AUTH_CONFIG.redirectUri,
-    });
-
-    if (TESLA_AUTH_CONFIG.clientSecret) {
-      params.append('client_secret', TESLA_AUTH_CONFIG.clientSecret);
-    }
-    if (TESLA_AUTH_CONFIG.audience) {
-      params.append('audience', TESLA_AUTH_CONFIG.audience);
-    }
-
-    const response = await fetch(`${TESLA_CORS_PROXY}${TESLA_AUTH_CONFIG.tokenEndpoint}`, {
+  const postJson = async (url, payload) => {
+    const apiUrl = TESLA_AUTH_CONFIG.backendOrigin
+      ? `${TESLA_AUTH_CONFIG.backendOrigin.replace(/\/$/, '')}${url}`
+      : url;
+    const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
+    let body = {};
+    try {
+      body = await response.json();
+    } catch (error) {
+      body = {};
+    }
 
     if (!response.ok) {
-      let reason = 'Token exchange failed';
-      try {
-        const payload = await response.json();
-        reason = payload.error_description || payload.error || reason;
-      } catch (err) {
-        /* ignore parse error */
-      }
-      throw new Error(reason);
+      throw new Error(body.error || 'Request failed.');
     }
 
-    return response.json();
+    return body;
+  };
+
+  const exchangeToken = async (authCode) => {
+    return postJson('/api/tesla/exchange', {
+      code: authCode,
+      clientId: TESLA_AUTH_CONFIG.clientId,
+      clientSecret: TESLA_AUTH_CONFIG.clientSecret,
+      audience: TESLA_AUTH_CONFIG.audience,
+      redirectUri: TESLA_AUTH_CONFIG.redirectUri,
+      tokenEndpoint: TESLA_AUTH_CONFIG.tokenEndpoint,
+    });
   };
 
   const completeLogin = async () => {
@@ -130,12 +133,13 @@
         expiresAt: Date.now() + (token.expires_in || 0) * 1000,
       };
       persistAuth(payload);
+      window.history.replaceState({}, document.title, window.location.pathname);
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.removeItem(TESLA_AUTH_STATE_KEY);
       }
       setStatus('Signed in with Tesla. Redirecting…');
       setTimeout(() => {
-        window.location.href = REDIRECT_TARGET;
+        window.location.replace(REDIRECT_TARGET);
       }, 600);
     } catch (err) {
       setStatus('Unable to finish Tesla sign-in.', true, err?.message || 'Token exchange failed.');

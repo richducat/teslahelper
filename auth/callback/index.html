@@ -17,31 +17,41 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tesla Helper · Auth callback</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
   <base href="/" />
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data:; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.na.vn.cloud.tesla.com https://fleet-api.prd.na.vn.cloud.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-api.prd.vn.cloud.tesla.com https://corsproxy.io https://www.googletagmanager.com https://www.google-analytics.com; frame-ancestors 'none';" />
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self' https://auth.tesla.com https://fleet-auth.prd.vn.cloud.tesla.com https://fleet-auth.prd.na.vn.cloud.tesla.com https://fleet-api.prd.na.vn.cloud.tesla.com https://www.googletagmanager.com https://www.google-analytics.com; base-uri 'none'; object-src 'none';" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0b0b0f" />
   <meta name="color-scheme" content="dark light" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/config/runtime-public.js"></script>
+  <script src="/api/runtime-env.js"></script>
   <script src="/config/runtime-env.js"></script>
   <script defer src="/auth/callback/callback.js"></script>
 </head>
 
-<body class="min-h-screen bg-neutral-950 text-white">
+<body class="min-h-screen bg-neutral-950 text-white" style="font-family: 'Manrope', system-ui, sans-serif;">
   <main class="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-4 py-12 text-center">
-    <div class="space-y-4">
+    <div class="space-y-5 rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 shadow-2xl">
       <div class="flex justify-center">
-        <svg class="h-12 w-12 text-emerald-400" viewBox="0 0 32 32" role="img" aria-hidden="true" focusable="false">
+        <svg class="h-12 w-12 text-amber-400" viewBox="0 0 32 32" role="img" aria-hidden="true" focusable="false">
           <rect x="4" y="4" width="24" height="24" rx="6" class="fill-current opacity-90" />
           <path
             d="M10.5 21.5h4.25a3.75 3.75 0 0 0 3.75-3.75v-.5A3.25 3.25 0 0 0 15.25 14H10.5v-3h11v2h-4.25a3.25 3.25 0 0 1 0 6.5H10.5v2Z"
             class="fill-white" />
         </svg>
       </div>
-      <h1 class="text-2xl font-bold">Connecting your Tesla account…</h1>
-      <p id="status" class="text-sm text-neutral-200">Finishing secure sign-in with Tesla.</p>
+      <div class="space-y-2">
+        <p class="text-[11px] font-black uppercase tracking-[0.28em] text-white/50">Tesla account callback</p>
+        <h1 class="text-2xl font-bold">Finishing your Tesla sign-in…</h1>
+      </div>
+      <p id="status" class="text-sm text-neutral-200">Exchanging your authorization code and preparing the dashboard.</p>
       <p id="detail" class="text-sm text-neutral-400"></p>
+      <p class="text-xs leading-relaxed text-neutral-500">When this succeeds you will be sent back to the live dashboard section automatically.</p>
       <div class="pt-4">
         <a id="home-link" href="/"
           class="hidden inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 font-semibold text-neutral-900 hover:bg-neutral-100">

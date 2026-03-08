@@ -1339,7 +1339,7 @@
       (typeof window !== 'undefined' && window.APP_ENV?.adsenseSidebarSlotId) || ADSENSE_CONFIG.homeSlot;
 
     return (
-      <section id="sponsored" className="mx-auto max-w-6xl px-4 pb-16" aria-label="Sponsored offers">
+      <section id="sponsored" className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-6" aria-label="Sponsored offers">
         <SectionTitle
           title="Sponsored picks for Tesla owners"
           subtitle="Google AdSense placements appear here, mirroring Yahoo-style inline ads so sponsored content feels native while supporting TeslaHelper."
@@ -1420,64 +1420,78 @@
     return (
       <Card
         className={classNames(
-          'p-6 md:p-8 overflow-hidden relative border shadow-2xl',
+          'relative overflow-hidden border p-6 md:p-8',
           className,
-          isDark ? 'bg-neutral-950/80 border-white/10' : 'bg-white/95 border-neutral-200'
+          isDark ? 'bg-[#13171c]/84 border-white/10' : 'bg-white/74 border-black/8'
         )}
       >
-        <div className="flex flex-col gap-6">
+        <div className="absolute inset-x-0 top-0 h-px bg-[#e82127]" aria-hidden="true" />
+        <div className="flex flex-col gap-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] opacity-80">
+            <div
+              className={classNames(
+                'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em]',
+                isDark ? 'border-white/10 bg-white/[0.04] text-white/70' : 'border-black/8 bg-black/[0.03] text-[#171a20]/64'
+              )}
+            >
               <span
                 className={classNames(
-                  'h-2.5 w-2.5 rounded-full',
-                  isConnected ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.7)]' : hasTeslaSession ? 'bg-amber-400' : 'bg-white/30'
+                  'h-2 w-2 rounded-full',
+                  isConnected ? 'bg-[#e82127]' : hasTeslaSession ? 'bg-[#f59e0b]' : isDark ? 'bg-white/40' : 'bg-[#171a20]/28'
                 )}
               />
               {isConnected ? 'Vehicle synced' : hasTeslaSession ? 'Tesla account connected' : 'Connection ready'}
             </div>
             {lastSynced && isConnected ? (
-              <div className="text-xs opacity-60">
+              <div className="text-xs opacity-55">
                 Last sync {new Date(lastSynced).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
               </div>
             ) : null}
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50">Tesla account connection</div>
-              <h3 className="text-3xl font-extrabold tracking-tight">Sign in once. Sync your vehicle when you need it.</h3>
-              <p className="text-base leading-relaxed opacity-75 max-w-2xl">
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.32em] opacity-52">Tesla account connection</div>
+              <h3 className="text-[2rem] font-semibold tracking-[-0.04em] leading-tight">Sign in once. Pull a live snapshot when you need it.</h3>
+              <p className="max-w-2xl text-base leading-relaxed opacity-72">
                 Use Tesla’s official OAuth screen, return here automatically, and load a live vehicle snapshot without relying on third-party CORS workarounds.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {connectionHighlights.map((item) => (
+            <div
+              className={classNames(
+                'overflow-hidden rounded-[26px] border',
+                isDark ? 'border-white/10 bg-white/[0.03]' : 'border-black/8 bg-black/[0.02]'
+              )}
+            >
+              {connectionHighlights.map((item, index) => (
                 <div
                   key={item.label}
                   className={classNames(
-                    'rounded-2xl border p-4',
-                    isDark ? 'border-white/10 bg-white/[0.03]' : 'border-neutral-200 bg-neutral-50'
+                    'grid gap-2 px-4 py-4 sm:grid-cols-[minmax(0,120px)_minmax(0,1fr)_auto] sm:items-center',
+                    index < connectionHighlights.length - 1 && (isDark ? 'border-b border-white/8' : 'border-b border-black/8')
                   )}
                 >
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] opacity-45">{item.label}</div>
-                  <div className="mt-2 text-lg font-black tracking-tight">{item.value}</div>
-                  <p className="mt-2 text-sm leading-relaxed opacity-70">{item.helper}</p>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.28em] opacity-48">{item.label}</div>
+                  <p className="text-sm leading-relaxed opacity-72">{item.helper}</p>
+                  <div className="text-sm font-semibold tracking-[0.02em] opacity-64">{item.value}</div>
                 </div>
               ))}
             </div>
 
             {authError && (
-              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
+              <div className={classNames(
+                'rounded-[24px] border px-4 py-3 text-sm font-semibold',
+                isDark ? 'border-red-500/25 bg-red-500/10 text-red-200' : 'border-red-200 bg-red-50 text-red-700'
+              )}>
                 {authError}
               </div>
             )}
 
             {!isAuthConfigured && !hasTeslaSession && (
               <div className={classNames(
-                'rounded-2xl border px-4 py-3 text-sm leading-relaxed',
-                isDark ? 'border-amber-400/20 bg-amber-400/10 text-amber-100' : 'border-amber-300 bg-amber-50 text-amber-900'
+                'rounded-[24px] border px-4 py-3 text-sm leading-relaxed',
+                isDark ? 'border-amber-400/20 bg-amber-400/10 text-amber-100' : 'border-amber-200 bg-amber-50 text-amber-900'
               )}>
                 This deployment still needs a Tesla OAuth client ID and secret configured before live sign-in will work.
               </div>
@@ -1490,7 +1504,8 @@
               accent={accent}
               size="md"
               disabled={isLoadingTelemetry || (!hasTeslaSession && !isAuthConfigured)}
-              className="w-full text-base py-6 sm:flex-1"
+              isDark={isDark}
+              className="w-full text-base sm:flex-1"
             >
               {primaryLabel}
             </Button>
@@ -1522,13 +1537,13 @@
     return (
       <Card
         className={classNames(
-          'p-6 h-full transition-all duration-300 transform hover:scale-[1.02]',
-          isDark ? 'bg-neutral-900/40 border-neutral-800' : 'bg-white border-neutral-200'
+          'h-full p-6',
+          isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8'
         )}
       >
-        <div className="text-[10px] font-black uppercase tracking-[0.25em] opacity-40">{label}</div>
-        <div className="mt-3 text-3xl font-black tracking-tight leading-tight">{value}</div>
-        {helper ? <div className="mt-1 text-xs font-semibold opacity-60 italic">{helper}</div> : null}
+        <div className="text-[10px] font-semibold uppercase tracking-[0.28em] opacity-45">{label}</div>
+        <div className="mt-4 text-3xl font-semibold tracking-[-0.04em] leading-tight">{value}</div>
+        {helper ? <div className="mt-2 text-xs font-medium opacity-58">{helper}</div> : null}
         <div className={classNames('mt-4 h-1 w-12 rounded-full', accent.underline)} aria-hidden="true" />
       </Card>
     );
@@ -1542,9 +1557,9 @@
           <span>{label}</span>
           <span className="opacity-70">{pct}%</span>
         </div>
-        <div className={classNames('h-2 rounded-full', isDark ? 'bg-neutral-800' : 'bg-neutral-200')} role="presentation">
+        <div className={classNames('h-2 rounded-full', isDark ? 'bg-white/10' : 'bg-black/[0.08]')} role="presentation">
           <div
-            className="h-full rounded-full bg-emerald-500"
+            className="h-full rounded-full bg-[#171a20]"
             style={{ width: `${pct}%` }}
             aria-hidden="true"
           />
@@ -1633,15 +1648,15 @@
       <Card
         className={classNames(
           'p-5 flex flex-col gap-4',
-          isDark ? 'bg-neutral-900/40 border-neutral-800' : 'bg-white border-neutral-200'
+          isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8'
         )}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <div className="font-extrabold tracking-tight leading-none">{trip.name}</div>
-            <div className="text-[10px] font-black uppercase tracking-widest opacity-40">{trip.date}</div>
+            <div className="font-semibold tracking-[-0.03em] leading-none">{trip.name}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.28em] opacity-42">{trip.date}</div>
           </div>
-          <div className={classNames('text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm', accent.btn, 'text-white')}>
+          <div className={classNames('rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]', accent.btn, 'text-white')}>
             {trip.autopilotPct}% Protocols Active
           </div>
         </div>
@@ -1670,8 +1685,8 @@
             <span
               key={ev}
               className={classNames(
-                'inline-flex items-center gap-1 rounded-full px-2 py-1 font-semibold',
-                isDark ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-800'
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold',
+                isDark ? 'bg-white/[0.06] text-white' : 'bg-black/[0.04] text-[#171a20]'
               )}
             >
               <span aria-hidden="true">⚠️</span>
@@ -1687,12 +1702,19 @@
     const maxMiles = Math.max(...weeklyMiles.map((d) => d.miles));
     return (
       <div className="flex items-end gap-2" aria-label="Autopilot miles this week">
-        {weeklyMiles.map((d) => {
+        {weeklyMiles.map((d, index) => {
           const height = (d.miles / maxMiles) * 100;
           return (
             <div key={d.label} className="flex flex-col items-center gap-2 text-xs">
               <div
-                className={classNames('w-9 rounded-md bg-blue-500/80', isDark ? 'bg-blue-500/80' : 'bg-blue-500/70')}
+                className={classNames(
+                  'w-9 rounded-md',
+                  index === weeklyMiles.length - 1
+                    ? 'bg-[#e82127]'
+                    : isDark
+                      ? 'bg-white/60'
+                      : 'bg-[#171a20]/80'
+                )}
                 style={{ height: `${height}%`, minHeight: '32px' }}
                 aria-hidden="true"
               />
@@ -1721,7 +1743,7 @@
     const disclosureId = useId();
     const { summary, trips, fsd, safety, achievements } = data || ANALYTICS_MOCK;
     return (
-      <section id={sectionId} className="mx-auto max-w-6xl px-4 pb-16">
+      <section id={sectionId} className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <SectionTitle
             title={title || 'Telemetry, FSD, and safety analytics'}
@@ -1748,10 +1770,10 @@
                   className={classNames(
                     'rounded-full px-2 py-1 font-semibold',
                     telemetrySource === 'tesla'
-                      ? 'bg-emerald-500/20 text-emerald-500'
+                      ? 'bg-[#e82127]/12 text-[#e82127]'
                       : isDark
-                        ? 'bg-neutral-800 text-white'
-                        : 'bg-neutral-100 text-neutral-800'
+                        ? 'bg-white/[0.06] text-white'
+                        : 'bg-black/[0.04] text-[#171a20]'
                   )}
                 >
                   {telemetrySource === 'tesla' ? 'Live Tesla data' : 'Demo data'}
@@ -1763,8 +1785,8 @@
                 <button
                   type="button"
                   className={classNames(
-                    'underline underline-offset-4 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500',
-                    isDark ? 'text-white' : 'text-neutral-800'
+                    'underline underline-offset-4 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e82127]',
+                    isDark ? 'text-white' : 'text-[#171a20]'
                   )}
                   onClick={() => onRefresh()}
                 >
@@ -1810,7 +1832,7 @@
 
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="lg:col-span-2 space-y-4">
-                <Card className={classNames('border p-4', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+                <Card className={classNames('border p-4', isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8')}>
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
                       <div className="text-xs uppercase tracking-[0.25em] opacity-70">Recent trips</div>
@@ -1828,7 +1850,7 @@
                 </Card>
               </div>
 
-              <Card className={classNames('border p-4 space-y-4', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+              <Card className={classNames('border p-4 space-y-4', isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8')}>
                 <div className="text-xs uppercase tracking-[0.25em] opacity-70">Autopilot week</div>
                 <div className="flex items-center justify-between">
                   <div>
@@ -1845,13 +1867,13 @@
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
-              <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+              <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8')}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-xs uppercase tracking-[0.25em] opacity-70">Safety events</div>
                     <div className="font-semibold">Hard braking, acceleration, turns, speeding</div>
                   </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-1 text-xs font-semibold text-amber-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#e82127]/12 px-2 py-1 text-xs font-semibold text-[#e82127]">
                     Real-time from telemetry
                   </span>
                 </div>
@@ -1879,7 +1901,7 @@
                       key={alert}
                       className={classNames(
                         'flex items-center gap-2 rounded-lg px-3 py-2 text-sm',
-                        isDark ? 'bg-neutral-800' : 'bg-neutral-100'
+                        isDark ? 'bg-white/[0.06]' : 'bg-black/[0.04]'
                       )}
                     >
                       <span aria-hidden="true">🚨</span>
@@ -1889,7 +1911,7 @@
                 </div>
               </Card>
 
-              <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+              <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8')}>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xs uppercase tracking-[0.25em] opacity-70">Achievements</div>
@@ -1913,7 +1935,7 @@
                   <div
                     className={classNames(
                       'space-y-2 rounded-lg border p-3',
-                      isDark ? 'border-neutral-800 bg-neutral-900/80' : 'border-neutral-200 bg-neutral-50'
+                      isDark ? 'border-white/10 bg-white/[0.04]' : 'border-black/8 bg-black/[0.02]'
                     )}
                   >
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] opacity-70">
@@ -1945,9 +1967,9 @@
                           key={reward.id}
                           className={classNames(
                             'inline-flex items-center gap-1 rounded-full px-2 py-1',
-                            isDark ? 'bg-neutral-800 text-neutral-50' : 'bg-white text-neutral-800',
+                            isDark ? 'bg-white/[0.06] text-neutral-50' : 'bg-white text-[#171a20]',
                             'shadow-sm ring-1 ring-inset',
-                            isDark ? 'ring-neutral-700' : 'ring-neutral-200'
+                            isDark ? 'ring-white/10' : 'ring-black/8'
                           )}
                         >
                           <span aria-hidden="true">{reward.icon}</span>
@@ -1959,7 +1981,7 @@
                 </div>
               </Card>
 
-              <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white border-neutral-200')}>
+              <Card className={classNames('border p-4 space-y-3', isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8')}>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xs uppercase tracking-[0.25em] opacity-70">Trip detail preview</div>
@@ -1971,8 +1993,8 @@
                 </div>
                 <div
                   className={classNames(
-                    'aspect-[4/3] w-full rounded-xl border bg-gradient-to-br from-blue-500/40 via-emerald-500/30 to-violet-500/30',
-                    isDark ? 'border-neutral-800' : 'border-neutral-200'
+                    'aspect-[4/3] w-full rounded-xl border bg-[linear-gradient(140deg,rgba(23,26,32,0.92),rgba(68,73,80,0.54),rgba(232,33,39,0.22))]',
+                    isDark ? 'border-white/10' : 'border-black/8'
                   )}
                   aria-hidden="true"
                 />
@@ -2013,21 +2035,21 @@
     // Use base64 image if available, otherwise fall back to the img field or an empty string.
     const imgSrc = (carImages && carImages[id]) || m.img || '';
     return (
-      <Card className="bg-neutral-900/70 border border-neutral-800 overflow-hidden">
+      <Card className={classNames('overflow-hidden border', isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8')}>
         <div className="p-4">
-          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl">
+          <div className={classNames('aspect-[16/9] w-full overflow-hidden rounded-[22px]', isDark ? 'bg-white/[0.04]' : 'bg-black/[0.03]')}>
             <img src={imgSrc} alt={m.alt} className="h-full w-full object-cover" loading="lazy" />
           </div>
           <div className="mt-3 flex items-start justify-between gap-2">
             <div>
-              <div className="font-semibold">{m.label}</div>
-              <div className="text-xs opacity-70">{m.note}</div>
+              <div className="font-semibold tracking-[-0.02em]">{m.label}</div>
+              <div className="text-xs opacity-66">{m.note}</div>
             </div>
             <Button
               as="a"
               href={'#library?model=' + encodeURIComponent(m.label)}
               variant="primary"
-              size="md"
+              size="sm"
               accent={accent}
               isDark={isDark}
             >
@@ -2047,7 +2069,7 @@
   function CarsGrid({ accent, carImages, isDark }) {
     const ids = ['model3', 'models', 'modelx', 'modely', 'cybertruck'];
     return (
-      <section id="models" className="mx-auto max-w-6xl px-4 pb-16">
+      <section id="models" className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-6">
         <SectionTitle
           title="Choose your Tesla model"
           subtitle="Jump into model-specific guides, delivery checklists, and accessory fitment pages without digging through a generic help center."
@@ -2089,8 +2111,8 @@
   function CategoryAccordion({ cat, isDark }) {
     const [open, setOpen] = useState(false);
     const disclosureId = useId();
-    const borderSoft = isDark ? 'border-neutral-800' : 'border-neutral-200';
-    const cardBg = isDark ? 'bg-neutral-900' : 'bg-neutral-50';
+    const borderSoft = isDark ? 'border-white/10' : 'border-black/8';
+    const cardBg = isDark ? 'bg-white/[0.04]' : 'bg-white/78';
     return (
       <Card className={classNames(cardBg, 'border', borderSoft)}>
         <button
@@ -2098,7 +2120,7 @@
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-controls={`${disclosureId}-content`}
-          className="w-full text-left p-4 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="w-full p-4 text-left font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e82127]"
         >
           {cat.name}
         </button>
@@ -2237,11 +2259,11 @@
       return cat.videos.some(videoMatches);
     }
 
-    const borderSoft = isDark ? 'border-neutral-800' : 'border-neutral-200';
-    const cardBg = isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200';
+    const borderSoft = isDark ? 'border-white/10' : 'border-black/8';
+    const cardBg = isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8';
 
     return (
-      <section id="library" className="mx-auto max-w-6xl px-4 pb-24">
+      <section id="library" className="mx-auto max-w-[1240px] px-4 pb-24 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <SectionTitle
             title="Owner guides library"
@@ -2273,16 +2295,18 @@
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   className={classNames(
-                    'w-full rounded-2xl px-5 py-3 text-sm border focus:outline-none focus:ring-2 transition-all',
-                    isDark ? 'bg-neutral-950 border-white/5 focus:ring-indigo-500 placeholder:text-white/20' : 'bg-white border-neutral-300 focus:ring-indigo-500'
+                    'w-full rounded-[22px] px-5 py-3 text-sm border focus:outline-none focus:ring-2 transition-all',
+                    isDark
+                      ? 'bg-[#0d1014] border-white/10 focus:ring-white/18 placeholder:text-white/20'
+                      : 'bg-[#f8f7f3] border-black/8 focus:ring-black/10'
                   )}
                 />
                 <select
                   value={modelFilter}
                   onChange={(e) => setModelFilter(e.target.value)}
                   className={classNames(
-                    'w-full rounded-2xl px-5 py-3 text-sm border transition-all appearance-none',
-                    isDark ? 'bg-neutral-950 border-white/5 focus:ring-indigo-500' : 'bg-white border-neutral-300'
+                    'w-full appearance-none rounded-[22px] px-5 py-3 text-sm border transition-all',
+                    isDark ? 'bg-[#0d1014] border-white/10 focus:ring-white/18' : 'bg-[#f8f7f3] border-black/8 focus:ring-black/10'
                   )}
                 >
                   <option value="">Filter by Model</option>
@@ -2296,8 +2320,8 @@
                   value={yearFilter}
                   onChange={(e) => setYearFilter(e.target.value)}
                   className={classNames(
-                    'w-full rounded-2xl px-5 py-3 text-sm border transition-all appearance-none',
-                    isDark ? 'bg-neutral-950 border-white/5 focus:ring-indigo-500' : 'bg-white border-neutral-300'
+                    'w-full appearance-none rounded-[22px] px-5 py-3 text-sm border transition-all',
+                    isDark ? 'bg-[#0d1014] border-white/10 focus:ring-white/18' : 'bg-[#f8f7f3] border-black/8 focus:ring-black/10'
                   )}
                 >
                   <option value="">Filter by Era</option>
@@ -2845,7 +2869,7 @@
         />
         <LibraryPanel accent={accent} isDark={isDark} />
         <CarsGrid accent={accent} carImages={carImages} isDark={isDark} />
-        <section className="mx-auto max-w-6xl px-4 pb-16">
+        <section className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-6">
           <SectionTitle
             title="Cross-check with official Tesla resources"
             subtitle="TeslaHelper is meant to be practical, not authoritative. Use these official Tesla references whenever you need final confirmation."
@@ -2856,7 +2880,7 @@
                 key={link.label}
                 className={classNames(
                   'p-4 border',
-                  isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+                  isDark ? 'bg-white/[0.04] border-white/10' : 'bg-white/78 border-black/8'
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -2865,7 +2889,7 @@
                     <p className="text-sm opacity-80 mt-1">{link.desc}</p>
                   </div>
                   <a
-                    className={classNames('text-sm font-semibold hover:opacity-90', accent.btn, accent.hover, 'px-3 py-2 rounded-lg')}
+                    className={classNames('rounded-full px-3 py-2 text-sm font-semibold text-white hover:opacity-90', accent.btn, accent.hover)}
                     href={link.href}
                     target="_blank"
                     rel="noreferrer"
@@ -2877,8 +2901,8 @@
             ))}
           </div>
         </section>
-        <footer className={classNames('border-t', isDark ? 'border-neutral-800' : 'border-neutral-200')}>
-          <div className="mx-auto max-w-6xl px-4 py-8 text-sm opacity-80 flex flex-col md:flex-row items-center justify-between gap-4">
+        <footer className={classNames('border-t', isDark ? 'border-white/10' : 'border-black/8')}>
+          <div className="mx-auto flex max-w-[1240px] flex-col items-center justify-between gap-4 px-4 py-8 text-sm opacity-80 sm:px-6 md:flex-row">
             <div className="text-center md:text-left">© {new Date().getFullYear()} {BRAND.name}. All rights reserved.</div>
             <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
               <div className="flex items-center gap-4">
@@ -2896,10 +2920,12 @@
                 href={SUPPORT_LINK}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white shadow-lg shadow-red-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                style={{ background: 'linear-gradient(90deg, #ef4444, #f87171)' }}
+                className={classNames(
+                  'inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e82127]',
+                  isDark ? 'bg-white text-[#171a20]' : 'bg-[#171a20] text-white'
+                )}
               >
-                <span aria-hidden="true">⚡</span> Support TeslaHelper
+                Support TeslaHelper
               </a>
             </div>
           </div>
